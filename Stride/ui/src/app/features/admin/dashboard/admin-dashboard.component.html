@@ -1,0 +1,118 @@
+<div class="admin-dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>admin_panel_settings</mat-icon>
+        Панель адміністратора
+      </h1>
+      <p class="subtitle">Аналітика та управління платформою</p>
+    </div>
+    <button
+      mat-icon-button
+      (click)="onRefresh()"
+      [disabled]="loading()"
+      matTooltip="Оновити дані"
+    >
+      <mat-icon>refresh</mat-icon>
+    </button>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading()" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Завантаження даних...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error() && !loading()" class="error-container">
+    <mat-icon>error_outline</mat-icon>
+    <p>{{ error() }}</p>
+    <button mat-raised-button color="primary" (click)="onRefresh()">
+      <mat-icon>refresh</mat-icon>
+      Спробувати ще раз
+    </button>
+  </div>
+
+  <!-- Main Content -->
+  <div *ngIf="!loading() && !error()" class="dashboard-content">
+    <!-- Last Updated -->
+    <div *ngIf="dashboard()" class="last-updated">
+      <mat-icon>schedule</mat-icon>
+      <span>Оновлено: {{ formatDate(dashboard()!.generatedAt) }}</span>
+    </div>
+
+    <!-- KPI Cards -->
+    <section class="kpi-section">
+      <h2>Ключові показники</h2>
+      <div class="kpi-grid">
+        <mat-card *ngFor="let card of kpiCards()" class="kpi-card">
+          <mat-card-content>
+            <div class="kpi-icon" [style.background-color]="card.iconColor">
+              <mat-icon>{{ card.icon }}</mat-icon>
+            </div>
+            <div class="kpi-content">
+              <h3>{{ card.title }}</h3>
+              <div class="kpi-value">{{ card.value }}</div>
+              <div *ngIf="card.trend" class="kpi-trend">
+                <mat-icon>{{ card.trend }}</mat-icon>
+                <span>{{ card.trendLabel }}</span>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <!-- Quick Links -->
+    <section class="quick-links-section">
+      <h2>Швидкі дії</h2>
+      <div class="quick-links-grid">
+        <mat-card
+          *ngFor="let link of quickLinks"
+          class="quick-link-card"
+          [routerLink]="link.route"
+        >
+          <mat-card-content>
+            <div class="link-icon" [ngClass]="'icon-' + link.color">
+              <mat-icon>{{ link.icon }}</mat-icon>
+            </div>
+            <h3>{{ link.title }}</h3>
+            <p>{{ link.description }}</p>
+            <mat-icon class="arrow-icon">arrow_forward</mat-icon>
+          </mat-card-content>
+        </mat-card>
+      </div>
+    </section>
+
+    <mat-divider></mat-divider>
+
+    <!-- Recent Activity -->
+    <section class="activity-section" *ngIf="recentActivity().length > 0">
+      <h2>Остання активність</h2>
+      <mat-card class="activity-card">
+        <mat-card-content>
+          <div class="activity-list">
+            <div
+              *ngFor="let activity of recentActivity()"
+              class="activity-item"
+            >
+              <div class="activity-icon" [style.background-color]="activity.iconColor">
+                <mat-icon>{{ activity.icon }}</mat-icon>
+              </div>
+              <div class="activity-content">
+                <h4>{{ activity.title }}</h4>
+                <p>{{ activity.description }}</p>
+              </div>
+              <div class="activity-time">
+                {{ activity.timestamp }}
+              </div>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </section>
+  </div>
+</div>

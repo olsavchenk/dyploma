@@ -1,0 +1,13 @@
+2026-02-18 14:32:18.668 +00:00 [INF] []  Starting Stride Adaptive API application
+2026-02-18 14:32:19.954 +00:00 [INF] []  Stride Adaptive API is ready to handle requests
+2026-02-18 14:32:20.063 +00:00 [WRN] [Microsoft.AspNetCore.DataProtection.Repositories.FileSystemXmlRepository]  Storing keys in a directory '/app/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-02-18 14:32:20.103 +00:00 [INF] [Stride.Adaptive.BackgroundServices.TaskPoolRefillService]  Task Pool Refill Service started
+2026-02-18 14:32:20.104 +00:00 [INF] [Stride.Adaptive.BackgroundServices.ModelRetrainingService]  Model Retraining Service starting
+2026-02-18 14:32:20.107 +00:00 [INF] [Stride.Adaptive.BackgroundServices.ModelRetrainingService]  No existing model found. Training initial model on synthetic data
+2026-02-18 14:32:20.142 +00:00 [WRN] [Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager]  No XML encryptor configured. Key {add26132-04b9-4527-8913-f61fb4e93514} may be persisted to storage in unencrypted form.
+2026-02-18 14:32:20.182 +00:00 [WRN] [Microsoft.AspNetCore.Hosting.Diagnostics]  Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://+:5010'.
+2026-02-18 14:32:20.341 +00:00 [INF] [Stride.Adaptive.Services.Implementations.ModelTrainer]  Starting model training on synthetic data
+2026-02-18 14:32:20.344 +00:00 [INF] [Stride.Adaptive.Services.Implementations.ModelTrainer]  Generated 10000 synthetic training samples
+2026-02-18 14:32:22.218 +00:00 [INF] [Stride.Adaptive.Services.Implementations.ModelTrainer]  Model training completed. R²: 0.9971, RMSE: 1.36, MAE: 1.03
+2026-02-18 14:32:22.220 +00:00 [INF] [Stride.Adaptive.BackgroundServices.ModelRetrainingService]  Initial model trained successfully. R²: 0.9971, RMSE: 1.36, Samples: 10000
+2026-02-18 14:32:22.224 +00:00 [INF] [Stride.Adaptive.BackgroundServices.ModelRetrainingService]  Waiting 168 hours until next retraining cycle

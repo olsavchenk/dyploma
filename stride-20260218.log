@@ -1,0 +1,56 @@
+2026-02-18 14:32:20.330 +00:00 [INF] []  Starting Stride API application
+2026-02-18 14:32:21.409 +00:00 [INF] []  Initializing infrastructure services
+2026-02-18 14:32:21.789 +00:00 [INF] []  Applying database migrations...
+2026-02-18 14:32:22.756 +00:00 [WRN] [Microsoft.EntityFrameworkCore.Model.Validation]  Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'RefreshToken'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+2026-02-18 14:32:22.760 +00:00 [WRN] [Microsoft.EntityFrameworkCore.Model.Validation]  Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'StudentProfile'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+2026-02-18 14:32:22.761 +00:00 [WRN] [Microsoft.EntityFrameworkCore.Model.Validation]  Entity 'User' has a global query filter defined and is the required end of a relationship with the entity 'TeacherProfile'. This may lead to unexpected results when the required entity is filtered out. Either configure the navigation as optional, or define matching query filters for both entities in the navigation. See https://go.microsoft.com/fwlink/?linkid=2131316 for more information.
+2026-02-18 14:32:23.267 +00:00 [ERR] [Microsoft.EntityFrameworkCore.Database.Command]  Failed executing DbCommand (45ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT "MigrationId", "ProductVersion"
+FROM "__EFMigrationsHistory"
+ORDER BY "MigrationId";
+2026-02-18 14:32:23.932 +00:00 [INF] []  Database migrations applied successfully
+2026-02-18 14:32:24.679 +00:00 [INF] []  MongoDB indexes initialized
+2026-02-18 14:32:25.546 +00:00 [INF] []  Database seeded with initial subjects and topics
+2026-02-18 14:32:25.691 +00:00 [INF] []  Database seeded with learning paths
+2026-02-18 14:32:25.754 +00:00 [INF] []  Database seeded with achievements
+2026-02-18 14:32:26.003 +00:00 [INF] [Stride.DataAccess.Repositories.TaskTemplateRepository]  Bulk inserting 94 task templates to MongoDB
+2026-02-18 14:32:26.099 +00:00 [INF] [Stride.DataAccess.Repositories.TaskTemplateRepository]  ✅ Successfully inserted 94 task templates
+2026-02-18 14:32:26.102 +00:00 [INF] []  MongoDB seeded with task templates
+2026-02-18 14:32:26.256 +00:00 [INF] []  MinIO buckets initialized
+2026-02-18 14:32:26.495 +00:00 [INF] []  Meilisearch indexes initialized
+2026-02-18 14:32:26.496 +00:00 [INF] []  All infrastructure services initialized successfully
+2026-02-18 14:32:26.504 +00:00 [INF] []  Stride API is ready to handle requests
+2026-02-18 14:32:26.535 +00:00 [WRN] [Microsoft.AspNetCore.DataProtection.Repositories.FileSystemXmlRepository]  Storing keys in a directory '/app/.aspnet/DataProtection-Keys' that may not be persisted outside of the container. Protected data will be unavailable when container is destroyed. For more information go to https://aka.ms/aspnet/dataprotectionwarning
+2026-02-18 14:32:26.557 +00:00 [INF] [Stride.Api.BackgroundServices.LeaderboardWeeklyService]  Leaderboard Weekly Service started
+2026-02-18 14:32:26.582 +00:00 [WRN] [Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager]  No XML encryptor configured. Key {5d2b175f-87c3-4a0e-9805-b074f945f0cb} may be persisted to storage in unencrypted form.
+2026-02-18 14:32:26.609 +00:00 [INF] [Stride.Adaptive.BackgroundServices.TaskPoolRefillService]  Task Pool Refill Service started
+2026-02-18 14:32:26.609 +00:00 [WRN] [Microsoft.AspNetCore.Hosting.Diagnostics]  Overriding HTTP_PORTS '8080' and HTTPS_PORTS ''. Binding to values defined by URLS instead 'http://+:5000'.
+2026-02-18 14:43:53.000 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000001 HTTP OPTIONS /api/v1/auth/login responded 204 in 3.2050 ms
+2026-02-18 14:43:53.019 +00:00 [WRN] [Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware] 0HNJEVGHE8PLN:00000001 Failed to determine the https port for redirect.
+2026-02-18 14:43:53.179 +00:00 [WRN] [Stride.Services.Implementations.AuthService] 0HNJEVGHE8PLN:00000001 LoginAsync failed: User not found for Email=t***@t.t
+2026-02-18 14:43:53.180 +00:00 [WRN] [Stride.Api.Controllers.AuthController] 0HNJEVGHE8PLN:00000001 Login failed for t@t.t: Invalid email or password
+2026-02-18 14:43:53.188 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLN:00000001 HTTP POST /api/v1/auth/login responded 401 in 171.7765 ms
+2026-02-18 14:44:10.085 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000002 HTTP OPTIONS /api/v1/auth/register responded 204 in 0.5889 ms
+2026-02-18 14:44:10.452 +00:00 [INF] [Stride.Services.Implementations.AuthService] 0HNJEVGHE8PLN:00000002 RegisterAsync completed: New user registered UserId="f9eb8ff5-2777-46aa-bd01-e8f28075b29a", Email=t***@t.t, HasGdprConsent=true
+2026-02-18 14:44:10.494 +00:00 [INF] [Stride.Api.Controllers.AuthController] 0HNJEVGHE8PLN:00000002 User registered successfully: t@t.t
+2026-02-18 14:44:10.514 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLN:00000002 HTTP POST /api/v1/auth/register responded 201 in 426.4978 ms
+2026-02-18 14:44:10.524 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000003 HTTP OPTIONS /hubs/notifications/negotiate responded 204 in 0.1499 ms
+2026-02-18 14:44:10.566 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLN:00000003 HTTP POST /hubs/notifications/negotiate responded 200 in 37.5593 ms
+2026-02-18 14:44:17.261 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000004 HTTP OPTIONS /api/v1/auth/select-role responded 204 in 0.0926 ms
+2026-02-18 14:44:17.314 +00:00 [INF] [Stride.Services.Implementations.GoogleAuthService] 0HNJEVGHE8PLN:00000004 Teacher profile created for user: "f9eb8ff5-2777-46aa-bd01-e8f28075b29a"
+2026-02-18 14:44:17.345 +00:00 [INF] [Stride.Api.Controllers.AuthController] 0HNJEVGHE8PLN:00000004 User "f9eb8ff5-2777-46aa-bd01-e8f28075b29a" selected role: Teacher
+2026-02-18 14:44:17.347 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLN:00000004 HTTP POST /api/v1/auth/select-role responded 200 in 82.7389 ms
+2026-02-18 14:44:17.423 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000005 HTTP OPTIONS /api/v1/classes/stats responded 204 in 0.1750 ms
+2026-02-18 14:44:17.427 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000001 HTTP OPTIONS /api/v1/classes responded 204 in 0.1383 ms
+2026-02-18 14:44:17.429 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000006 HTTP GET /api/v1/classes/stats responded 404 in 0.9853 ms
+2026-02-18 14:44:17.442 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000002 HTTP GET /api/v1/classes responded 400 in 11.4118 ms
+2026-02-18 14:44:21.358 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000003 HTTP OPTIONS /api/v1/users/me responded 204 in 0.3780 ms
+2026-02-18 14:44:21.408 +00:00 [WRN] [Microsoft.EntityFrameworkCore.Query] 0HNJEVGHE8PLP:00000004 Compiling a query which loads related collections for more than one collection navigation, either via 'Include' or through projection, but no 'QuerySplittingBehavior' has been configured. By default, Entity Framework will use 'QuerySplittingBehavior.SingleQuery', which can potentially result in slow query performance. See https://go.microsoft.com/fwlink/?linkid=2134277 for more information. To identify the query that's triggering this warning call 'ConfigureWarnings(w => w.Throw(RelationalEventId.MultipleCollectionIncludeWarning))'.
+2026-02-18 14:44:21.495 +00:00 [INF] [Stride.Services.Implementations.UserService] 0HNJEVGHE8PLP:00000004 GetUserProfileAsync completed for UserId="f9eb8ff5-2777-46aa-bd01-e8f28075b29a", Role=Teacher
+2026-02-18 14:44:21.503 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000004 HTTP GET /api/v1/users/me responded 200 in 141.9461 ms
+2026-02-18 14:44:30.347 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000005 HTTP OPTIONS /api/v1/classes/stats responded 204 in 0.1415 ms
+2026-02-18 14:44:30.348 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000007 HTTP OPTIONS /api/v1/classes responded 204 in 0.0754 ms
+2026-02-18 14:44:30.352 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLM:00000008 HTTP GET /api/v1/classes/stats responded 404 in 0.6253 ms
+2026-02-18 14:44:30.354 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000006 HTTP GET /api/v1/classes responded 400 in 3.1711 ms
+2026-02-18 14:44:39.077 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000007 HTTP OPTIONS /api/v1/classes responded 204 in 0.1542 ms
+2026-02-18 14:44:39.135 +00:00 [INF] [Serilog.AspNetCore.RequestLoggingMiddleware] 0HNJEVGHE8PLP:00000008 HTTP POST /api/v1/classes responded 400 in 55.2644 ms

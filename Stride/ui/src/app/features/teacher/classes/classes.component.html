@@ -1,0 +1,135 @@
+<div class="classes-container">
+  <div class="header">
+    <div class="title-section">
+      <h1>Мої Класи</h1>
+      <p class="subtitle" *ngIf="quickStats()">
+        Управління {{ quickStats()!.totalClasses }} класами та {{ quickStats()!.totalStudents }} учнями
+      </p>
+    </div>
+    <button
+      mat-fab
+      extended
+      color="primary"
+      class="create-button"
+      (click)="openCreateDialog()"
+      aria-label="Створити клас"
+    >
+      <mat-icon>add</mat-icon>
+      Створити Клас
+    </button>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="quick-stats" *ngIf="quickStats()">
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>school</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ quickStats()!.totalClasses }}</div>
+          <div class="stat-label">Всього Класів</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>people</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ quickStats()!.totalStudents }}</div>
+          <div class="stat-label">Всього Учнів</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>trending_up</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ quickStats()!.activeThisWeek }}</div>
+          <div class="stat-label">Активних Цього Тижня</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card class="stat-card">
+      <mat-card-content>
+        <div class="stat-icon">
+          <mat-icon>groups</mat-icon>
+        </div>
+        <div class="stat-info">
+          <div class="stat-value">{{ quickStats()!.averageClassSize.toFixed(1) }}</div>
+          <div class="stat-label">Середній Розмір Класу</div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div class="loading-container" *ngIf="loading()">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Завантаження класів...</p>
+  </div>
+
+  <!-- Classes Grid -->
+  <div class="classes-grid" *ngIf="!loading() && classes().length > 0">
+    <mat-card
+      *ngFor="let class of classes()"
+      class="class-card"
+      (click)="viewClass(class.id)"
+    >
+      <mat-card-header>
+        <div mat-card-avatar class="class-avatar">
+          <mat-icon>class</mat-icon>
+        </div>
+        <mat-card-title>{{ class.name }}</mat-card-title>
+        <mat-card-subtitle>{{ class.gradeLevel }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <div class="class-stats">
+          <div class="stat-item">
+            <mat-icon class="stat-item-icon">people</mat-icon>
+            <span>{{ class.studentCount }} учнів</span>
+          </div>
+          <div class="stat-item">
+            <mat-icon class="stat-item-icon">assignment</mat-icon>
+            <span>{{ class.assignmentCount }} завдань</span>
+          </div>
+          <div class="stat-item" *ngIf="class.averageAccuracy !== undefined">
+            <mat-icon class="stat-item-icon">analytics</mat-icon>
+            <span>{{ class.averageAccuracy.toFixed(0) }}% точність</span>
+          </div>
+        </div>
+
+        <div class="join-code">
+          <mat-icon>vpn_key</mat-icon>
+          <span>Код: <strong>{{ class.joinCode }}</strong></span>
+        </div>
+      </mat-card-content>
+
+      <mat-card-actions>
+        <button mat-button color="primary">
+          Переглянути
+          <mat-icon>arrow_forward</mat-icon>
+        </button>
+      </mat-card-actions>
+    </mat-card>
+  </div>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading() && classes().length === 0">
+    <mat-icon class="empty-icon">school</mat-icon>
+    <h2>Ще немає класів</h2>
+    <p>Створіть свій перший клас, щоб почати працювати з учнями</p>
+    <button mat-raised-button color="primary" (click)="openCreateDialog()">
+      <mat-icon>add</mat-icon>
+      Створити Перший Клас
+    </button>
+  </div>
+</div>

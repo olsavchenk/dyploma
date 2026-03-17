@@ -1,0 +1,282 @@
+.student-detail-container {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  @media (max-width: 768px) {
+    padding: 1rem;
+  }
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+
+  .back-button {
+    mat-icon {
+      font-size: 24px;
+    }
+  }
+
+  .student-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex: 1;
+
+    .student-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .student-info {
+      h1 {
+        margin: 0 0 0.5rem 0;
+        font-size: 2rem;
+        font-weight: 600;
+        color: #1a1a1a;
+      }
+
+      .student-meta {
+        display: flex;
+        gap: 0.75rem;
+
+        .level-badge,
+        .xp-badge {
+          display: inline-flex;
+          align-items: center;
+          padding: 0.25rem 0.75rem;
+          border-radius: 12px;
+          font-size: 0.875rem;
+          font-weight: 600;
+        }
+
+        .level-badge {
+          background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+          color: white;
+        }
+
+        .xp-badge {
+          background: #f5f5f5;
+          color: #667eea;
+        }
+      }
+    }
+  }
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 4rem 0;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.stats-card {
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 12px;
+
+      mat-icon {
+        font-size: 32px;
+        width: 32px;
+        height: 32px;
+        color: #667eea;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #1a1a1a;
+        margin-bottom: 0.25rem;
+      }
+
+      .stat-label {
+        font-size: 0.875rem;
+        color: #666;
+      }
+    }
+  }
+}
+
+.insights-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+
+  .insight-card {
+    mat-card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+
+      mat-icon {
+        font-size: 24px;
+        width: 24px;
+        height: 24px;
+      }
+
+      mat-card-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+    }
+
+    &.strengths {
+      mat-card-header mat-icon {
+        color: #4caf50;
+      }
+    }
+
+    &.weaknesses {
+      mat-card-header mat-icon {
+        color: #ff9800;
+      }
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 1.5rem;
+
+      li {
+        margin-bottom: 0.5rem;
+        color: #333;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+
+    .empty-text {
+      color: #999;
+      font-style: italic;
+      margin: 0;
+    }
+  }
+}
+
+.topics-card {
+  .topics-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    .topic-item {
+      padding: 1rem;
+      background: #f9f9f9;
+      border-radius: 8px;
+
+      .topic-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.75rem;
+        gap: 1rem;
+
+        @media (max-width: 600px) {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+
+        .topic-name {
+          font-weight: 600;
+          font-size: 1rem;
+        }
+
+        .topic-stats {
+          display: flex;
+          gap: 1rem;
+          font-size: 0.875rem;
+
+          .accuracy {
+            font-weight: 600;
+            color: #667eea;
+          }
+
+          .attempts {
+            color: #666;
+          }
+        }
+      }
+
+      .topic-progress {
+        margin-bottom: 0.5rem;
+        position: relative;
+
+        mat-progress-bar {
+          height: 8px;
+          border-radius: 4px;
+        }
+
+        .mastery-label {
+          position: absolute;
+          right: 0;
+          top: -24px;
+          font-size: 0.75rem;
+          color: #666;
+        }
+      }
+
+      .topic-meta {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: #666;
+        margin-top: 0.5rem;
+
+        @media (max-width: 600px) {
+          flex-direction: column;
+          gap: 0.25rem;
+        }
+      }
+    }
+  }
+}
+
+.activity-card {
+  .activity-table {
+    width: 100%;
+
+    mat-icon {
+      &.correct {
+        color: #4caf50;
+      }
+
+      &.incorrect {
+        color: #f44336;
+      }
+    }
+  }
+
+  .empty-text {
+    color: #999;
+    font-style: italic;
+    margin: 0;
+    padding: 2rem;
+    text-align: center;
+  }
+}

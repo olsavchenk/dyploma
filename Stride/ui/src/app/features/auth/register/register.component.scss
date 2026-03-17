@@ -1,0 +1,202 @@
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 1rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.register-card {
+  width: 100%;
+  max-width: 500px;
+  padding: 2rem;
+
+  mat-card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding: 0;
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+
+      .logo-icon {
+        font-size: 40px;
+        width: 40px;
+        height: 40px;
+        color: #667eea;
+      }
+
+      .app-name {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 700;
+        color: #333;
+      }
+    }
+
+    .subtitle {
+      margin: 0;
+      color: #666;
+      font-size: 1rem;
+    }
+  }
+
+  mat-card-content {
+    padding: 0;
+  }
+
+  mat-card-footer {
+    padding: 1.5rem 0 0 0;
+    margin: 0;
+  }
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1.5rem;
+  background-color: #fee;
+  border: 1px solid #fcc;
+  border-radius: 4px;
+  color: #c33;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+
+  span {
+    flex: 1;
+    font-size: 0.875rem;
+  }
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.gdpr-consent {
+  margin: 0.5rem 0 1rem;
+
+  .consent-text {
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: #666;
+
+    .link {
+      color: #667eea;
+      text-decoration: none;
+      transition: color 0.2s;
+
+      &:hover {
+        color: #764ba2;
+        text-decoration: underline;
+      }
+    }
+  }
+
+  .consent-error {
+    margin-top: 0.5rem;
+    margin-left: 32px;
+    font-size: 0.75rem;
+    color: #f44336;
+  }
+}
+
+.register-button {
+  height: 48px;
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 0.5rem;
+
+  .button-spinner {
+    display: inline-block;
+    margin-right: 0.5rem;
+  }
+}
+
+.divider {
+  margin: 1.5rem 0;
+  position: relative;
+  text-align: center;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.12);
+  }
+
+  .divider-text {
+    position: relative;
+    background-color: white;
+    padding: 0 1rem;
+    color: #999;
+    font-size: 0.875rem;
+    z-index: 1;
+  }
+}
+
+.google-button {
+  height: 48px;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  .google-icon {
+    width: 20px;
+    height: 20px;
+    font-size: 20px;
+  }
+}
+
+.login-prompt {
+  text-align: center;
+  margin: 0;
+  color: #666;
+  font-size: 0.875rem;
+
+  .link {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    margin-left: 0.25rem;
+    transition: color 0.2s;
+
+    &:hover {
+      color: #764ba2;
+      text-decoration: underline;
+    }
+  }
+}
+
+// Responsive adjustments
+@media (max-width: 560px) {
+  .register-card {
+    padding: 1.5rem;
+  }
+
+  .logo-container .app-name {
+    font-size: 1.75rem;
+  }
+}

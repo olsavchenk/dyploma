@@ -1,0 +1,45 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.sidenav {
+  height: 100%;
+  padding: 1rem 0;
+
+  mat-nav-list {
+    padding: 0;
+  }
+
+  .nav-item {
+    margin: 0.25rem 0.5rem;
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    color: inherit;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+
+    &.active {
+      background-color: var(--primary-color, #1976d2);
+      color: white;
+
+      mat-icon {
+        color: white;
+      }
+    }
+
+    mat-icon {
+      margin-right: 1rem;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+}
+
+::ng-deep {
+  .mat-mdc-list-item-title {
+    font-size: 0.875rem;
+    font-weight: 500;
+  }
+}

@@ -1,0 +1,499 @@
+.profile-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+  min-height: calc(100vh - 120px);
+}
+
+.profile-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 2rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0;
+}
+
+.page-title mat-icon {
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+  color: #6366F1;
+}
+
+// Loading & Error States
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.loading-container p {
+  margin-top: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-size: 1rem;
+}
+
+.error-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.25rem;
+  background: #FEE2E2;
+  border: 1px solid #FECACA;
+  border-radius: 12px;
+  color: #991B1B;
+  margin-bottom: 1.5rem;
+}
+
+.error-banner mat-icon {
+  color: #DC2626;
+}
+
+.error-banner button {
+  margin-left: auto;
+}
+
+// Profile Content
+.profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+// Profile Card
+.profile-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+.profile-card-header {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.avatar-wrapper {
+  position: relative;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.avatar-wrapper:hover {
+  transform: scale(1.05);
+}
+
+.avatar-wrapper:hover .avatar-edit-overlay {
+  opacity: 1;
+}
+
+.avatar-wrapper.uploading {
+  pointer-events: none;
+}
+
+.avatar,
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.avatar-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+}
+
+.avatar-placeholder mat-icon {
+  font-size: 48px;
+  width: 48px;
+  height: 48px;
+  color: white;
+}
+
+.avatar-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 2;
+}
+
+.avatar-edit-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.avatar-edit-overlay mat-icon {
+  color: white;
+  font-size: 32px;
+  width: 32px;
+  height: 32px;
+}
+
+.profile-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.profile-name {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0 0 0.5rem 0;
+  word-break: break-word;
+}
+
+.profile-email {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.6);
+  margin: 0 0 1rem 0;
+  word-break: break-all;
+}
+
+mat-chip-set {
+  margin: 0;
+}
+
+mat-chip {
+  font-weight: 500;
+}
+
+.edit-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.profile-details {
+  padding: 1.5rem 2rem;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+}
+
+.detail-row:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.detail-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.detail-label mat-icon {
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  color: rgba(0, 0, 0, 0.54);
+}
+
+.detail-value {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+}
+
+// Stats Grid
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem;
+  cursor: default;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.stat-icon mat-icon {
+  color: white;
+  font-size: 28px;
+  width: 28px;
+  height: 28px;
+}
+
+.stat-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.stat-value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: rgba(0, 0, 0, 0.87);
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+}
+
+// Teacher Stats Card
+.teacher-stats-card {
+  padding: 1.5rem;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+  margin: 0 0 1rem 0;
+}
+
+.card-title mat-icon {
+  color: #6366F1;
+}
+
+.teacher-details {
+  margin-top: 1.5rem;
+}
+
+.teacher-stats-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.summary-item {
+  text-align: center;
+  padding: 1rem;
+  background: #F9FAFB;
+  border-radius: 12px;
+}
+
+.summary-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #6366F1;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+.summary-label {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+  font-weight: 500;
+}
+
+// Settings Card
+.settings-card {
+  padding: 1.5rem;
+}
+
+.settings-list {
+  margin-top: 1.5rem;
+}
+
+.setting-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 0;
+  gap: 1rem;
+}
+
+.setting-item.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.setting-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1;
+}
+
+.setting-info mat-icon {
+  color: rgba(0, 0, 0, 0.54);
+  margin-top: 0.125rem;
+}
+
+.setting-label {
+  font-weight: 600;
+  color: rgba(0, 0, 0, 0.87);
+  margin-bottom: 0.25rem;
+}
+
+.setting-description {
+  font-size: 0.875rem;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+// Danger Zone Card
+.danger-zone-card {
+  padding: 1.5rem;
+  border: 1px solid #FEE2E2;
+}
+
+.danger-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
+.export-button,
+.delete-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.danger-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #FEF2F2;
+  border-radius: 8px;
+  color: #991B1B;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+.danger-warning mat-icon {
+  color: #DC2626;
+  font-size: 20px;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+// Responsive Design
+@media (max-width: 768px) {
+  .profile-container {
+    padding: 1.5rem 1rem;
+  }
+
+  .page-title {
+    font-size: 1.5rem;
+  }
+
+  .profile-card-header {
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+  }
+
+  .edit-button {
+    width: 100%;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  }
+
+  .teacher-stats-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .danger-actions {
+    flex-direction: column;
+  }
+
+  .export-button,
+  .delete-button {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-container {
+    padding: 1rem;
+  }
+
+  .page-title {
+    font-size: 1.25rem;
+  }
+
+  .profile-card-header {
+    padding: 1.5rem;
+    gap: 1rem;
+  }
+
+  .avatar-wrapper {
+    width: 100px;
+    height: 100px;
+  }
+
+  .profile-name {
+    font-size: 1.5rem;
+  }
+
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-card {
+    padding: 1rem;
+  }
+
+  .setting-info {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}

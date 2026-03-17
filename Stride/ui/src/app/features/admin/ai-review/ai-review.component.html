@@ -1,0 +1,180 @@
+<div class="ai-review-container">
+  <div class="header">
+    <h1>AI Content Review Queue</h1>
+    <p class="subtitle">Review and approve AI-generated task templates</p>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Task Type</mat-label>
+          <mat-select [(ngModel)]="selectedTaskType" (ngModelChange)="onFilterChange()">
+            <mat-option [value]="undefined">All Types</mat-option>
+            @for (type of taskTypes; track type.value) {
+              <mat-option [value]="type.value">{{ type.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Difficulty Band</mat-label>
+          <mat-select [(ngModel)]="selectedDifficultyBand" (ngModelChange)="onFilterChange()">
+            <mat-option [value]="undefined">All Levels</mat-option>
+            @for (band of difficultyBands; track band) {
+              <mat-option [value]="band">Level {{ band }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button (click)="clearFilters()" class="clear-btn">
+          <mat-icon>clear</mat-icon>
+          Clear Filters
+        </button>
+
+        <div class="count-badge">
+          <span class="count">{{ totalCount() }}</span>
+          <span class="label">pending reviews</span>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Loading State -->
+  @if (isLoading()) {
+    <div class="loading-container">
+      <mat-spinner></mat-spinner>
+      <p>Loading review queue...</p>
+    </div>
+  }
+
+  <!-- Empty State -->
+  @if (!isLoading() && !hasItems()) {
+    <mat-card class="empty-state">
+      <mat-card-content>
+        <mat-icon class="empty-icon">check_circle</mat-icon>
+        <h2>No Pending Reviews</h2>
+        <p>All AI-generated templates have been reviewed!</p>
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <!-- Review Queue Table -->
+  @if (!isLoading() && hasItems()) {
+    <mat-card class="table-card">
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="items()" class="review-table">
+            <!-- Subject Column -->
+            <ng-container matColumnDef="subject">
+              <th mat-header-cell *matHeaderCellDef>Subject</th>
+              <td mat-cell *matCellDef="let item">
+                <div class="subject-cell">
+                  <strong>{{ item.subjectName }}</strong>
+                </div>
+              </td>
+            </ng-container>
+
+            <!-- Topic Column -->
+            <ng-container matColumnDef="topic">
+              <th mat-header-cell *matHeaderCellDef>Topic</th>
+              <td mat-cell *matCellDef="let item">{{ item.topicName }}</td>
+            </ng-container>
+
+            <!-- Task Type Column -->
+            <ng-container matColumnDef="taskType">
+              <th mat-header-cell *matHeaderCellDef>Type</th>
+              <td mat-cell *matCellDef="let item">
+                <mat-chip [color]="getTaskTypeColor(item.taskType)">
+                  {{ getTaskTypeLabel(item.taskType) }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Difficulty Column -->
+            <ng-container matColumnDef="difficulty">
+              <th mat-header-cell *matHeaderCellDef>Difficulty</th>
+              <td mat-cell *matCellDef="let item">
+                <mat-chip [color]="getDifficultyColor(item.difficultyBand)">
+                  Level {{ item.difficultyBand }}
+                </mat-chip>
+              </td>
+            </ng-container>
+
+            <!-- Provider Column -->
+            <ng-container matColumnDef="provider">
+              <th mat-header-cell *matHeaderCellDef>AI Provider</th>
+              <td mat-cell *matCellDef="let item">
+                <span class="provider-badge">{{ item.aiProvider || 'N/A' }}</span>
+              </td>
+            </ng-container>
+
+            <!-- Created At Column -->
+            <ng-container matColumnDef="createdAt">
+              <th mat-header-cell *matHeaderCellDef>Created</th>
+              <td mat-cell *matCellDef="let item">{{ formatDate(item.createdAt) }}</td>
+            </ng-container>
+
+            <!-- Actions Column -->
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Actions</th>
+              <td mat-cell *matCellDef="let item">
+                <div class="action-buttons">
+                  <button 
+                    mat-icon-button 
+                    color="primary" 
+                    (click)="toggleExpand(item.id)"
+                    matTooltip="View Content">
+                    <mat-icon>{{ expandedItemId() === item.id ? 'expand_less' : 'expand_more' }}</mat-icon>
+                  </button>
+                  <button 
+                    mat-raised-button 
+                    color="primary" 
+                    (click)="approveTemplate(item)"
+                    class="action-btn">
+                    <mat-icon>check</mat-icon>
+                    Approve
+                  </button>
+                  <button 
+                    mat-raised-button 
+                    color="warn" 
+                    (click)="rejectTemplate(item)"
+                    class="action-btn">
+                    <mat-icon>close</mat-icon>
+                    Reject
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+
+            <!-- Expanded Content Row -->
+            <ng-container matColumnDef="expandedDetail">
+              <td mat-cell *matCellDef="let item" [attr.colspan]="displayedColumns.length">
+                @if (expandedItemId() === item.id) {
+                  <div class="expanded-content">
+                    <h3>Template Content</h3>
+                    <pre class="content-preview">{{ formatContent(item.templateContent) }}</pre>
+                  </div>
+                }
+              </td>
+            </ng-container>
+          </table>
+        </div>
+
+        <!-- Paginator -->
+        <mat-paginator
+          [length]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageIndex]="page() - 1"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons>
+        </mat-paginator>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

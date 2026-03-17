@@ -1,0 +1,22 @@
+<nav class="sidenav">
+  @if (isAuthenticated()) {
+    <mat-nav-list>
+      @for (item of navItems(); track item.route) {
+        @if (shouldShowItem(item)) {
+          <a
+            mat-list-item
+            [routerLink]="item.route"
+            routerLinkActive="active"
+            [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
+            class="nav-item"
+          >
+            <mat-icon matListItemIcon [matBadge]="item.badge" [matBadgeHidden]="!item.badge" aria-hidden="false">
+              {{ item.icon }}
+            </mat-icon>
+            <span matListItemTitle>{{ item.label }}</span>
+          </a>
+        }
+      }
+    </mat-nav-list>
+  }
+</nav>

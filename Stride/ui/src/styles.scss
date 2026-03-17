@@ -1,0 +1,123 @@
+
+// Include theming for Angular Material with `mat.theme()`.
+// This Sass mixin will define CSS variables that are used for styling Angular Material
+// components according to the Material 3 design spec.
+// Learn more about theming and how to use it for your application's
+// custom components at https://material.angular.dev/guide/theming
+@use '@angular/material' as mat;
+
+html {
+  @include mat.theme((
+    color: (
+      primary: mat.$azure-palette,
+      tertiary: mat.$blue-palette,
+    ),
+    typography: Roboto,
+    density: 0,
+  ));
+}
+
+body {
+  // Default the application to a light color theme. This can be changed to
+  // `dark` to enable the dark color theme, or to `light dark` to defer to the
+  // user's system settings.
+  color-scheme: light;
+
+  // Set a default background, font and text colors for the application using
+  // Angular Material's system-level CSS variables. Learn more about these
+  // variables at https://material.angular.dev/guide/system-variables
+  background-color: var(--mat-sys-surface);
+  color: var(--mat-sys-on-surface);
+  font: var(--mat-sys-body-medium);
+
+  // Reset the user agent margin.
+  margin: 0;
+}
+/* Tailwind CSS */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.mat-mdc-notch-piece.mdc-notched-outline__notch {
+  border-right-style: none !important;
+}
+
+/* You can add global styles to this file, and also import other style files */
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+/* Custom CSS Variables */
+:root {
+  --primary: #1976d2;
+  --primary-dark: #115293;
+  --primary-light: #e3f2fd;
+  --accent: #00bcd4;
+  --accent-light: #e0f7fa;
+  --warn: #f44336;
+  --primary-text: rgba(0, 0, 0, 0.87);
+  --secondary-text: rgba(0, 0, 0, 0.54);
+}
+
+/* PWA Update Snackbar Styles */
+.update-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #6366f1 !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+  }
+
+  .mat-mdc-button {
+    --mdc-text-button-label-text-color: white !important;
+    font-weight: 600;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+.error-snackbar {
+  .mdc-snackbar__surface {
+    background-color: #ef4444 !important;
+  }
+
+  .mat-mdc-snack-bar-label {
+    color: white !important;
+  }
+
+  .mat-mdc-button {
+    --mdc-text-button-label-text-color: white !important;
+    font-weight: 600;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
+/* PWA Install Prompt */
+.install-pwa-prompt {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  z-index: 1000;
+  max-width: 90%;
+
+  @media (max-width: 640px) {
+    bottom: 80px;
+    flex-direction: column;
+    text-align: center;
+  }
+}
+

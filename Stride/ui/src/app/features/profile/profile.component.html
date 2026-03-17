@@ -1,0 +1,304 @@
+<div class="profile-container">
+  <!-- Header -->
+  <div class="profile-header">
+    <h1 class="page-title">
+      <mat-icon>person</mat-icon>
+      Профіль
+    </h1>
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Завантаження профілю...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-banner">
+      <mat-icon>error_outline</mat-icon>
+      <span>{{ error() }}</span>
+      <button mat-icon-button (click)="loadProfile()">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    </div>
+  }
+
+  <!-- Profile Content -->
+  @else if (profile(); as userProfile) {
+    <div class="profile-content">
+      
+      <!-- Main Profile Card -->
+      <mat-card class="profile-card">
+        <div class="profile-card-header">
+          <div 
+            class="avatar-wrapper" 
+            (click)="onAvatarClick()"
+            [class.uploading]="uploadingAvatar()">
+            @if (uploadingAvatar()) {
+              <div class="avatar-overlay">
+                <mat-spinner diameter="32"></mat-spinner>
+              </div>
+            }
+            @if (userProfile.avatarUrl) {
+              <img 
+                [src]="userProfile.avatarUrl" 
+                [alt]="userProfile.displayName"
+                class="avatar" />
+            } @else {
+              <div class="avatar-placeholder">
+                <mat-icon>person</mat-icon>
+              </div>
+            }
+            <div class="avatar-edit-overlay">
+              <mat-icon>photo_camera</mat-icon>
+            </div>
+          </div>
+
+          <div class="profile-info">
+            <h2 class="profile-name">{{ userProfile.displayName }}</h2>
+            <p class="profile-email">{{ userProfile.email }}</p>
+            <mat-chip-set>
+              <mat-chip>
+                <mat-icon matChipAvatar>{{ userProfile.role === 'Student' ? 'school' : userProfile.role === 'Teacher' ? 'local_library' : 'admin_panel_settings' }}</mat-icon>
+                {{ getRoleLabel(userProfile.role) }}
+              </mat-chip>
+            </mat-chip-set>
+          </div>
+
+          <button 
+            mat-raised-button 
+            color="primary" 
+            class="edit-button"
+            (click)="openEditDialog()">
+            <mat-icon>edit</mat-icon>
+            Редагувати
+          </button>
+        </div>
+
+        <mat-divider></mat-divider>
+
+        <div class="profile-details">
+          <div class="detail-row">
+            <span class="detail-label">
+              <mat-icon>event</mat-icon>
+              Дата реєстрації
+            </span>
+            <span class="detail-value">{{ formatDate(userProfile.createdAt) }}</span>
+          </div>
+
+          @if (userProfile.lastLoginAt) {
+            <div class="detail-row">
+              <span class="detail-label">
+                <mat-icon>login</mat-icon>
+                Останній вхід
+              </span>
+              <span class="detail-value">{{ formatDate(userProfile.lastLoginAt) }}</span>
+            </div>
+          }
+        </div>
+      </mat-card>
+
+      <!-- Stats Cards -->
+      @if (userProfile.studentStats; as stats) {
+        <div class="stats-grid">
+          <mat-card class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);">
+              <mat-icon>stars</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stats.totalXp }}</div>
+              <div class="stat-label">Загальний XP</div>
+            </div>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);">
+              <mat-icon>trending_up</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stats.currentLevel }}</div>
+              <div class="stat-label">Рівень</div>
+            </div>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">
+              <mat-icon>local_fire_department</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stats.currentStreak }}</div>
+              <div class="stat-label">Поточна серія</div>
+            </div>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+              <mat-icon>military_tech</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stats.achievementsUnlocked }}</div>
+              <div class="stat-label">Досягнення</div>
+            </div>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);">
+              <mat-icon>emoji_events</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stats.league }}</div>
+              <div class="stat-label">Ліга</div>
+            </div>
+          </mat-card>
+
+          <mat-card class="stat-card">
+            <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
+              <mat-icon>assignment</mat-icon>
+            </div>
+            <div class="stat-content">
+              <div class="stat-value">{{ stats.totalTasksAttempted }}</div>
+              <div class="stat-label">Завдань виконано</div>
+            </div>
+          </mat-card>
+        </div>
+      }
+
+      @if (userProfile.teacherStats; as stats) {
+        <mat-card class="teacher-stats-card">
+          <h3 class="card-title">
+            <mat-icon>school</mat-icon>
+            Інформація вчителя
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="teacher-details">
+            @if (stats.school) {
+              <div class="detail-row">
+                <span class="detail-label">
+                  <mat-icon>business</mat-icon>
+                  Школа
+                </span>
+                <span class="detail-value">{{ stats.school }}</span>
+              </div>
+            }
+
+            @if (stats.gradesTaught) {
+              <div class="detail-row">
+                <span class="detail-label">
+                  <mat-icon>groups</mat-icon>
+                  Класи
+                </span>
+                <span class="detail-value">{{ stats.gradesTaught }}</span>
+              </div>
+            }
+
+            @if (stats.subjectsExpertise) {
+              <div class="detail-row">
+                <span class="detail-label">
+                  <mat-icon>menu_book</mat-icon>
+                  Предмети
+                </span>
+                <span class="detail-value">{{ stats.subjectsExpertise }}</span>
+              </div>
+            }
+
+            <div class="teacher-stats-summary">
+              <div class="summary-item">
+                <div class="summary-value">{{ stats.totalClasses }}</div>
+                <div class="summary-label">Класів</div>
+              </div>
+              <div class="summary-item">
+                <div class="summary-value">{{ stats.totalStudents }}</div>
+                <div class="summary-label">Учнів</div>
+              </div>
+            </div>
+          </div>
+        </mat-card>
+      }
+
+      <!-- Settings Card -->
+      <mat-card class="settings-card">
+        <h3 class="card-title">
+          <mat-icon>settings</mat-icon>
+          Налаштування
+        </h3>
+        <mat-divider></mat-divider>
+
+        <div class="settings-list">
+          <div class="setting-item">
+            <div class="setting-info">
+              <mat-icon>notifications</mat-icon>
+              <div>
+                <div class="setting-label">Сповіщення</div>
+                <div class="setting-description">Отримувати сповіщення про досягнення та нагадування</div>
+              </div>
+            </div>
+            <mat-slide-toggle
+              [checked]="notificationsEnabled()"
+              (change)="onNotificationToggle()"
+              color="primary">
+            </mat-slide-toggle>
+          </div>
+
+          <mat-divider></mat-divider>
+
+          <div class="setting-item disabled">
+            <div class="setting-info">
+              <mat-icon>language</mat-icon>
+              <div>
+                <div class="setting-label">Мова інтерфейсу</div>
+                <div class="setting-description">Українська (змінити мову буде доступно пізніше)</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </mat-card>
+
+      <!-- Data Management Card -->
+      <mat-card class="danger-zone-card">
+        <h3 class="card-title">
+          <mat-icon>data_usage</mat-icon>
+          Керування даними
+        </h3>
+        <mat-divider></mat-divider>
+
+        <div class="danger-actions">
+          <button 
+            mat-stroked-button 
+            class="export-button"
+            [disabled]="exporting()"
+            (click)="exportData()">
+            @if (exporting()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <mat-icon>download</mat-icon>
+            }
+            Експортувати мої дані
+          </button>
+
+          <button 
+            mat-stroked-button 
+            color="warn"
+            class="delete-button"
+            [disabled]="deleting()"
+            (click)="deleteAccount()">
+            @if (deleting()) {
+              <mat-spinner diameter="20"></mat-spinner>
+            } @else {
+              <mat-icon>delete_forever</mat-icon>
+            }
+            Видалити обліковий запис
+          </button>
+        </div>
+
+        <p class="danger-warning">
+          <mat-icon>warning</mat-icon>
+          Видалення облікового запису є незворотною дією. Всі ваші дані будуть безповоротно видалені.
+        </p>
+      </mat-card>
+    </div>
+  }
+</div>

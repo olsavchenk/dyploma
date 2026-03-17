@@ -1,0 +1,165 @@
+<div class="dashboard-container">
+  <!-- Header -->
+  <div class="dashboard-header">
+    <div class="welcome-section">
+      <h1 class="welcome-title">
+        Привіт, {{ user()?.displayName || 'Студент' }}! 👋
+      </h1>
+      <p class="welcome-subtitle">
+        Готові продовжити навчання?
+      </p>
+    </div>
+    
+    @if (!loading()) {
+      <button 
+        mat-icon-button 
+        class="refresh-button" 
+        (click)="onRefresh()"
+        matTooltip="Оновити">
+        <mat-icon>refresh</mat-icon>
+      </button>
+    }
+  </div>
+
+  <!-- Loading State -->
+  @if (loading()) {
+    <div class="loading-container">
+      <mat-spinner diameter="48"></mat-spinner>
+      <p>Завантаження...</p>
+    </div>
+  }
+
+  <!-- Error State -->
+  @else if (error()) {
+    <div class="error-container">
+      <mat-icon>error_outline</mat-icon>
+      <p>{{ error() }}</p>
+      <button mat-raised-button color="primary" (click)="onRefresh()">
+        Спробувати ще раз
+      </button>
+    </div>
+  }
+
+  <!-- Dashboard Content -->
+  @else {
+    <!-- Empty State -->
+    @if (!hasActivities()) {
+      <div class="empty-state">
+        <div class="empty-state-icon">🚀</div>
+        <h2>Розпочніть навчання!</h2>
+        <p>Виберіть предмет та розпочніть своє навчальне подорож.</p>
+        <button mat-raised-button color="primary" routerLink="/learn" class="start-button">
+          <mat-icon>play_arrow</mat-icon>
+          Розпочати навчання
+        </button>
+      </div>
+    }
+
+    <!-- Main Content -->
+    @else {
+      <div class="dashboard-content">
+        <!-- First Task of Day Bonus -->
+        @if (stats()) {
+          <app-first-task-bonus [isCompleted]="stats()!.firstTaskOfDayCompleted" />
+        }
+
+        <!-- Gamification Section -->
+        @if (stats()) {
+          <div class="gamification-grid">
+            <app-streak-widget 
+              [currentStreak]="stats()!.currentStreak"
+              [longestStreak]="stats()!.longestStreak" />
+            
+            <app-xp-bar 
+              [currentXp]="stats()!.totalXp"
+              [currentLevel]="stats()!.currentLevel"
+              [xpToNextLevel]="stats()!.xpToNextLevel"
+              [xpProgress]="stats()!.xpProgress" />
+          </div>
+        }
+
+        <!-- Continue Learning Section -->
+        @if (continueLearning().length > 0) {
+          <section class="dashboard-section">
+            <div class="section-header">
+              <h2 class="section-title">
+                <mat-icon>school</mat-icon>
+                Продовжити навчання
+              </h2>
+              <a mat-button routerLink="/learn" class="section-link">
+                Переглянути все
+                <mat-icon>arrow_forward</mat-icon>
+              </a>
+            </div>
+            
+            <div class="topics-grid">
+              @for (topic of continueLearning(); track topic.topicId) {
+                <app-topic-card [topic]="topic" />
+              }
+            </div>
+          </section>
+        }
+
+        <!-- Two Column Layout for Leaderboard and Quick Stats -->
+        <div class="two-column-layout">
+          <!-- Leaderboard Preview -->
+          @if (leaderboard()) {
+            <div class="column">
+              <app-leaderboard-preview [preview]="leaderboard()" />
+            </div>
+          }
+
+          <!-- Quick Actions / Stats -->
+          <div class="column">
+            <div class="quick-actions-card">
+              <h3 class="quick-actions-title">Швидкі дії</h3>
+              
+              <div class="quick-actions-grid">
+                <a routerLink="/learn" class="quick-action-item">
+                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);">
+                    <mat-icon>school</mat-icon>
+                  </div>
+                  <div class="quick-action-label">Вибрати тему</div>
+                </a>
+
+                <a routerLink="/profile" class="quick-action-item">
+                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);">
+                    <mat-icon>person</mat-icon>
+                  </div>
+                  <div class="quick-action-label">Профіль</div>
+                </a>
+
+                <a routerLink="/leaderboard" class="quick-action-item">
+                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);">
+                    <mat-icon>emoji_events</mat-icon>
+                  </div>
+                  <div class="quick-action-label">Рейтинг</div>
+                </a>
+
+                <a routerLink="/profile?tab=achievements" class="quick-action-item">
+                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
+                    <mat-icon>military_tech</mat-icon>
+                  </div>
+                  <div class="quick-action-label">Досягнення</div>
+                </a>
+              </div>
+
+              @if (stats()) {
+                <div class="stats-summary">
+                  <div class="stat-item">
+                    <div class="stat-label">Ліга</div>
+                    <div class="stat-value">{{ getLeagueLabel(stats()!.league) }}</div>
+                  </div>
+                  <div class="stat-item">
+                    <div class="stat-label">Заморозки</div>
+                    <div class="stat-value">{{ stats()!.streakFreezes }}</div>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>

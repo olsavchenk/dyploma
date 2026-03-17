@@ -1,0 +1,255 @@
+<div class="users-container">
+  <!-- Header -->
+  <div class="users-header">
+    <div class="header-content">
+      <h1>
+        <mat-icon>group</mat-icon>
+        Управління користувачами
+      </h1>
+      <p class="subtitle">Перегляд та редагування користувачів платформи</p>
+    </div>
+  </div>
+
+  <!-- Filters Card -->
+  <mat-card class="filters-card">
+    <mat-card-content>
+      <div class="filters-row">
+        <!-- Search -->
+        <mat-form-field appearance="outline" class="search-field">
+          <mat-label>Пошук</mat-label>
+          <input
+            matInput
+            [formControl]="searchControl"
+            placeholder="Email або ім'я..."
+          />
+          <mat-icon matPrefix>search</mat-icon>
+          <button
+            *ngIf="searchControl.value"
+            matSuffix
+            mat-icon-button
+            (click)="searchControl.setValue('')"
+          >
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+
+        <!-- Role Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Роль</mat-label>
+          <mat-select
+            [(ngModel)]="roleFilter"
+            (ngModelChange)="onRoleFilterChange()"
+          >
+            <mat-option [value]="undefined">Всі ролі</mat-option>
+            <mat-option *ngFor="let role of roles" [value]="role">
+              {{ getRoleLabel(role) }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Deleted Filter -->
+        <mat-form-field appearance="outline">
+          <mat-label>Статус</mat-label>
+          <mat-select
+            [(ngModel)]="deletedFilter"
+            (ngModelChange)="onDeletedFilterChange()"
+          >
+            <mat-option
+              *ngFor="let option of deletedOptions"
+              [value]="option.value"
+            >
+              {{ option.label }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <!-- Clear Filters -->
+        <button
+          mat-stroked-button
+          (click)="clearFilters()"
+          [disabled]="!hasActiveFilters()"
+        >
+          <mat-icon>filter_alt_off</mat-icon>
+          Очистити
+        </button>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Users Table Card -->
+  <mat-card class="table-card">
+    <mat-card-content>
+      <!-- Loading State -->
+      <div *ngIf="loading()" class="loading-container">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Завантаження користувачів...</p>
+      </div>
+
+      <!-- Table -->
+      <div *ngIf="!loading()" class="table-container">
+        <!-- Empty State -->
+        <div *ngIf="users().length === 0" class="empty-state">
+          <mat-icon>people_outline</mat-icon>
+          <h3>Користувачів не знайдено</h3>
+          <p *ngIf="hasActiveFilters()">
+            Спробуйте змінити фільтри пошуку
+          </p>
+          <p *ngIf="!hasActiveFilters()">
+            Користувачі з'являться тут після реєстрації
+          </p>
+        </div>
+
+        <!-- Data Table -->
+        <table
+          *ngIf="users().length > 0"
+          mat-table
+          [dataSource]="users()"
+          matSort
+          (matSortChange)="onSortChange($event)"
+          class="users-table"
+        >
+          <!-- Name Column -->
+          <ng-container matColumnDef="displayName">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Користувач
+            </th>
+            <td mat-cell *matCellDef="let user">
+              <div class="user-info">
+                <div class="user-avatar">
+                  <img
+                    *ngIf="user.avatarUrl"
+                    [src]="user.avatarUrl"
+                    [alt]="user.displayName"
+                  />
+                  <mat-icon *ngIf="!user.avatarUrl">account_circle</mat-icon>
+                </div>
+                <div class="user-details">
+                  <div class="user-name">
+                    {{ user.displayName }}
+                    <mat-icon
+                      *ngIf="user.isDeleted"
+                      class="deleted-icon"
+                      matTooltip="Акаунт видалено"
+                    >
+                      block
+                    </mat-icon>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Email Column -->
+          <ng-container matColumnDef="email">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+            <td mat-cell *matCellDef="let user">{{ user.email }}</td>
+          </ng-container>
+
+          <!-- Role Column -->
+          <ng-container matColumnDef="role">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Роль</th>
+            <td mat-cell *matCellDef="let user">
+              <mat-chip [color]="getRoleColor(user.role)" highlighted>
+                {{ getRoleLabel(user.role) }}
+              </mat-chip>
+            </td>
+          </ng-container>
+
+          <!-- Created At Column -->
+          <ng-container matColumnDef="createdAt">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>Реєстрація</th>
+            <td mat-cell *matCellDef="let user">
+              {{ formatDate(user.createdAt) }}
+            </td>
+          </ng-container>
+
+          <!-- Last Login Column -->
+          <ng-container matColumnDef="lastLoginAt">
+            <th mat-header-cell *matHeaderCellDef mat-sort-header>
+              Останній вхід
+            </th>
+            <td mat-cell *matCellDef="let user">
+              {{ formatDateTime(user.lastLoginAt) }}
+            </td>
+          </ng-container>
+
+          <!-- Stats Column -->
+          <ng-container matColumnDef="stats">
+            <th mat-header-cell *matHeaderCellDef>Статистика</th>
+            <td mat-cell *matCellDef="let user">
+              <div class="stats-cell">
+                <span
+                  class="stat-item"
+                  matTooltip="Рівень"
+                  *ngIf="user.role === 'Student'"
+                >
+                  <mat-icon>workspace_premium</mat-icon>
+                  {{ user.currentLevel }}
+                </span>
+                <span
+                  class="stat-item"
+                  matTooltip="XP"
+                  *ngIf="user.role === 'Student'"
+                >
+                  <mat-icon>stars</mat-icon>
+                  {{ user.totalXp.toLocaleString('uk-UA') }}
+                </span>
+                <span
+                  class="stat-item"
+                  matTooltip="Завдання"
+                  *ngIf="user.role === 'Student'"
+                >
+                  <mat-icon>assignment</mat-icon>
+                  {{ user.totalTasksAttempted }}
+                </span>
+                <span
+                  class="stat-item"
+                  matTooltip="Класи"
+                  *ngIf="user.role === 'Teacher'"
+                >
+                  <mat-icon>class</mat-icon>
+                  {{ user.totalClasses }}
+                </span>
+              </div>
+            </td>
+          </ng-container>
+
+          <!-- Actions Column -->
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Дії</th>
+            <td mat-cell *matCellDef="let user">
+              <button
+                mat-icon-button
+                [matMenuTriggerFor]="userMenu"
+                matTooltip="Дії"
+              >
+                <mat-icon>more_vert</mat-icon>
+              </button>
+              <mat-menu #userMenu="matMenu">
+                <button mat-menu-item (click)="openChangeRoleDialog(user)">
+                  <mat-icon>swap_horiz</mat-icon>
+                  <span>Змінити роль</span>
+                </button>
+              </mat-menu>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        </table>
+
+        <!-- Paginator -->
+        <mat-paginator
+          *ngIf="users().length > 0"
+          [length]="totalCount()"
+          [pageSize]="pageSize()"
+          [pageIndex]="page() - 1"
+          [pageSizeOptions]="[10, 20, 50, 100]"
+          (page)="onPageChange($event)"
+          showFirstLastButtons
+        >
+        </mat-paginator>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

@@ -1,0 +1,95 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app",
+      "installMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/offline.html",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/assets/**",
+          "/*.(svg|cur|jpg|jpeg|png|apng|webp|avif|gif|otf|ttf|woff|woff2)"
+        ]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-subjects-topics",
+      "urls": [
+        "/api/v1/subjects",
+        "/api/v1/subjects/*",
+        "/api/v1/topics/*"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 100,
+        "maxAge": "1h",
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-tasks",
+      "urls": [
+        "/api/v1/tasks/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 50,
+        "maxAge": "5m",
+        "timeout": "5s"
+      }
+    },
+    {
+      "name": "api-leaderboard",
+      "urls": [
+        "/api/v1/leaderboard",
+        "/api/v1/leaderboard/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 20,
+        "maxAge": "1m",
+        "timeout": "3s"
+      },
+      "cacheQueryOptions": {
+        "ignoreSearch": false
+      }
+    },
+    {
+      "name": "api-user-profile",
+      "urls": [
+        "/api/v1/users/me",
+        "/api/v1/gamification/**"
+      ],
+      "cacheConfig": {
+        "strategy": "freshness",
+        "maxSize": 30,
+        "maxAge": "5m",
+        "timeout": "5s"
+      }
+    }
+  ],
+  "navigationUrls": [
+    "/**",
+    "!/**/*.*",
+    "!/**/*__*",
+    "!/**/*__*/**"
+  ],
+  "navigationRequestStrategy": "freshness"
+}

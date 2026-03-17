@@ -1,0 +1,216 @@
+Plan: Stride — Gamified Educational Platform with AI-Generated Tasks
+Date: February 10, 2026
+
+Overview
+Stride is a Ukrainian-first, all-ages gamified educational platform that uses a proprietary Adaptive AI Service to generate and dynamically adjust task difficulty based on each student's performance, streaks, and learning state. Built on .NET 10 / Angular 20 / PostgreSQL with free/open-source tooling. The platform fills the #1 gap in the Ukrainian EdTech market — no existing Ukrainian platform combines gamification with AI-powered adaptive learning.
+
+1. Competitive Analysis — Best Practices to Adopt
+
+Global Leaders
+- Duolingo
+  - Best: gamification (streaks, XP, leagues, hearts), habit loops, push notifications, viral mascot
+  - Adopt: streak system, XP, tiered leaderboards, loss aversion (hearts/lives)
+- Khan Academy (Khanmigo)
+  - Best: AI Socratic tutoring — never gives answers, guides through questions
+  - Adopt: AI tutor that teaches how to think, not just answers
+- Brilliant.org
+  - Best: AI-generated interactive puzzles at scale, learn-by-doing visual pedagogy
+  - Adopt: AI content generation pipeline (AI generates tasks, humans design learning goals)
+- Quizlet
+  - Best: AI study tools (notes to flashcards, practice tests, homework help)
+  - Adopt: upload notes/PDF to generate study materials
+- Kahoot!
+  - Best: live multiplayer quiz competitions, game show energy
+  - Adopt: real-time group challenges, competitive quiz mode
+- Coursera
+  - Best: prestige certificates, career-oriented paths
+  - Adopt: verified certificates with employer recognition
+
+Ukrainian Market (Gap)
+- Prometheus: no gamification, no AI
+- EdEra: no gamification, no AI, no mobile-first consumer platform
+
+Key Insight
+- No Ukrainian platform combines gamification plus AI. This is the main market gap.
+
+2. Feature Lists
+
+MUST HAVE (MVP)
+
+A) Adaptive AI Service (Custom, Proprietary) — Core Differentiator
+- Custom .NET 10 service for task generation and difficulty calibration
+- Student performance model tracks: accuracy rate, response time, streak length, topic mastery, session frequency, historical difficulty curve
+- Difficulty engine calculates a real-time Difficulty Level (1-100) per student per topic using:
+  - Rolling accuracy over last N tasks
+  - Current streak multiplier (winning streak increases difficulty, losing streak decreases)
+  - Time-decay factor (long absence slightly regresses difficulty)
+  - Topic-specific mastery vs global mastery weighting
+- Task generation pipeline:
+  1) AI generates task templates per topic/difficulty band via LLM
+  2) Parameterized templates filled with dynamic values
+  3) Human review queue for new template types
+  4) Cached task pools per difficulty band for instant delivery
+- Adaptive flow:
+  - Student answers -> evaluate -> update student model -> select next task at target difficulty
+- Fallback: pre-authored task banks where AI quality is insufficient
+
+B) Gamification Core
+- Daily streaks with streak freeze and repair
+- XP per task (scaled by difficulty)
+- Levels and skill mastery tree
+- Achievement badges
+- Weekly leaderboards (Bronze -> Silver -> Gold -> Platinum -> Diamond)
+- Progress visualization per subject/topic
+
+C) Learning Content Structure
+- Subject-based catalog aligned with Ukrainian curriculum
+- Bite-sized lessons (5-10 minutes)
+- Structured learning paths per subject and grade level
+- NMT (NMT) exam preparation tracks
+- MVP subjects: Mathematics, Ukrainian Language, History of Ukraine, English
+- Task types: multiple choice, fill-in-the-blank, matching, ordering, short answer, drag-and-drop, true/false
+
+D) User System & Roles
+- Registration/login: email, Google, Apple
+- Roles: Student, Teacher, Admin
+- Student profile: avatar, stats, streak, XP, badges
+- Teacher dashboard: classes, task assignments, student analytics
+- Admin panel: content management, user management, analytics, AI monitoring
+
+E) Ukrainian Language & Localization
+- Full Ukrainian UI and content
+- i18n-ready architecture for future languages
+- Curriculum alignment with Ukrainian education standards
+
+F) Mobile-First PWA
+- Angular 20 PWA with offline cached lessons
+- Responsive design for mobile, tablet, desktop
+- Push notifications (streaks, challenges, league updates)
+- Installable on home screen
+
+G) Core Infrastructure
+- .NET 10 backend with Clean Architecture
+- PostgreSQL database with EF Core
+- Redis for caching (leaderboards, task pools)
+- Identity via ASP.NET Identity or Keycloak
+- CI/CD with GitHub Actions
+- Logging/monitoring with Seq or ELK stack
+- Admin analytics dashboard
+
+CAN HAVE (Post-MVP / Phases)
+
+Phase 2 — Enhanced Engagement
+- Hearts/lives system
+- In-app currency (coins)
+- Daily/weekly challenges
+- Avatar customization
+- Real-time multiplayer quiz battles (Kahoot-style)
+
+Phase 3 — Advanced AI
+- AI Tutor chatbot (Socratic method)
+- Upload notes/PDF -> AI flashcards, summaries, practice tests
+- AI-generated personalized study plans
+- AI-powered essay feedback
+- Voice interaction for language subjects
+
+Phase 4 — Social & Community
+- Friend system and activity feeds
+- Study groups and class rooms
+- 1v1 peer quiz duels
+- Community-created quizzes and flashcards
+- Parent dashboard
+- School/class leaderboards
+
+Phase 5 — Content Expansion
+- Additional subjects: Physics, Chemistry, Biology, Geography, Computer Science
+- University-level content
+- Professional skills tracks
+- Interactive simulations (labs, timelines)
+- Video mini-lessons (supplementary)
+
+Phase 6 — Platform & Business
+- Native iOS and Android apps
+- Freemium monetization (core free, premium AI features)
+- Family plan and B2B licensing
+- Verified certificates with QR validation
+- Employer/university partnerships
+
+3. Tech Stack (Mostly Free)
+
+Frontend
+- Angular 20, PWA
+- Angular Material or Tailwind CSS
+
+Backend
+- .NET 10 (ASP.NET Core)
+- Clean Architecture, MediatR
+
+Database
+- PostgreSQL 17+ (EF Core)
+
+Cache
+- Redis or Valkey
+
+Auth
+- ASP.NET Identity + JWT, or Keycloak
+
+AI/LLM
+- Self-hosted Ollama + Llama 3 / Mistral (free)
+- Optional OpenAI API fallback for quality
+
+Real-time
+- SignalR (WebSockets)
+
+Search
+- Meilisearch (open-source)
+
+Storage
+- MinIO (self-hosted) or Cloudflare R2
+
+CI/CD
+- GitHub Actions (free or self-hosted runners)
+
+Hosting
+- Linux VPS (Hetzner) or Docker Compose
+
+Monitoring
+- Seq (free single user) or Grafana + Loki
+
+Containerization
+- Docker + Docker Compose (dev), optional K8s later
+
+4. Adaptive AI Service — Technical Design
+
+Flow
+- Student completes task
+- Evaluate answer (correctness, time, hints)
+- Update student performance model
+- Calculate target difficulty level
+- Select or generate next task at target difficulty
+- Serve to student
+
+Difficulty Algorithm Principles
+- Winning streak (3+ correct) -> difficulty increases 5-10 per answer
+- Losing streak (2+ wrong) -> difficulty decreases 10-15 per answer
+- Long absence (>7 days) -> difficulty regresses 10-20% toward baseline
+- Flow zone targeting: aim for 70-80% success rate
+- Per-topic independence: student can be high in one topic and low in another
+
+5. Verification & Quality
+
+Testing
+- Unit tests: xUnit for .NET, Jest/Karma for Angular
+- Integration tests: Adaptive AI pipeline end-to-end
+- Load testing: k6
+- AI quality testing: correctness, difficulty calibration, Ukrainian language quality
+- Manual QA: educator review for AI-generated content
+- A/B testing: engagement metrics (streak retention, DAU, session length)
+
+6. Decisions (Confirmed)
+- Name: Stride
+- Target: all ages
+- Stack: .NET 10 + Angular 20 + PostgreSQL
+- AI approach: self-hosted open-source LLM, parameterized templates, human review
+- Architecture: modular monolith initially, split later if needed
+- MVP subjects: Mathematics, Ukrainian Language, History of Ukraine, English
+- Core differentiator: custom Adaptive AI Service that adjusts difficulty per student

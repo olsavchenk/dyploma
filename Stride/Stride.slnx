@@ -1,0 +1,15 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Stride.Api/Stride.Api.csproj" />
+    <Project Path="src/Stride.Core/Stride.Core.csproj" />
+    <Project Path="src/Stride.DataAccess/Stride.DataAccess.csproj" />
+    <Project Path="src/Stride.Services/Stride.Services.csproj" />
+    <Project Path="src/Stride.Adaptive/Stride.Adaptive.csproj" />
+    <Project Path="src/Stride.Adaptive.Api/Stride.Adaptive.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Stride.Api.Tests/Stride.Api.Tests.csproj" />
+    <Project Path="tests/Stride.Services.Tests/Stride.Services.Tests.csproj" />
+    <Project Path="tests/Stride.Adaptive.Tests/Stride.Adaptive.Tests.csproj" />
+  </Folder>
+</Solution>

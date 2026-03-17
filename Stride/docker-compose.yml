@@ -1,0 +1,196 @@
+version: '3.8'
+
+services:
+  # API Service
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stride-api
+    ports:
+      - "5000:5000"
+      - "5001:5001"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5000
+      - Development__UseInMemoryDatabase=false
+      - Development__SkipInfrastructureInitialization=false
+      - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=stride;Username=postgres;Password=postgres
+      - ConnectionStrings__MongoDB=mongodb://mongodb:27017
+      - MongoDB__ConnectionString=mongodb://mongodb:27017
+      - MongoDB__DatabaseName=stride
+      - Valkey__ConnectionString=valkey:6379
+      - MinIO__Endpoint=minio:9000
+      - MinIO__AccessKey=minioadmin
+      - MinIO__SecretKey=minioadmin
+      - MinIO__UseSSL=false
+      - Meilisearch__Url=http://meilisearch:7700
+      - Meilisearch__MasterKey=masterKey
+      - AIProvider__Gemini__ApiKey=${GEMINI_API_KEY:-your-gemini-api-key-here}
+      - AIProvider__Gemini__Model=gemini-3-flash-preview
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    networks:
+      - stride-network
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Adaptive ML API Service
+  adaptive-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.adaptive
+    container_name: stride-adaptive-api
+    ports:
+      - "5010:5010"
+      - "5011:5011"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:5010
+      - Development__UseInMemoryDatabase=false
+      - Development__SkipInfrastructureInitialization=false
+      - ConnectionStrings__PostgreSQL=Host=postgres;Port=5432;Database=stride;Username=postgres;Password=postgres
+      - MongoDb__ConnectionString=mongodb://mongodb:27017
+      - MongoDb__DatabaseName=stride
+      - Valkey__ConnectionString=valkey:6379,abortConnect=false
+      - DifficultyEngine__ModelFilePath=MLModels/difficulty_model.zip
+      - ModelTraining__RetrainingIntervalHours=168
+      - AIProvider__Gemini__ApiKey=${GEMINI_API_KEY:-your-gemini-api-key-here}
+      - AIProvider__Gemini__Model=gemini-3-flash-preview
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+    networks:
+      - stride-network
+    volumes:
+      - ./logs:/app/logs
+      - adaptive-models:/app/MLModels
+    restart: unless-stopped
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:17-alpine
+    container_name: stride-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: stride
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stride-network
+    restart: unless-stopped
+
+  # MongoDB Database
+  mongodb:
+    image: mongo:7
+    container_name: stride-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: stride
+    volumes:
+      - mongodb-data:/data/db
+      - mongodb-config:/data/configdb
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stride-network
+    restart: unless-stopped
+
+  # Valkey Cache (Redis-compatible)
+  valkey:
+    image: valkey/valkey:8
+    container_name: stride-valkey
+    ports:
+      - "6379:6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stride-network
+    restart: unless-stopped
+
+  # MinIO Object Storage
+  minio:
+    image: minio/minio:latest
+    container_name: stride-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stride-network
+    restart: unless-stopped
+
+  # Meilisearch Search Engine
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: stride-meilisearch
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: masterKey
+      MEILI_ENV: development
+    volumes:
+      - meilisearch-data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - stride-network
+    restart: unless-stopped
+
+networks:
+  stride-network:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  mongodb-data:
+  mongodb-config:
+  valkey-data:
+  minio-data:
+  meilisearch-data:
+  adaptive-models:

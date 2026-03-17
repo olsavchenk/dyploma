@@ -1,0 +1,31 @@
+<div class="app-layout">
+  <app-header
+    [userStats]="userStats()"
+    [notificationCount]="notificationCount()"
+    (menuToggle)="onMenuToggle()"
+  ></app-header>
+
+  <mat-sidenav-container class="sidenav-container" autosize>
+    <!-- Desktop Sidenav -->
+    <mat-sidenav
+      #sidenav
+      class="app-sidenav"
+      [mode]="sidenavMode()"
+      [opened]="sidenavOpened()"
+      [fixedInViewport]="false"
+      [fixedTopGap]="64"
+    >
+      <app-sidenav></app-sidenav>
+    </mat-sidenav>
+
+    <!-- Main Content -->
+    <mat-sidenav-content class="main-content">
+      <div class="content-wrapper" (click)="onSidenavClose()">
+        <router-outlet></router-outlet>
+      </div>
+
+      <!-- Mobile Bottom Nav -->
+      <app-bottom-nav></app-bottom-nav>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</div>

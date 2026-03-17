@@ -1,0 +1,78 @@
+:host {
+  display: block;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: white;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  height: 64px;
+  padding: 0.5rem 0;
+  max-width: 100%;
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  flex: 1;
+  max-width: 80px;
+  text-decoration: none;
+  color: rgba(0, 0, 0, 0.6);
+  transition: all 0.2s;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+
+  &:hover {
+    color: rgba(0, 0, 0, 0.87);
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+
+  &.active {
+    color: var(--primary-color, #1976d2);
+
+    mat-icon {
+      color: var(--primary-color, #1976d2);
+    }
+
+    .nav-label {
+      font-weight: 600;
+    }
+  }
+
+  mat-icon {
+    font-size: 24px;
+    width: 24px;
+    height: 24px;
+    transition: color 0.2s;
+  }
+
+  .nav-label {
+    font-size: 0.625rem;
+    line-height: 1;
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+}
+
+// Add safe area for devices with notches
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  :host {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

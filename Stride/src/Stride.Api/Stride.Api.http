@@ -1,0 +1,55 @@
+@Stride.Api_HostAddress = http://localhost:5297
+@accessToken = your-access-token-here
+
+# Health Check
+GET {{Stride.Api_HostAddress}}/health
+Accept: application/json
+
+###
+
+# ========================================
+# Class Management Endpoints (US-021)
+# ========================================
+
+# 1. Create a new class (Teacher only)
+# @name createClass
+POST {{Stride.Api_HostAddress}}/api/v1/classes
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "name": "Mathematics Grade 5A",
+  "gradeLevel": 5
+}
+
+###
+
+# 2. Get all classes for current teacher
+GET {{Stride.Api_HostAddress}}/api/v1/classes
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 3. Get class by ID
+@classId = put-class-id-here
+GET {{Stride.Api_HostAddress}}/api/v1/classes/{{classId}}
+Authorization: Bearer {{accessToken}}
+
+###
+
+# 4. Join class with join code (Student only)
+POST {{Stride.Api_HostAddress}}/api/v1/classes/join
+Content-Type: application/json
+Authorization: Bearer {{accessToken}}
+
+{
+  "joinCode": "ABC123"
+}
+
+###
+
+# 5. Get students in a class (Teacher only)
+GET {{Stride.Api_HostAddress}}/api/v1/classes/{{classId}}/students
+Authorization: Bearer {{accessToken}}
+
+###

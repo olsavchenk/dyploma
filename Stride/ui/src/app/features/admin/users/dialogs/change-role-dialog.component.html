@@ -1,0 +1,44 @@
+<h2 mat-dialog-title>Зміна ролі користувача</h2>
+
+<mat-dialog-content>
+  <p class="user-name">
+    <strong>{{ data.displayName }}</strong>
+  </p>
+
+  <form [formGroup]="form" (ngSubmit)="onSubmit()">
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Нова роль</mat-label>
+      <mat-select formControlName="role" [disabled]="submitting()">
+        <mat-option *ngFor="let role of roles" [value]="role.value">
+          <div class="role-option">
+            <div class="role-label">{{ role.label }}</div>
+            <div class="role-description">{{ role.description }}</div>
+          </div>
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div class="warning-message">
+      <mat-icon>warning</mat-icon>
+      <div>
+        <strong>Увага!</strong> Зміна ролі створить відповідний профіль, якщо він
+        не існує. Користувач отримає доступ до функцій нової ролі.
+      </div>
+    </div>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="submitting()">
+    Скасувати
+  </button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="onSubmit()"
+    [disabled]="form.invalid || submitting()"
+  >
+    <mat-spinner *ngIf="submitting()" diameter="20"></mat-spinner>
+    <span *ngIf="!submitting()">Змінити роль</span>
+  </button>
+</mat-dialog-actions>

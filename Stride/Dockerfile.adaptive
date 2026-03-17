@@ -1,0 +1,62 @@
+# Build stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /src
+
+# Copy solution file
+COPY Stride.slnx .
+
+# Copy project files
+COPY src/Stride.Adaptive.Api/Stride.Adaptive.Api.csproj src/Stride.Adaptive.Api/
+COPY src/Stride.Adaptive/Stride.Adaptive.csproj src/Stride.Adaptive/
+COPY src/Stride.Core/Stride.Core.csproj src/Stride.Core/
+COPY src/Stride.DataAccess/Stride.DataAccess.csproj src/Stride.DataAccess/
+
+# Restore dependencies
+RUN dotnet restore src/Stride.Adaptive.Api/Stride.Adaptive.Api.csproj
+
+# Copy everything else
+COPY src/ src/
+
+# Build
+WORKDIR /src/src/Stride.Adaptive.Api
+RUN dotnet build Stride.Adaptive.Api.csproj -c Release -o /app/build
+
+# Publish stage
+FROM build AS publish
+RUN dotnet publish Stride.Adaptive.Api.csproj -c Release -o /app/publish /p:UseAppHost=false
+
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+
+# Create non-root user
+RUN groupadd -r strideapp && useradd -r -g strideapp strideapp
+
+# Create directories
+RUN mkdir -p /app/logs && mkdir -p /app/MLModels && \
+    chown -R strideapp:strideapp /app/logs && \
+    chown -R strideapp:strideapp /app/MLModels
+
+# Copy published app
+COPY --from=publish /app/publish .
+
+# Change ownership
+RUN chown -R strideapp:strideapp /app
+
+# Switch to non-root user
+USER strideapp
+
+# Expose ports
+EXPOSE 5010
+EXPOSE 5011
+
+# Set environment variables
+ENV ASPNETCORE_URLS=http://+:5010;https://+:5011
+ENV ASPNETCORE_ENVIRONMENT=Production
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:5010/health || exit 1
+
+# Start application
+ENTRYPOINT ["dotnet", "Stride.Adaptive.Api.dll"]
