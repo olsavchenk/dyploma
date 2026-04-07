@@ -18,6 +18,18 @@ export const adminRoutes: Routes = [
         path: 'users',
         loadComponent: () => import('./users/users.component').then((m) => m.UsersComponent),
       },
+      {
+        path: 'subjects',
+        loadComponent: () => import('./subjects/admin-subjects.component').then((m) => m.AdminSubjectsComponent),
+      },
+      {
+        path: 'topics',
+        loadComponent: () => import('./topics/admin-topics.component').then((m) => m.AdminTopicsComponent),
+      },
+      {
+        path: 'achievements',
+        loadComponent: () => import('./achievements/admin-achievements.component').then((m) => m.AdminAchievementsComponent),
+      },
     ],
   },
 ];

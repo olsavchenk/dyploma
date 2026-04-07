@@ -22,6 +22,8 @@ import { XpBarComponent } from './widgets/xp-bar.component';
 import { TopicCardComponent } from './widgets/topic-card.component';
 import { LeaderboardPreviewComponent } from './widgets/leaderboard-preview.component';
 import { FirstTaskBonusComponent } from './widgets/first-task-bonus.component';
+import { DailyGoalComponent } from './widgets/daily-goal.component';
+import { RecentAchievementsComponent } from './widgets/recent-achievements.component';
 
 @Component({
   selector: 'app-dashboard',
@@ -37,6 +39,8 @@ import { FirstTaskBonusComponent } from './widgets/first-task-bonus.component';
     TopicCardComponent,
     LeaderboardPreviewComponent,
     FirstTaskBonusComponent,
+    DailyGoalComponent,
+    RecentAchievementsComponent,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.scss',
@@ -58,6 +62,20 @@ export class DashboardComponent implements OnInit {
   // Computed values
   protected readonly user = this.authService.user;
   protected readonly hasActivities = signal<boolean>(false);
+  protected readonly today = new Date();
+
+  protected get greeting(): string {
+    const h = new Date().getHours();
+    if (h >= 5 && h < 12) return 'Доброго ранку';
+    if (h < 18) return 'Добрий день';
+    return 'Доброго вечора';
+  }
+
+  protected get todayLabel(): string {
+    return new Date().toLocaleDateString('uk-UA', {
+      weekday: 'long', day: 'numeric', month: 'long',
+    });
+  }
 
   ngOnInit(): void {
     this.loadDashboardData();

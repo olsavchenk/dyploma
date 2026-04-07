@@ -7,29 +7,31 @@
         <p class="page-subtitle">Твої класи та предмети</p>
       </div>
       @if (!loading() && classes().length > 0) {
-        <button mat-raised-button color="primary" class="join-btn" (click)="openJoinDialog()">
-          <mat-icon>add</mat-icon>
+        <button class="btn-join" (click)="openJoinDialog()">
+          <span class="btn-join-icon">+</span>
           Приєднатися до класу
         </button>
       }
     </div>
   </div>
 
-  <!-- Join class panel (inline, shown via button or when no classes) -->
+  <!-- Join class panel -->
   @if (showJoinForm) {
-    <mat-card class="join-panel" [class.join-panel--empty]="classes().length === 0">
+    <div class="join-panel" [class.join-panel--empty]="classes().length === 0">
       @if (classes().length === 0) {
         <div class="no-classes-hero">
-          <mat-icon class="no-classes-icon">school</mat-icon>
+          <div class="no-classes-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <circle cx="24" cy="24" r="22" stroke="var(--blue-600)" stroke-width="2" fill="none" opacity="0.2"/>
+              <path d="M24 12v24M12 24h24" stroke="var(--blue-600)" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+          </div>
           <h2 class="no-classes-title">Ти ще не приєднався до жодного класу</h2>
           <p class="no-classes-text">Попроси свого вчителя надати тобі 6-значний код і вступи до класу</p>
         </div>
       }
-      <mat-card-content class="join-panel-content">
-        <p class="join-hint">
-          <mat-icon>vpn_key</mat-icon>
-          Введи 6-значний код, наданий вчителем
-        </p>
+      <div class="join-panel-content">
+        <p class="join-hint">Введи 6-значний код, наданий вчителем</p>
         <div class="join-form-row">
           <mat-form-field appearance="outline" class="join-code-field">
             <mat-label>Код класу</mat-label>
@@ -46,82 +48,57 @@
             }
           </mat-form-field>
           <button
-            mat-raised-button
-            color="primary"
-            class="join-submit-btn"
+            class="btn-primary"
             [disabled]="joining() || joinCodeControl.invalid"
             (click)="onJoinClass()">
             @if (joining()) {
-              <mat-progress-spinner diameter="20" mode="indeterminate"></mat-progress-spinner>
+              <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
             } @else {
-              <mat-icon>login</mat-icon>
               Приєднатися
             }
           </button>
           @if (classes().length > 0) {
-            <button mat-button (click)="closeJoinDialog()">
-              Скасувати
-            </button>
+            <button class="btn-ghost" (click)="closeJoinDialog()">Скасувати</button>
           }
         </div>
         @if (joinError()) {
-          <p class="join-message join-message--error">
-            <mat-icon>error_outline</mat-icon>
-            {{ joinError() }}
-          </p>
+          <p class="join-message join-message--error">{{ joinError() }}</p>
         }
         @if (joinSuccess()) {
-          <p class="join-message join-message--success">
-            <mat-icon>check_circle</mat-icon>
-            {{ joinSuccess() }}
-          </p>
+          <p class="join-message join-message--success">{{ joinSuccess() }}</p>
         }
-      </mat-card-content>
-    </mat-card>
+      </div>
+    </div>
   }
 
-  <!-- Search bar (only if there are classes) -->
+  <!-- Grade filter chips -->
   @if (!loading() && !error() && classes().length > 0) {
-    <div class="search-container">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Пошук класів та предметів</mat-label>
-        <input
-          matInput
-          [formControl]="searchControl"
-          placeholder="Введіть назву..."
-          type="text"
-        />
-        <mat-icon matPrefix>search</mat-icon>
-        @if (searchControl.value) {
-          <button
-            mat-icon-button
-            matSuffix
-            (click)="searchControl.setValue('')"
-            aria-label="Очистити">
-            <mat-icon>close</mat-icon>
-          </button>
-        }
-      </mat-form-field>
+    <div class="filter-row">
+      @for (chip of gradeFilters; track chip.value) {
+        <button
+          class="filter-chip"
+          [class.filter-chip--active]="activeGradeFilter() === chip.value"
+          (click)="setGradeFilter(chip.value)">
+          {{ chip.label }}
+        </button>
+      }
     </div>
   }
 
   <!-- Loading state -->
   @if (loading()) {
     <div class="loading-container">
-      <mat-progress-spinner mode="indeterminate" diameter="48"></mat-progress-spinner>
+      <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
       <p class="loading-text">Завантаження класів...</p>
     </div>
   }
 
   <!-- Error state -->
   @if (error() && !loading()) {
-    <div class="error-container">
-      <mat-icon class="error-icon">error_outline</mat-icon>
-      <p class="error-text">{{ error() }}</p>
-      <button mat-raised-button color="primary" (click)="onRefresh()">
-        <mat-icon>refresh</mat-icon>
-        Спробувати знову
-      </button>
+    <div class="empty-state">
+      <div class="empty-icon">⚠️</div>
+      <p class="empty-text">{{ error() }}</p>
+      <button class="btn-primary" (click)="onRefresh()">Спробувати знову</button>
     </div>
   }
 
@@ -130,24 +107,18 @@
     <div class="classes-list">
       @for (cls of filteredClasses(); track cls.id) {
         <div class="class-section">
-          <!-- Class header -->
           <div class="class-header">
-            <div class="class-header-icon">
-              <mat-icon>class</mat-icon>
-            </div>
+            <div class="class-header-dot"></div>
             <div class="class-header-info">
               <h2 class="class-name">{{ cls.name }}</h2>
-              <span class="class-meta">
-                {{ cls.gradeLevel }} клас &bull; {{ cls.teacherName }}
-              </span>
+              <span class="class-meta">{{ cls.gradeLevel }} клас &bull; {{ cls.teacherName }}</span>
             </div>
           </div>
 
-          <!-- Subjects grid for this class -->
           @if (cls.subjects.length > 0) {
             <div class="subjects-grid">
               @for (subject of cls.subjects; track subject.name) {
-                <mat-card
+                <div
                   class="subject-card"
                   [class.subject-card--no-id]="!subject.subjectId"
                   (click)="onSubjectClick(subject)"
@@ -155,76 +126,61 @@
                   tabindex="0"
                   (keydown.enter)="onSubjectClick(subject)"
                   (keydown.space)="onSubjectClick(subject)">
-                  <mat-card-header>
-                    <div class="subject-icon" mat-card-avatar>
-                      @if (subject.iconUrl) {
-                        <img [src]="subject.iconUrl" [alt]="subject.name" />
-                      } @else {
-                        <mat-icon>{{ getSubjectIcon(subject.name) }}</mat-icon>
-                      }
+
+                  <!-- Mastery ring -->
+                  <div class="subject-ring">
+                    <svg width="48" height="48" viewBox="0 0 48 48">
+                      <circle cx="24" cy="24" r="20" fill="none" stroke="var(--color-rule)" stroke-width="3"/>
+                      <circle
+                        cx="24" cy="24" r="20"
+                        fill="none"
+                        stroke="var(--blue-600)"
+                        stroke-width="3"
+                        stroke-linecap="round"
+                        stroke-dasharray="{{ getMasteryDash(subject.progressPercentage) }} 125.66"
+                        transform="rotate(-90 24 24)"
+                      />
+                    </svg>
+                    <div class="subject-ring-inner">
+                      <mat-icon class="subject-ring-icon">{{ getSubjectIcon(subject.name) }}</mat-icon>
                     </div>
-                    <mat-card-title>{{ subject.name }}</mat-card-title>
-                    <mat-card-subtitle>
+                  </div>
+
+                  <div class="subject-card-body">
+                    <h3 class="subject-card-title">{{ subject.name }}</h3>
+                    <p class="subject-card-meta">
                       {{ subject.assignmentCount }} {{ subject.assignmentCount === 1 ? 'завдання' : 'завдань' }}
-                    </mat-card-subtitle>
-                  </mat-card-header>
-
-                  <mat-card-content>
-                    @if (subject.description) {
-                      <p class="subject-description">{{ subject.description }}</p>
-                    }
-
+                    </p>
                     @if (subject.progressPercentage > 0) {
-                      <div class="progress-section">
-                        <div class="progress-header">
-                          <span class="progress-label">Прогрес</span>
-                          <span class="progress-value">{{ subject.progressPercentage }}%</span>
-                        </div>
-                        <mat-progress-bar
-                          mode="determinate"
-                          [value]="subject.progressPercentage"
-                          [color]="getProgressColor(subject.progressPercentage)">
-                        </mat-progress-bar>
-                      </div>
-                    } @else {
-                      <div class="start-badge">
-                        <mat-icon>play_arrow</mat-icon>
-                        <span>Почати вивчення</span>
-                      </div>
+                      <span class="mastery-pct">{{ subject.progressPercentage }}% освоєно</span>
                     }
-                  </mat-card-content>
+                  </div>
 
                   @if (subject.subjectId) {
-                    <mat-card-actions>
-                      <button mat-button color="primary">
-                        Переглянути теми
-                        <mat-icon>arrow_forward</mat-icon>
-                      </button>
-                    </mat-card-actions>
+                    <button class="btn-start" (click)="onSubjectClick(subject); $event.stopPropagation()">
+                      Почати
+                    </button>
                   }
-                </mat-card>
+                </div>
               }
             </div>
           } @else {
-            <p class="no-subjects-text">
-              <mat-icon>pending</mat-icon>
-              Поки що предметів немає — зачекай, поки вчитель додасть завдання.
-            </p>
+            <div class="empty-state">
+              <div class="empty-icon">📚</div>
+              <p class="empty-text">Предмети ще не додано</p>
+            </div>
           }
         </div>
       }
     </div>
   }
 
-  <!-- No search results (but has classes) -->
-  @if (!loading() && !error() && classes().length > 0 && filteredClasses().length === 0) {
+  <!-- No classes and no join form -->
+  @if (!loading() && !error() && classes().length === 0 && !showJoinForm) {
     <div class="empty-state">
-      <mat-icon class="empty-icon">search_off</mat-icon>
-      <h3 class="empty-title">Нічого не знайдено</h3>
-      <p class="empty-text">Спробуй інший запит або очисти пошук</p>
-      <button mat-raised-button color="primary" (click)="searchControl.setValue('')">
-        Очистити пошук
-      </button>
+      <div class="empty-icon">🎓</div>
+      <h3 class="empty-title">Предмети ще не додано</h3>
+      <p class="empty-text">Приєднайся до класу, щоб побачити предмети</p>
     </div>
   }
 </div>

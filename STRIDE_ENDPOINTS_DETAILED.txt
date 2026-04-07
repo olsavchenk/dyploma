@@ -1,0 +1,580 @@
+STRIDE API DETAILED ENDPOINT REFERENCE WITH LINE NUMBERS
+Generated: 2026-04-07
+
+================================================================================
+STRIDE.API CONTROLLERS - DETAILED ENDPOINT LISTINGS
+================================================================================
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/AuthController.cs
+Base Route: /api/v1/auth
+
+Endpoints:
+  [HttpPost("register")]
+  Register(RegisterRequest) → IActionResult (201 Created: AuthResponse, 400 BadRequest)
+  
+  [HttpPost("login")]
+  Login(LoginRequest) → IActionResult (200 OK: AuthResponse, 401 Unauthorized)
+  
+  [HttpPost("refresh")]
+  RefreshToken() → IActionResult (200 OK: AuthResponse, 401 Unauthorized)
+  
+  [HttpPost("logout")]
+  Logout() → IActionResult (200 OK: { message })
+  
+  [HttpPost("google")]
+  GoogleLogin(GoogleLoginRequest) → IActionResult (200 OK: AuthResponse, 401 Unauthorized)
+  
+  [HttpPost("select-role")]
+  SelectRole(SelectRoleRequest) → IActionResult (200 OK: AuthResponse, 400 BadRequest)
+  
+  [HttpPost("forgot-password")]
+  ForgotPassword(ForgotPasswordRequest) → IActionResult (200 OK, 400 BadRequest)
+  
+  [HttpPost("reset-password")]
+  ResetPassword(ResetPasswordRequest) → IActionResult (200 OK, 400 BadRequest)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/TasksController.cs
+Base Route: /api/v1/tasks
+
+Endpoints:
+  [HttpGet("next")]
+  Query: topicId (required)
+  Returns: TaskDto (200 OK, 400 BadRequest, 401 Unauthorized)
+  
+  [HttpPost("{taskInstanceId}/submit")]
+  Body: { answer: string | string[] | MatchingPair[], responseTimeMs: int }
+  Returns: SubmitTaskResponse (200 OK, 400 BadRequest, 401 Unauthorized)
+  
+  [HttpGet("history")]
+  Query: page (default: 1), pageSize (default: 20)
+  Returns: { items: TaskAttempt[], totalCount: int, page: int, pageSize: int }
+  (200 OK, 401 Unauthorized)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/LeaderboardController.cs
+Base Route: /api/v1/leaderboard
+
+Endpoints:
+  [HttpGet]
+  Query: league (optional: Bronze, Silver, Gold, Platinum, Diamond)
+  Returns: GetLeaderboardResponse (200 OK, 400 BadRequest, 401 Unauthorized)
+  
+  [HttpGet("preview")]
+  Returns: LeaderboardPreviewResponse (200 OK, 401 Unauthorized)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/LearningController.cs
+Base Route: /api/v1/learning
+
+Endpoints:
+  [HttpGet("continue")]
+  Query: limit (default: 3)
+  Returns: List<ContinueLearningTopicDto> (200 OK, 401 Unauthorized)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/GamificationController.cs
+Base Route: /api/v1/gamification
+
+Endpoints:
+  [HttpGet("achievements")]
+  Returns: AchievementsResponse (200 OK, 401 Unauthorized)
+  
+  [HttpGet("stats")]
+  Returns: GamificationStatsDto (200 OK, 401 Unauthorized)
+  
+  [HttpPost("streak/freeze")]
+  Returns: void (200 OK, 401 Unauthorized)
+  
+  [HttpPost("streak/repair")]
+  Returns: void (200 OK, 401 Unauthorized)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/UsersController.cs
+Base Route: /api/v1/users
+
+Endpoints:
+  [HttpGet("me")]
+  Returns: UserProfile (200 OK, 401 Unauthorized)
+  
+  [HttpPut("me")]
+  Body: UserProfileUpdateRequest
+  Returns: UserProfile (200 OK, 400 BadRequest, 401 Unauthorized)
+  
+  [HttpPost("me/avatar")]
+  Body: FormData (Content-Type: multipart/form-data)
+  Returns: { avatarUrl: string } (200 OK, 400 BadRequest, 401 Unauthorized)
+  
+  [HttpGet("me/data-export")]
+  Returns: UserDataExport (200 OK, 401 Unauthorized)
+  
+  [HttpDelete("me")]
+  Returns: { message: string } (200 OK, 401 Unauthorized)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/ClassController.cs
+Base Route: /api/v1/classes
+Auth Policy: TeacherAccess, StudentAccess
+
+Endpoints:
+  [HttpGet]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: List<ClassDto> (200 OK, 400 BadRequest)
+  
+  [HttpGet("{classId}")]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: ClassDto (200 OK, 400 BadRequest, 404 NotFound)
+  
+  [HttpPost]
+  [Authorize(Policy = "TeacherAccess")]
+  Body: CreateClassRequest
+  Returns: ClassDto (201 Created, 400 BadRequest)
+  
+  [HttpPut("{classId}")]
+  [Authorize(Policy = "TeacherAccess")]
+  Body: UpdateClassRequest
+  Returns: ClassDto (200 OK, 400 BadRequest, 404 NotFound)
+  
+  [HttpDelete("{classId}")]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: void (200 OK, 400 BadRequest, 404 NotFound)
+  
+  [HttpGet("stats")]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: ClassQuickStatsDto (200 OK)
+  
+  [HttpPost("join")]
+  [Authorize(Policy = "StudentAccess")]
+  Body: { joinCode: string }
+  Returns: { message: string, classId: string } (200 OK, 400 BadRequest)
+  
+  [HttpGet("{classId}/students")]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: List<ClassMember> (200 OK, 404 NotFound)
+  
+  [HttpDelete("{classId}/students/{studentId}")]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: void (200 OK, 404 NotFound)
+  
+  [HttpGet("{classId}/analytics")]
+  [Authorize(Policy = "TeacherAccess")]
+  Returns: ClassAnalytics (200 OK, 404 NotFound)
+  
+  [HttpGet("my")]
+  [Authorize(Policy = "StudentAccess")]
+  Returns: List<StudentClass> (200 OK)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/SubjectsController.cs
+Base Route: /api/v1/subjects
+Auth: Not required
+
+Endpoints:
+  [HttpGet]
+  Returns: List<Subject> (200 OK)
+  
+  [HttpGet("{id}")]
+  Returns: Subject (200 OK, 404 NotFound)
+  
+  [HttpGet("{subjectId}/topics")]
+  Returns: List<Topic> (200 OK, 404 NotFound)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/TopicsController.cs
+Base Route: /api/v1/topics
+Auth: Not required
+
+Endpoints:
+  [HttpGet("{id}")]
+  Returns: Topic (200 OK, 404 NotFound)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/LearningPathsController.cs
+Base Route: /api/v1/learning-paths
+Auth: Required
+
+Endpoints:
+  [HttpGet]
+  Query: limit (optional)
+  Returns: List<LearningPath> (200 OK, 400 BadRequest, 401 Unauthorized)
+  
+  [HttpGet("{id}")]
+  Returns: { path: LearningPath, steps: LearningPathStep[] } (200 OK, 404 NotFound, 401 Unauthorized)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/AdminController.cs
+Base Route: /api/v1/admin
+Auth Policy: AdminAccess (Required)
+
+Endpoints:
+  [HttpGet("analytics/dashboard")]
+  Returns: AdminDashboard (200 OK, 403 Forbidden)
+  
+  [HttpGet("users")]
+  Query: page, pageSize, search (optional), role (optional)
+  Returns: PaginatedUsersResponse (200 OK, 400 BadRequest, 403 Forbidden)
+  
+  [HttpPut("users/{userId}/role")]
+  Body: { role: string }
+  Returns: { message: string } (200 OK, 400 BadRequest, 403 Forbidden)
+  
+  [HttpGet("ai/review-queue")]
+  Query: page, pageSize
+  Returns: PaginatedReviewQueueResponse (200 OK, 400 BadRequest, 403 Forbidden)
+  
+  [HttpPost("ai/review-queue/{templateId}/approve")]
+  Returns: { message: string } (200 OK, 403 Forbidden, 404 NotFound)
+  
+  [HttpPost("ai/review-queue/{templateId}/reject")]
+  Body: { reason: string }
+  Returns: { message: string } (200 OK, 403 Forbidden, 404 NotFound)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/AdminAchievementsController.cs
+Base Route: /api/v1/admin/achievements
+Auth Policy: AdminAccess (Required)
+Status: NOT INTEGRATED WITH FRONTEND
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/AdminSubjectsController.cs
+Base Route: /api/v1/admin/subjects
+Auth Policy: AdminAccess (Required)
+Status: NOT INTEGRATED WITH FRONTEND
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/AdminTopicsController.cs
+Base Route: /api/v1/admin/topics
+Auth Policy: AdminAccess (Required)
+Status: NOT INTEGRATED WITH FRONTEND
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Controllers/HealthController.cs
+Base Route: /api/v1/health
+Auth: Not required
+
+Endpoints:
+  [HttpGet("ping")]
+  Returns: { message: string } (200 OK)
+  
+  [HttpGet("error")]
+  Returns: 500 InternalServerError (for testing)
+  
+  [HttpGet("validation-error")]
+  Returns: 400 BadRequest (for testing)
+
+================================================================================
+SIGNALR HUBS - DETAILED SPECIFICATIONS
+================================================================================
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Hubs/NotificationHub.cs
+Route: /api/v1/hubs/notifications
+Require Auth: [Authorize]
+
+Connection Groups:
+- Format: user_{userId}
+- Added: OnConnectedAsync() - adds current user to group
+- Removed: OnDisconnectedAsync() - automatic cleanup
+
+Server Methods (Sent by Backend):
+  SendAsync("AchievementUnlocked", {
+    AchievementCode: string,
+    AchievementName: string,
+    Description: string,
+    IconUrl: string,
+    XpReward: int
+  })
+  
+  SendAsync("LevelUp", {
+    OldLevel: int,
+    NewLevel: int,
+    TotalXp: int,
+    NextLevelXp: int
+  })
+  
+  SendAsync("StreakReminder", {
+    CurrentStreak: int,
+    StreakFreezes: int,
+    Message: string
+  })
+  
+  SendAsync("Notification", {
+    Title: string,
+    Message: string,
+    Type: string
+  })
+
+Client Methods (Hub Server Methods):
+- None defined (hub is notification-only)
+
+---
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Hubs/LeaderboardHub.cs
+Route: /api/v1/hubs/leaderboard
+Require Auth: [Authorize]
+
+Connection Groups:
+- Format: league_{leagueName}
+- Added: Via JoinLeague(league) method call
+
+Server Methods (Sent by Backend):
+  SendAsync("LeaderboardUpdated", {
+    // Broadcast to entire league_{league} group
+    // Typically includes updated rankings
+  })
+  
+  SendAsync("RankChanged", {
+    // Sent to individual user
+    // Includes rank change notification
+  })
+
+Client Methods (Hub Server Methods):
+  JoinLeague(league: string)
+  - Adds client to league_{league} group
+  - Async, no return value
+  
+  LeaveLeague(league: string)
+  - Removes client from league_{league} group
+  - Async, no return value
+
+================================================================================
+FRONTEND SERVICES - METHOD SIGNATURES
+================================================================================
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/auth.service.ts
+
+  login(request: LoginRequest): Observable<AuthResponse>
+  register(request: RegisterRequest): Observable<AuthResponse>
+  googleLogin(request: GoogleLoginRequest): Observable<AuthResponse>
+  selectRole(request: SelectRoleRequest): Observable<AuthResponse>
+  forgotPassword(request: ForgotPasswordRequest): Observable<void>
+  resetPassword(request: ResetPasswordRequest): Observable<void>
+  refreshToken(): Observable<RefreshTokenResponse>
+  logout(): Observable<void>
+  
+  getToken(): string | null
+  isAuthenticated(): boolean (signal)
+  currentUser(): UserInfo | null (signal)
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/task.service.ts
+
+  getNextTask(topicId: string): Observable<Task>
+  submitTask(taskId: string, answer: string | string[] | MatchingPair[], responseTimeMs: number): Observable<TaskSubmitResponse>
+  getTaskHistory(page: number = 1, pageSize: number = 20): Observable<PaginatedResult<TaskAttempt>>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/leaderboard.service.ts
+
+  getLeaderboard(league?: string): Observable<LeaderboardResponse>
+  getLeaderboardPreview(): Observable<LeaderboardPreview>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/learning.service.ts
+
+  getMyClasses(): Observable<StudentClass[]>
+  joinClassByCode(joinCode: string): Observable<{ message: string, className: string }>
+  getSubjects(): Observable<Subject[]>
+  getSubjectById(id: string): Observable<Subject>
+  getTopicsBySubject(subjectId: string): Observable<Topic[]>
+  getTopicById(id: string): Observable<Topic>
+  getContinueTopics(limit?: number): Observable<ContinueLearningTopic[]>
+  getLearningPaths(limit?: number): Observable<LearningPath[]>
+  getLearningPathById(id: string): Observable<{ path: LearningPath, steps: LearningPathStep[] }>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/user.service.ts
+
+  getUserProfile(): Observable<UserProfile>
+  updateProfile(request: UserProfileUpdateRequest): Observable<UserProfile>
+  uploadAvatar(file: File): Observable<{ avatarUrl: string }>
+  exportUserData(): Observable<UserDataExport>
+  deleteAccount(): Observable<void>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/gamification.service.ts
+
+  getAchievements(): Observable<AchievementsResponse>
+  getStats(): Observable<GamificationStatsDto>
+  freezeStreak(): Observable<void>
+  repairStreak(): Observable<void>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/teacher.service.ts
+
+  getClassStats(): Observable<ClassQuickStats>
+  getMyClasses(): Observable<Class[]>
+  getClass(classId: string): Observable<Class>
+  createClass(request: CreateClassRequest): Observable<Class>
+  updateClass(classId: string, request: UpdateClassRequest): Observable<Class>
+  deleteClass(classId: string): Observable<void>
+  joinClass(joinCode: string): Observable<{ message: string, classId: string }>
+  getClassStudents(classId: string): Observable<ClassMember[]>
+  removeStudent(classId: string, studentId: string): Observable<void>
+  getClassAnalytics(classId: string): Observable<ClassAnalytics>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/admin.service.ts
+
+  getDashboardAnalytics(): Observable<AdminDashboard>
+  getUsers(page: number, pageSize: number, search?: string, role?: string): Observable<PaginatedUsersResponse>
+  changeUserRole(userId: string, role: string): Observable<{ message: string }>
+  getAIReviewQueue(page: number, pageSize: number): Observable<PaginatedReviewQueueResponse>
+  approveTemplate(templateId: string): Observable<{ message: string }>
+  rejectTemplate(templateId: string, reason: string): Observable<{ message: string }>
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/services/signalr.service.ts
+
+  async connect(): Promise<void>
+  async disconnect(): Promise<void>
+  async joinLeague(league: string): Promise<void>
+  async leaveLeague(league: string): Promise<void>
+  
+  onAchievementUnlocked(): Observable<AchievementUnlocked>
+  onLevelUp(): Observable<LevelUp>
+  onStreakReminder(): Observable<StreakReminder>
+  onNotification(): Observable<Notification>
+  onLeaderboardUpdated(): Observable<LeaderboardUpdatedEvent>
+  onRankChanged(): Observable<RankChangedEvent>
+  
+  connectionState(): Signal<ConnectionState>
+
+================================================================================
+HTTP INTERCEPTORS - DETAILED IMPLEMENTATION
+================================================================================
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/interceptors/auth.interceptor.ts
+
+Function: authInterceptor: HttpInterceptorFn
+
+Input:
+  - req: HttpRequest<any>
+  - next: HttpHandlerFn
+
+Process:
+  1. Get token from authService.getToken()
+  2. Skip token injection for auth endpoints (login, register, google, forgot-password, reset-password)
+  3. If token exists and not auth endpoint: Clone request and add Authorization header
+  4. Call next(authReq)
+  5. Catch HttpErrorResponse with status 401:
+     - Check if already refreshing (prevent duplicate calls)
+     - Check if error is from refresh endpoint itself
+     - Set isRefreshing = true
+     - Call authService.refreshToken()
+     - On success: Retry request with new token
+     - On failure: Logout user
+
+Output: Observable<HttpEvent<unknown>>
+
+Error Handling:
+  - 401 with token refresh → retry once
+  - 401 on refresh endpoint → logout
+  - Other errors → pass through
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/core/interceptors/logging.interceptor.ts
+
+Function: loggingInterceptor: HttpInterceptorFn
+
+Input:
+  - req: HttpRequest<any>
+  - next: HttpHandlerFn
+
+Process:
+  1. Start performance timer
+  2. Generate request ID (random UUID)
+  3. Check for existing X-Correlation-ID header
+  4. If missing: Clone request, add X-Correlation-ID header
+  5. Log request: method, URL, duration, body type
+  6. Call next(loggedReq)
+  7. On HttpResponse event:
+     - Calculate duration
+     - Capture X-Correlation-ID from response
+     - Log success: status code, duration, response type
+  8. On HttpErrorResponse:
+     - Calculate duration
+     - Capture X-Correlation-ID from error
+     - Log error: status code, error message, duration
+     - Create HttpError object with stack trace
+
+Output: Observable<HttpEvent<any>>
+
+Data Sanitization:
+  - Headers: Redacts Authorization, Password, Token
+  - Request logging: Logs method, URL, headers (sanitized)
+  - Error logging: Full context including correlation ID
+
+================================================================================
+CORS & AUTHENTICATION CONFIGURATION
+================================================================================
+
+File: /d/apps/dyploma/Stride/src/Stride.Api/Program.cs
+
+CORS Setup (lines ~50-57):
+  builder.Services.AddCors(options =>
+  {
+    options.AddDefaultPolicy(policy =>
+    {
+      policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+  });
+
+JWT Configuration:
+  - Middleware added: builder.Services.AddAuthenticationServices(builder.Configuration);
+  - Bearer token validation
+  - Refresh token in HTTP-only cookie
+
+SignalR Setup:
+  - builder.Services.AddSignalR();
+  - Hub routes: /api/v1/hubs/notifications, /api/v1/hubs/leaderboard
+
+---
+
+File: /d/apps/dyploma/Stride/ui/src/app/app.config.ts
+
+HTTP Client Configuration (line 54):
+  provideHttpClient(withInterceptors([loggingInterceptor, authInterceptor]))
+
+Order of Interceptors:
+  1. loggingInterceptor (first)
+     - Tracks timing
+     - Adds correlation ID
+     - Sanitizes logs
+  2. authInterceptor (second)
+     - Adds auth header
+     - Handles 401 refresh
+
+Token Storage:
+  - TOKEN_KEY = 'stride_access_token'
+  - USER_KEY = 'stride_user'
+  - Refresh token: HTTP-only cookie (no JS access)
+
+================================================================================
+END OF DETAILED REFERENCE
+================================================================================

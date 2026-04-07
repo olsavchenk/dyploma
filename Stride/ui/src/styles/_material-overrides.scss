@@ -1,0 +1,136 @@
+// ─── Material Component Overrides ────────────────────────────────────────────
+// Layered on top of the Material 3 theme to match Stride editorial style.
+
+// ── Buttons ──────────────────────────────────────────────────────────────────
+.mat-mdc-button,
+.mat-mdc-raised-button,
+.mat-mdc-unelevated-button,
+.mat-mdc-outlined-button {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  border-radius: var(--radius-sm) !important;
+  transition: box-shadow var(--transition-base), transform var(--transition-fast);
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+.mat-mdc-unelevated-button.mat-primary {
+  background-color: var(--brand) !important;
+
+  &:hover {
+    background-color: var(--blue-700) !important;
+    box-shadow: var(--shadow-card);
+  }
+}
+
+.mat-mdc-unelevated-button.mat-accent {
+  background-color: var(--sun-400) !important;
+  color: var(--color-ink) !important;
+
+  &:hover {
+    background-color: var(--sun-500) !important;
+  }
+}
+
+// ── Form Fields ───────────────────────────────────────────────────────────────
+.mat-mdc-form-field {
+  font-family: var(--font-sans);
+
+  .mat-mdc-text-field-wrapper {
+    border-radius: var(--radius-sm) !important;
+  }
+
+  &.mat-focused .mdc-notched-outline__leading,
+  &.mat-focused .mdc-notched-outline__notch,
+  &.mat-focused .mdc-notched-outline__trailing {
+    border-color: var(--brand) !important;
+    border-width: 2px !important;
+  }
+}
+
+.mat-mdc-notch-piece.mdc-notched-outline__notch {
+  border-right-style: none !important;
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+.mat-mdc-tab-group {
+  .mat-mdc-tab {
+    font-family: var(--font-sans);
+    font-weight: 600;
+  }
+
+  .mat-mdc-tab-header {
+    border-bottom: 1px solid var(--color-rule);
+  }
+
+  .mdc-tab-indicator__content--underline {
+    border-color: var(--sun-400) !important;
+    border-top-width: 3px !important;
+  }
+}
+
+// ── Snackbar ─────────────────────────────────────────────────────────────────
+.mat-mdc-snack-bar-container {
+  font-family: var(--font-sans);
+  border-radius: var(--radius-sm) !important;
+}
+
+.update-snackbar .mdc-snackbar__surface {
+  background-color: var(--brand) !important;
+}
+
+.error-snackbar .mdc-snackbar__surface {
+  background-color: var(--color-danger) !important;
+}
+
+.success-snackbar .mdc-snackbar__surface {
+  background-color: var(--color-success) !important;
+}
+
+// ── Dialog ────────────────────────────────────────────────────────────────────
+.mat-mdc-dialog-container {
+  --mdc-dialog-container-shape: var(--radius-lg) !important;
+
+  .mat-mdc-dialog-surface {
+    border-radius: var(--radius-lg) !important;
+    box-shadow: var(--shadow-float) !important;
+  }
+}
+
+// ── Cards ─────────────────────────────────────────────────────────────────────
+.mat-mdc-card {
+  border-radius: var(--radius-md) !important;
+  box-shadow: var(--shadow-card) !important;
+  border: 1px solid var(--color-rule);
+  font-family: var(--font-sans);
+}
+
+// ── Chips ────────────────────────────────────────────────────────────────────
+.mat-mdc-chip {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+// ── Progress bar ──────────────────────────────────────────────────────────────
+.mat-mdc-progress-bar {
+  --mdc-linear-progress-active-indicator-color: var(--sun-400);
+  --mdc-linear-progress-track-color: var(--color-rule);
+  border-radius: var(--radius-pill) !important;
+  overflow: hidden;
+}
+
+// ── Sidenav ───────────────────────────────────────────────────────────────────
+.mat-drawer {
+  font-family: var(--font-sans);
+}
+
+// ── Tooltip ───────────────────────────────────────────────────────────────────
+.mat-mdc-tooltip {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+}

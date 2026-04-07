@@ -1,0 +1,99 @@
+// ─── Stride Design Tokens ───────────────────────────────────────────────────
+// Single source of truth for all CSS custom properties.
+// Consumed by Tailwind, Material overrides, and component styles.
+
+:root {
+  // Brand Blue
+  --blue-50:  #EEF3FB;
+  --blue-100: #D6E2F4;
+  --blue-200: #A7BEE6;
+  --blue-300: #6D91D2;
+  --blue-400: #3F68BA;
+  --blue-500: #1F4CA4;
+  --blue-600: #0B3D91;
+  --blue-700: #082E6E;
+  --blue-800: #061F4B;
+  --blue-900: #03112A;
+
+  // Sun Yellow
+  --sun-50:  #FFFAE5;
+  --sun-100: #FFF1B8;
+  --sun-200: #FFE580;
+  --sun-300: #FFD94C;
+  --sun-400: #FFD500;
+  --sun-500: #E6BE00;
+  --sun-600: #B79700;
+  --sun-700: #8A7100;
+
+  // Semantic
+  --color-success: #1F8F5C;
+  --color-warning: #D97706;
+  --color-danger:  #C62828;
+  --color-info:    #0B7AB8;
+
+  // Neutrals
+  --color-paper:       #FAF7F1;
+  --color-ink:         #0A0E1F;
+  --color-ink-soft:    #2B3046;
+  --color-rule:        #E7E1D3;
+  --color-surface:     #FFFFFF;
+  --color-surface-alt: #F2ECDD;
+
+  // League tiers
+  --tier-bronze:   #B87333;
+  --tier-silver:   #9DA3AE;
+  --tier-gold:     #E3B341;
+  --tier-platinum: #7FDBDA;
+  --tier-diamond:  #5AB1FF;
+
+  // Brand aliases
+  --brand:        var(--blue-600);
+  --brand-light:  var(--blue-100);
+  --accent:       var(--sun-400);
+  --accent-dark:  var(--sun-600);
+
+  // Typography scale
+  --font-display: 'Fraunces', Georgia, serif;
+  --font-sans:    'Manrope', system-ui, sans-serif;
+  --font-mono:    'JetBrains Mono', monospace;
+
+  // Spacing (4px grid)
+  --space-0: 0px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  // Border radius
+  --radius-xs:   6px;
+  --radius-sm:   10px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-xl:   28px;
+  --radius-pill: 999px;
+
+  // Shadows (blue-tinted)
+  --shadow-card:  0 4px 16px -4px rgba(11,61,145,.12);
+  --shadow-hero:  0 16px 40px -16px rgba(11,61,145,.18);
+  --shadow-float: 0 24px 64px -24px rgba(11,61,145,.24);
+  --shadow-focus: 0 0 0 4px rgba(255,213,0,.35);
+
+  // Easings
+  --ease-editorial: cubic-bezier(.2,.7,.2,1);
+  --ease-spring:    cubic-bezier(.34,1.56,.64,1);
+  --ease-out:       cubic-bezier(0,0,.2,1);
+
+  // Transitions
+  --transition-fast:   150ms var(--ease-out);
+  --transition-base:   250ms var(--ease-editorial);
+  --transition-slow:   400ms var(--ease-editorial);
+}

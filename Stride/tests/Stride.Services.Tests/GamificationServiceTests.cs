@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Moq;
 using Stride.Core.Entities;
@@ -60,7 +61,8 @@ public class GamificationServiceTests : IDisposable
             _dbContext,
             Options.Create(_settings),
             Mock.Of<IAchievementService>(),
-            Mock.Of<ILeaderboardService>());
+            Mock.Of<ILeaderboardService>(),
+            NullLogger<GamificationService>.Instance);
     }
 
     public void Dispose()

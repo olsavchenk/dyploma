@@ -23,8 +23,12 @@ export const teacherRoutes: Routes = [
         loadComponent: () => import('./task-review/task-review.component').then((m) => m.TaskReviewComponent),
       },
       {
+        path: 'dashboard',
+        loadComponent: () => import('./dashboard/teacher-dashboard.component').then((m) => m.TeacherDashboardComponent),
+      },
+      {
         path: '',
-        redirectTo: 'classes',
+        redirectTo: 'dashboard',
         pathMatch: 'full',
       },
     ],

@@ -54,6 +54,13 @@ export const routes: Routes = [
     ],
   },
 
+  // Offline fallback
+  {
+    path: 'offline',
+    loadComponent: () =>
+      import('./features/offline/offline.component').then((m) => m.OfflineComponent),
+  },
+
   // Fallback route
   {
     path: '**',

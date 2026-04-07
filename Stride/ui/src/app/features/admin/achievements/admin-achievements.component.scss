@@ -1,0 +1,167 @@
+.achievements-page {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.page-title {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.spinner-wrap {
+  display: flex;
+  justify-content: center;
+  padding: 64px 0;
+}
+
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+
+  @media (max-width: 1100px) { grid-template-columns: repeat(3, 1fr); }
+  @media (max-width: 768px) { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 480px) { grid-template-columns: 1fr; }
+}
+
+.achievement-card {
+  background: var(--color-paper);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  transition: box-shadow 0.2s;
+
+  &:hover { box-shadow: var(--shadow-hero); }
+}
+
+.card-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px;
+  height: 64px;
+  background: var(--color-surface);
+  border-radius: var(--radius-md);
+  align-self: flex-start;
+}
+
+.card-icon-img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.card-icon-placeholder {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+  color: var(--sun-400);
+}
+
+.hidden-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: var(--color-ink-soft);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  mat-icon {
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    color: #fff;
+  }
+}
+
+.card-body { flex: 1; }
+
+.card-code {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--blue-600);
+  margin: 0 0 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.card-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-ink);
+  margin: 0 0 6px;
+}
+
+.card-desc {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.card-xp {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--sun-400);
+}
+
+.xp-icon {
+  font-size: 18px;
+  width: 18px;
+  height: 18px;
+}
+
+.card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 4px;
+  border-top: 1px solid var(--color-rule);
+  padding-top: 8px;
+  margin-top: auto;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 64px;
+  color: var(--color-ink-soft);
+
+  mat-icon { font-size: 64px; width: 64px; height: 64px; }
+  p { margin: 0; font-size: 1.1rem; }
+}
+
+.page-footer {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-rule);
+}
+
+.total-label {
+  font-size: 0.85rem;
+  color: var(--color-ink-soft);
+}

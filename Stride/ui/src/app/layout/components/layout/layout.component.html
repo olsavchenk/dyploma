@@ -3,6 +3,7 @@
     [userStats]="userStats()"
     [notificationCount]="notificationCount()"
     (menuToggle)="onMenuToggle()"
+    (notificationPanelToggle)="onNotificationPanelToggle()"
   ></app-header>
 
   <mat-sidenav-container class="sidenav-container" autosize>
@@ -25,7 +26,17 @@
       </div>
 
       <!-- Mobile Bottom Nav -->
-      <app-bottom-nav></app-bottom-nav>
+      @if (isMobile()) {
+        <app-bottom-nav></app-bottom-nav>
+      }
     </mat-sidenav-content>
   </mat-sidenav-container>
+
+  <!-- Notification Panel (overlay) -->
+  @if (notificationPanelOpen()) {
+    <app-notification-panel
+      [notifications]="unreadNotifications()"
+      (close)="onNotificationPanelClose()"
+    ></app-notification-panel>
+  }
 </div>

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Stride.DataAccess.Contexts;
 
@@ -165,8 +166,8 @@ public class AuthenticationIntegrationTests : IClassFixture<IntegrationTestWebAp
         user.Should().NotBeNull();
         user!.Role.Should().Be("Student");
         
-        var studentProfile = await dbContext.StudentProfiles
-            .FirstOrDefaultAsync(sp => sp.UserId == user.Id);
+        var studentProfile = await EntityFrameworkQueryableExtensions
+            .FirstOrDefaultAsync(dbContext.StudentProfiles, sp => sp.UserId == user.Id);
         studentProfile.Should().NotBeNull();
     }
 

@@ -5,11 +5,12 @@ import {
   APP_INITIALIZER,
   inject,
   ErrorHandler,
+  isDevMode,
 } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { provideAnimations } from '@angular/platform-browser/animations';
-// import { provideServiceWorker } from '@angular/service-worker';
+import { provideServiceWorker } from '@angular/service-worker';
 import { TranslateModule } from '@ngx-translate/core';
 import { provideTranslateHttpLoader } from '@ngx-translate/http-loader';
 import { importProvidersFrom } from '@angular/core';
@@ -62,10 +63,10 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(withInterceptors([loggingInterceptor, authInterceptor])),
     { provide: ErrorHandler, useClass: GlobalErrorHandler },
     provideAnimations(),
-    // provideServiceWorker('ngsw-worker.js', {
-    //   enabled: !isDevMode(),
-    //   registrationStrategy: 'registerWhenStable:30000',
-    // }),
+    provideServiceWorker('ngsw-worker.js', {
+      enabled: !isDevMode(),
+      registrationStrategy: 'registerWhenStable:30000',
+    }),
     importProvidersFrom(
       TranslateModule.forRoot({
         defaultLanguage: 'uk',

@@ -1,0 +1,358 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back",
+    "next": "Next",
+    "done": "Done",
+    "search": "Search",
+    "filter": "Filter",
+    "all": "All",
+    "yes": "Yes",
+    "no": "No",
+    "error": "Error",
+    "retry": "Retry",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "share": "Share",
+    "actions": "Actions",
+    "required": "Required field",
+    "optional": "Optional",
+    "xp": "XP"
+  },
+  "errors": {
+    "generic": "Something went wrong. Please try again.",
+    "network": "Network error. Check your connection.",
+    "unauthorized": "Please log in again.",
+    "forbidden": "You don't have access to this section.",
+    "notFound": "Page not found.",
+    "validation": "Please check the entered data."
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in to Stride",
+      "subtitle": "Continue your learning",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "google": "Sign in with Google",
+      "forgotPassword": "Forgot password?",
+      "noAccount": "Don't have an account?",
+      "register": "Register",
+      "error": "Invalid email or password"
+    },
+    "register": {
+      "title": "Register",
+      "subtitle": "Start learning today",
+      "displayName": "Name",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Register",
+      "hasAccount": "Already have an account?",
+      "login": "Sign in",
+      "passwordStrength": {
+        "weak": "Weak",
+        "medium": "Medium",
+        "strong": "Strong"
+      },
+      "gdpr": "I agree to the terms of use and privacy policy"
+    },
+    "selectRole": {
+      "title": "Choose your role",
+      "subtitle": "How will you use Stride?",
+      "student": {
+        "title": "Student",
+        "description": "Learn and earn achievements"
+      },
+      "teacher": {
+        "title": "Teacher",
+        "description": "Manage classes and analyze progress"
+      }
+    },
+    "forgotPassword": {
+      "title": "Reset Password",
+      "subtitle": "Enter your email and we'll send instructions",
+      "email": "Email",
+      "submit": "Send",
+      "success": "Email sent! Check your inbox.",
+      "backToLogin": "Back to login"
+    },
+    "resetPassword": {
+      "title": "New Password",
+      "password": "New password",
+      "confirmPassword": "Confirm password",
+      "submit": "Change password",
+      "mismatch": "Passwords don't match"
+    },
+    "brand": {
+      "headline": "STRIDE",
+      "tagline": "Adaptive learning for every student",
+      "testimonial": "\"Stride changed how I approach learning\" — 9th grade student"
+    }
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "learn": "Learn",
+    "leaderboard": "Leaderboard",
+    "achievements": "Achievements",
+    "profile": "Profile",
+    "classes": "Classes",
+    "analytics": "Analytics",
+    "review": "Review",
+    "users": "Users",
+    "content": "Content",
+    "aiReview": "AI Review",
+    "system": "System",
+    "notifications": "Notifications",
+    "noNotifications": "No new notifications"
+  },
+  "dashboard": {
+    "hero": {
+      "greetingMorning": "Good morning",
+      "greetingDay": "Good afternoon",
+      "greetingEvening": "Good evening",
+      "subtitle": "Ready to learn?"
+    },
+    "xpBar": {
+      "level": "Level",
+      "xpTo": "to next level"
+    },
+    "streak": {
+      "title": "Streak",
+      "days": "days in a row",
+      "freeze": "Freezes",
+      "freezeAction": "Freeze",
+      "repair": "Repair"
+    },
+    "continueLearning": {
+      "title": "Continue Learning",
+      "empty": "Start your first lesson!"
+    },
+    "dailyGoal": {
+      "title": "Daily Goal",
+      "tasks": "tasks"
+    },
+    "leaderboardPreview": {
+      "title": "Weekly Leaderboard",
+      "viewAll": "View all"
+    },
+    "recentAchievements": {
+      "title": "Recent Achievements",
+      "empty": "Start learning to earn achievements!"
+    },
+    "firstTaskBonus": {
+      "title": "First task of the day",
+      "description": "Complete your first task and earn a +50 XP bonus!",
+      "cta": "Start learning"
+    }
+  },
+  "learn": {
+    "browse": {
+      "title": "Subjects",
+      "subtitle": "Choose a subject to learn",
+      "topics": "topics",
+      "start": "Start",
+      "empty": "No subjects added yet",
+      "filters": {
+        "all": "All grades",
+        "primary": "Grades 1-4",
+        "middle": "Grades 5-9",
+        "high": "Grades 10-11"
+      }
+    },
+    "subjectDetail": {
+      "topics": "Topics",
+      "mastery": "Mastery",
+      "difficulty": "Difficulty",
+      "start": "Start",
+      "continue": "Continue",
+      "locked": "Locked"
+    },
+    "session": {
+      "progress": "Progress",
+      "check": "Check",
+      "next": "Next",
+      "streak": "Streak",
+      "correct": "Correct!",
+      "incorrect": "Incorrect",
+      "explanation": "Explanation",
+      "exit": "Exit"
+    },
+    "summary": {
+      "title": "Session Results",
+      "accuracy": "Accuracy",
+      "xpEarned": "XP earned",
+      "mastery": "Mastery",
+      "incorrectReview": "Review mistakes",
+      "continue": "Continue",
+      "backToTopic": "Back to topic"
+    },
+    "joinClass": {
+      "title": "Join a Class",
+      "subtitle": "Enter the invitation code from your teacher",
+      "codePlaceholder": "Class code",
+      "submit": "Join",
+      "success": "Successfully joined the class!",
+      "error": "Invalid or expired code"
+    }
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "filters": {
+      "weekly": "Weekly",
+      "allTime": "All time",
+      "class": "Class"
+    },
+    "rank": "Rank",
+    "xp": "XP",
+    "you": "You",
+    "empty": "Leaderboard is empty",
+    "tiers": {
+      "Bronze": "Bronze",
+      "Silver": "Silver",
+      "Gold": "Gold",
+      "Platinum": "Platinum",
+      "Diamond": "Diamond"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "editTitle": "Edit Profile",
+    "memberSince": "Member since",
+    "stats": {
+      "totalXp": "Total XP",
+      "currentStreak": "Current Streak",
+      "longestStreak": "Longest Streak",
+      "tasksCompleted": "Tasks Completed",
+      "accuracy": "Accuracy"
+    },
+    "achievements": {
+      "title": "Achievements",
+      "locked": "Locked",
+      "unlocked": "Unlocked"
+    },
+    "activity": {
+      "title": "Activity",
+      "empty": "No activity yet"
+    },
+    "settings": {
+      "title": "Settings",
+      "language": "Language",
+      "notifications": "Notifications",
+      "installApp": "Install App",
+      "exportData": "Export Data",
+      "logout": "Log out",
+      "deleteAccount": "Delete Account"
+    }
+  },
+  "teacher": {
+    "dashboard": {
+      "title": "Teacher Dashboard",
+      "classes": "Classes",
+      "students": "Students",
+      "pendingReviews": "Pending Reviews",
+      "weekXp": "Week XP"
+    },
+    "classes": {
+      "title": "My Classes",
+      "create": "Create Class",
+      "empty": "Create your first class",
+      "students": "students",
+      "avgMastery": "Avg. mastery",
+      "manage": "Manage",
+      "shareCode": "Share Code"
+    },
+    "classDetail": {
+      "students": "Students",
+      "assignments": "Assignments",
+      "analytics": "Analytics",
+      "newAssignment": "New Assignment",
+      "lastActive": "Last active"
+    },
+    "createClass": {
+      "title": "Create Class",
+      "name": "Class name",
+      "grade": "Grade",
+      "description": "Description"
+    },
+    "shareCode": {
+      "title": "Invitation Code",
+      "instruction": "Share this code with students"
+    },
+    "taskReview": {
+      "title": "AI Task Review",
+      "approve": "Approve",
+      "edit": "Edit",
+      "reject": "Reject",
+      "empty": "No tasks to review"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Admin Panel",
+      "health": "System Health",
+      "online": "Online",
+      "degraded": "Degraded",
+      "offline": "Offline"
+    },
+    "users": {
+      "title": "Users",
+      "search": "Search user",
+      "role": "Role",
+      "status": "Status",
+      "changeRole": "Change role",
+      "disable": "Disable",
+      "export": "Export"
+    },
+    "subjects": {
+      "title": "Subjects",
+      "new": "New Subject",
+      "name": "Name",
+      "slug": "Slug",
+      "sortOrder": "Sort Order",
+      "active": "Active"
+    },
+    "topics": {
+      "title": "Topics",
+      "new": "New Topic",
+      "subject": "Subject",
+      "difficulty": "Difficulty"
+    },
+    "achievements": {
+      "title": "Achievements",
+      "new": "New Achievement",
+      "code": "Code",
+      "xpReward": "XP Reward",
+      "hidden": "Hidden"
+    },
+    "aiReview": {
+      "title": "AI Review",
+      "approve": "Approve",
+      "reject": "Reject",
+      "empty": "No tasks in queue"
+    }
+  },
+  "notifications": {
+    "achievement": "Achievement unlocked",
+    "levelUp": "Level up!",
+    "streakReminder": "Don't forget to keep your streak!",
+    "rankChanged": "Your rank changed",
+    "classJoined": "You joined a class",
+    "taskApproved": "Task approved"
+  },
+  "pwa": {
+    "installPrompt": "Install Stride as an app",
+    "install": "Install",
+    "dismiss": "Later",
+    "offline": {
+      "title": "You're offline",
+      "description": "Check your internet connection and try again.",
+      "retry": "Try again"
+    }
+  }
+}

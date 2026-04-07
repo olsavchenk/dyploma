@@ -1,11 +1,4 @@
 <div class="profile-container">
-  <!-- Header -->
-  <div class="profile-header">
-    <h1 class="page-title">
-      <mat-icon>person</mat-icon>
-      Профіль
-    </h1>
-  </div>
 
   <!-- Loading State -->
   @if (loading()) {
@@ -20,7 +13,7 @@
     <div class="error-banner">
       <mat-icon>error_outline</mat-icon>
       <span>{{ error() }}</span>
-      <button mat-icon-button (click)="loadProfile()">
+      <button mat-icon-button (click)="loadData()">
         <mat-icon>refresh</mat-icon>
       </button>
     </div>
@@ -29,22 +22,24 @@
   <!-- Profile Content -->
   @else if (profile(); as userProfile) {
     <div class="profile-content">
-      
-      <!-- Main Profile Card -->
-      <mat-card class="profile-card">
-        <div class="profile-card-header">
-          <div 
-            class="avatar-wrapper" 
+
+      <!-- ── HERO ─────────────────────────────────────── -->
+      <section class="hero-section">
+        <div class="avatar-container">
+          <div
+            class="avatar-wrapper"
             (click)="onAvatarClick()"
             [class.uploading]="uploadingAvatar()">
+
             @if (uploadingAvatar()) {
               <div class="avatar-overlay">
                 <mat-spinner diameter="32"></mat-spinner>
               </div>
             }
+
             @if (userProfile.avatarUrl) {
-              <img 
-                [src]="userProfile.avatarUrl" 
+              <img
+                [src]="userProfile.avatarUrl"
                 [alt]="userProfile.displayName"
                 class="avatar" />
             } @else {
@@ -52,253 +47,178 @@
                 <mat-icon>person</mat-icon>
               </div>
             }
+
             <div class="avatar-edit-overlay">
               <mat-icon>photo_camera</mat-icon>
             </div>
           </div>
 
-          <div class="profile-info">
-            <h2 class="profile-name">{{ userProfile.displayName }}</h2>
-            <p class="profile-email">{{ userProfile.email }}</p>
-            <mat-chip-set>
-              <mat-chip>
-                <mat-icon matChipAvatar>{{ userProfile.role === 'Student' ? 'school' : userProfile.role === 'Teacher' ? 'local_library' : 'admin_panel_settings' }}</mat-icon>
-                {{ getRoleLabel(userProfile.role) }}
-              </mat-chip>
-            </mat-chip-set>
-          </div>
-
-          <button 
-            mat-raised-button 
-            color="primary" 
-            class="edit-button"
-            (click)="openEditDialog()">
-            <mat-icon>edit</mat-icon>
-            Редагувати
-          </button>
-        </div>
-
-        <mat-divider></mat-divider>
-
-        <div class="profile-details">
-          <div class="detail-row">
-            <span class="detail-label">
-              <mat-icon>event</mat-icon>
-              Дата реєстрації
-            </span>
-            <span class="detail-value">{{ formatDate(userProfile.createdAt) }}</span>
-          </div>
-
-          @if (userProfile.lastLoginAt) {
-            <div class="detail-row">
-              <span class="detail-label">
-                <mat-icon>login</mat-icon>
-                Останній вхід
-              </span>
-              <span class="detail-value">{{ formatDate(userProfile.lastLoginAt) }}</span>
+          <!-- Level badge -->
+          @if (stats(); as st) {
+            <div class="level-badge" [matTooltip]="'Рівень ' + st.currentLevel">
+              {{ st.currentLevel }}
             </div>
           }
         </div>
-      </mat-card>
 
-      <!-- Stats Cards -->
-      @if (userProfile.studentStats; as stats) {
-        <div class="stats-grid">
-          <mat-card class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);">
-              <mat-icon>stars</mat-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.totalXp }}</div>
-              <div class="stat-label">Загальний XP</div>
-            </div>
-          </mat-card>
+        <h1 class="hero-name">{{ userProfile.displayName }}</h1>
 
-          <mat-card class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);">
-              <mat-icon>trending_up</mat-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.currentLevel }}</div>
-              <div class="stat-label">Рівень</div>
-            </div>
-          </mat-card>
+        <p class="hero-member-since">
+          <mat-icon>event</mat-icon>
+          З {{ formatMemberSince(userProfile.createdAt) }}
+        </p>
 
-          <mat-card class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%);">
-              <mat-icon>local_fire_department</mat-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.currentStreak }}</div>
-              <div class="stat-label">Поточна серія</div>
-            </div>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
-              <mat-icon>military_tech</mat-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.achievementsUnlocked }}</div>
-              <div class="stat-label">Досягнення</div>
-            </div>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);">
-              <mat-icon>emoji_events</mat-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.league }}</div>
-              <div class="stat-label">Ліга</div>
-            </div>
-          </mat-card>
-
-          <mat-card class="stat-card">
-            <div class="stat-icon" style="background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);">
-              <mat-icon>assignment</mat-icon>
-            </div>
-            <div class="stat-content">
-              <div class="stat-value">{{ stats.totalTasksAttempted }}</div>
-              <div class="stat-label">Завдань виконано</div>
-            </div>
-          </mat-card>
+        <div class="role-chip">
+          <mat-icon>{{ getRoleIcon(userProfile.role) }}</mat-icon>
+          {{ getRoleLabel(userProfile.role) }}
         </div>
-      }
 
-      @if (userProfile.teacherStats; as stats) {
-        <mat-card class="teacher-stats-card">
-          <h3 class="card-title">
-            <mat-icon>school</mat-icon>
-            Інформація вчителя
-          </h3>
-          <mat-divider></mat-divider>
-          
-          <div class="teacher-details">
-            @if (stats.school) {
-              <div class="detail-row">
-                <span class="detail-label">
-                  <mat-icon>business</mat-icon>
-                  Школа
-                </span>
-                <span class="detail-value">{{ stats.school }}</span>
-              </div>
-            }
+        <button mat-stroked-button class="edit-btn" (click)="openEditDialog()">
+          <mat-icon>edit</mat-icon>
+          Редагувати профіль
+        </button>
+      </section>
 
-            @if (stats.gradesTaught) {
-              <div class="detail-row">
-                <span class="detail-label">
-                  <mat-icon>groups</mat-icon>
-                  Класи
-                </span>
-                <span class="detail-value">{{ stats.gradesTaught }}</span>
-              </div>
-            }
-
-            @if (stats.subjectsExpertise) {
-              <div class="detail-row">
-                <span class="detail-label">
-                  <mat-icon>menu_book</mat-icon>
-                  Предмети
-                </span>
-                <span class="detail-value">{{ stats.subjectsExpertise }}</span>
-              </div>
-            }
-
-            <div class="teacher-stats-summary">
-              <div class="summary-item">
-                <div class="summary-value">{{ stats.totalClasses }}</div>
-                <div class="summary-label">Класів</div>
-              </div>
-              <div class="summary-item">
-                <div class="summary-value">{{ stats.totalStudents }}</div>
-                <div class="summary-label">Учнів</div>
-              </div>
-            </div>
+      <!-- ── STATS STRIP ─────────────────────────────── -->
+      @if (stats(); as st) {
+        <section class="stats-strip">
+          <div class="stat-tile">
+            <span class="stat-number">{{ st.totalXp }}</span>
+            <span class="stat-label">Загальний XP</span>
           </div>
-        </mat-card>
+          <div class="stat-tile">
+            <span class="stat-number">{{ st.currentStreak }}</span>
+            <span class="stat-label">Поточна серія</span>
+          </div>
+          <div class="stat-tile">
+            <span class="stat-number">{{ st.longestStreak }}</span>
+            <span class="stat-label">Найдовша серія</span>
+          </div>
+          @if (userProfile.studentStats; as ss) {
+            <div class="stat-tile">
+              <span class="stat-number">{{ ss.totalTasksAttempted }}</span>
+              <span class="stat-label">Завдань виконано</span>
+            </div>
+            <div class="stat-tile">
+              <span class="stat-number">{{ ss.achievementsUnlocked }}</span>
+              <span class="stat-label">Досягнень</span>
+            </div>
+          }
+        </section>
       }
 
-      <!-- Settings Card -->
-      <mat-card class="settings-card">
-        <h3 class="card-title">
+      <!-- ── ACHIEVEMENT GALLERY ─────────────────────── -->
+      @if (achievements().length > 0) {
+        <section class="card-section">
+          <h2 class="section-title">
+            <mat-icon>military_tech</mat-icon>
+            Досягнення
+          </h2>
+          <app-achievement-gallery
+            [achievements]="achievements()"
+            (achievementClick)="openAchievementDetail($event)" />
+        </section>
+      }
+
+      <!-- ── ACTIVITY TIMELINE ───────────────────────── -->
+      @if (recentActivity().length > 0) {
+        <section class="card-section">
+          <h2 class="section-title">
+            <mat-icon>history</mat-icon>
+            Остання активність
+          </h2>
+          <app-activity-timeline [activities]="recentActivity()" />
+        </section>
+      }
+
+      <!-- ── SETTINGS ────────────────────────────────── -->
+      <section class="card-section settings-section">
+        <h2 class="section-title">
           <mat-icon>settings</mat-icon>
           Налаштування
-        </h3>
+        </h2>
+
+        <!-- Language toggle -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <mat-icon>language</mat-icon>
+            <div>
+              <div class="setting-label">Мова інтерфейсу</div>
+              <div class="setting-description">Оберіть мову відображення</div>
+            </div>
+          </div>
+          <div class="lang-toggle">
+            <button
+              mat-flat-button
+              class="lang-btn"
+              [class.lang-btn--active]="currentLang() === 'uk'"
+              (click)="toggleLanguage()">
+              УК
+            </button>
+            <button
+              mat-flat-button
+              class="lang-btn"
+              [class.lang-btn--active]="currentLang() === 'en'"
+              (click)="toggleLanguage()">
+              EN
+            </button>
+          </div>
+        </div>
+
         <mat-divider></mat-divider>
 
-        <div class="settings-list">
-          <div class="setting-item">
-            <div class="setting-info">
-              <mat-icon>notifications</mat-icon>
-              <div>
-                <div class="setting-label">Сповіщення</div>
-                <div class="setting-description">Отримувати сповіщення про досягнення та нагадування</div>
-              </div>
+        <!-- Notifications -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <mat-icon>notifications</mat-icon>
+            <div>
+              <div class="setting-label">Сповіщення</div>
+              <div class="setting-description">Отримувати сповіщення про досягнення та нагадування</div>
             </div>
-            <mat-slide-toggle
-              [checked]="notificationsEnabled()"
-              (change)="onNotificationToggle()"
-              color="primary">
-            </mat-slide-toggle>
           </div>
+          <mat-slide-toggle
+            [checked]="notificationsEnabled()"
+            (change)="onNotificationToggle()"
+            color="primary">
+          </mat-slide-toggle>
+        </div>
 
+        <!-- PWA Install -->
+        @if (deferredInstallPrompt()) {
           <mat-divider></mat-divider>
-
-          <div class="setting-item disabled">
+          <div class="setting-row">
             <div class="setting-info">
-              <mat-icon>language</mat-icon>
+              <mat-icon>install_mobile</mat-icon>
               <div>
-                <div class="setting-label">Мова інтерфейсу</div>
-                <div class="setting-description">Українська (змінити мову буде доступно пізніше)</div>
+                <div class="setting-label">Встановити додаток</div>
+                <div class="setting-description">Додати Stride на головний екран</div>
               </div>
             </div>
+            <button mat-stroked-button (click)="installPwa()">
+              <mat-icon>download</mat-icon>
+              Встановити
+            </button>
           </div>
-        </div>
-      </mat-card>
+        }
 
-      <!-- Data Management Card -->
-      <mat-card class="danger-zone-card">
-        <h3 class="card-title">
-          <mat-icon>data_usage</mat-icon>
-          Керування даними
-        </h3>
         <mat-divider></mat-divider>
 
-        <div class="danger-actions">
-          <button 
-            mat-stroked-button 
-            class="export-button"
-            [disabled]="exporting()"
-            (click)="exportData()">
-            @if (exporting()) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              <mat-icon>download</mat-icon>
-            }
-            Експортувати мої дані
-          </button>
-
-          <button 
-            mat-stroked-button 
-            color="warn"
-            class="delete-button"
-            [disabled]="deleting()"
-            (click)="deleteAccount()">
-            @if (deleting()) {
-              <mat-spinner diameter="20"></mat-spinner>
-            } @else {
-              <mat-icon>delete_forever</mat-icon>
-            }
-            Видалити обліковий запис
+        <!-- Logout -->
+        <div class="setting-row setting-row--logout">
+          <div class="setting-info">
+            <mat-icon>logout</mat-icon>
+            <div>
+              <div class="setting-label">Вийти з акаунту</div>
+              <div class="setting-description">Завершити поточну сесію</div>
+            </div>
+          </div>
+          <button mat-stroked-button color="warn" (click)="logout()">
+            <mat-icon>logout</mat-icon>
+            Вийти
           </button>
         </div>
+      </section>
 
-        <p class="danger-warning">
-          <mat-icon>warning</mat-icon>
-          Видалення облікового запису є незворотною дією. Всі ваші дані будуть безповоротно видалені.
-        </p>
-      </mat-card>
     </div>
   }
 </div>

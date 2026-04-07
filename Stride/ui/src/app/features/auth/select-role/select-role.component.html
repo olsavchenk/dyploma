@@ -1,12 +1,11 @@
-<div class="select-role-container">
-  <div class="select-role-content">
-    <div class="header">
-      <div class="logo-container">
-        <mat-icon class="logo-icon">school</mat-icon>
-        <h1 class="app-name">Stride</h1>
+<div class="select-role-page">
+  <div class="select-role-inner">
+    <div class="page-header">
+      <div class="brand-mark">
+        <span class="brand-mark-letter font-display">С</span>
       </div>
-      <h2 class="title">Оберіть свою роль</h2>
-      <p class="subtitle">Це допоможе нам налаштувати ваш досвід</p>
+      <h1 class="page-title font-display">Оберіть свою роль</h1>
+      <p class="page-subtitle font-sans">Це допоможе нам налаштувати ваш досвід</p>
     </div>
 
     @if (errorMessage()) {
@@ -17,52 +16,71 @@
     }
 
     <div class="role-cards">
-      @for (option of roleOptions; track option.value) {
-        <mat-card
-          class="role-card"
-          [class.selected]="selectedRole() === option.value"
-          [class.disabled]="isSubmitting()"
-          (click)="selectRole(option.value)"
-          tabindex="0"
-          role="button"
-          [attr.aria-label]="'Обрати роль ' + option.title"
-        >
-          <div class="role-icon-wrapper" [style.background-color]="option.color + '20'">
-            <mat-icon class="role-icon" [style.color]="option.color">
-              {{ option.icon }}
-            </mat-icon>
-          </div>
-          <h3 class="role-title">{{ option.title }}</h3>
-          <p class="role-description">{{ option.description }}</p>
-
-          @if (selectedRole() === option.value) {
-            <div class="selected-indicator">
-              <mat-icon>check_circle</mat-icon>
-            </div>
-          }
-        </mat-card>
-      }
-    </div>
-
-    <div class="actions">
       <button
-        mat-raised-button
-        color="primary"
-        class="confirm-button"
-        (click)="confirmSelection()"
-        [disabled]="!selectedRole() || isSubmitting()"
+        class="role-card"
+        [class.role-card--selected]="selectedRole() === 'Student'"
+        [class.role-card--disabled]="isSubmitting()"
+        (click)="selectRole('Student')"
+        type="button"
+        role="radio"
+        [attr.aria-checked]="selectedRole() === 'Student'"
+        aria-label="Обрати роль Учень"
       >
-        @if (isSubmitting()) {
-          <mat-spinner diameter="24" class="button-spinner"></mat-spinner>
-          <span>Збереження...</span>
-        } @else {
-          <span>Продовжити</span>
+        <div class="role-card-accent role-card-accent--student"></div>
+        <div class="role-icon-wrap role-icon-wrap--student">
+          <mat-icon class="role-icon">school</mat-icon>
+        </div>
+        <h3 class="role-name font-display">Учень</h3>
+        <p class="role-desc font-sans">Навчайтесь та здобувайте досягнення</p>
+        @if (selectedRole() === 'Student') {
+          <div class="role-check">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+        }
+      </button>
+
+      <button
+        class="role-card"
+        [class.role-card--selected]="selectedRole() === 'Teacher'"
+        [class.role-card--disabled]="isSubmitting()"
+        (click)="selectRole('Teacher')"
+        type="button"
+        role="radio"
+        [attr.aria-checked]="selectedRole() === 'Teacher'"
+        aria-label="Обрати роль Вчитель"
+      >
+        <div class="role-card-accent role-card-accent--teacher"></div>
+        <div class="role-icon-wrap role-icon-wrap--teacher">
+          <mat-icon class="role-icon">cast_for_education</mat-icon>
+        </div>
+        <h3 class="role-name font-display">Вчитель</h3>
+        <p class="role-desc font-sans">Керуйте класами та аналізуйте прогрес</p>
+        @if (selectedRole() === 'Teacher') {
+          <div class="role-check">
+            <mat-icon>check_circle</mat-icon>
+          </div>
         }
       </button>
     </div>
 
-    <p class="help-text">
-      Ви зможете змінити роль пізніше в налаштуваннях
-    </p>
+    <div class="actions">
+      <button
+        mat-flat-button
+        class="confirm-btn"
+        (click)="confirmSelection()"
+        [disabled]="!selectedRole() || isSubmitting()"
+        type="button"
+      >
+        @if (isSubmitting()) {
+          <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+          <span>Збереження...</span>
+        } @else {
+          <span>Продовжити</span>
+          <mat-icon>arrow_forward</mat-icon>
+        }
+      </button>
+    </div>
+
+    <p class="help-text font-sans">Ви зможете змінити роль пізніше в налаштуваннях</p>
   </div>
 </div>

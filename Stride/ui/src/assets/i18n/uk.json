@@ -1,0 +1,358 @@
+{
+  "common": {
+    "loading": "Завантаження...",
+    "save": "Зберегти",
+    "cancel": "Скасувати",
+    "delete": "Видалити",
+    "edit": "Редагувати",
+    "close": "Закрити",
+    "confirm": "Підтвердити",
+    "back": "Назад",
+    "next": "Далі",
+    "done": "Готово",
+    "search": "Пошук",
+    "filter": "Фільтр",
+    "all": "Усі",
+    "yes": "Так",
+    "no": "Ні",
+    "error": "Помилка",
+    "retry": "Повторити",
+    "copy": "Копіювати",
+    "copied": "Скопійовано!",
+    "share": "Поділитися",
+    "actions": "Дії",
+    "required": "Обов'язкове поле",
+    "optional": "Необов'язково",
+    "xp": "ОД"
+  },
+  "errors": {
+    "generic": "Щось пішло не так. Спробуйте ще раз.",
+    "network": "Помилка мережі. Перевірте з'єднання.",
+    "unauthorized": "Будь ласка, увійдіть знову.",
+    "forbidden": "У вас немає доступу до цього розділу.",
+    "notFound": "Сторінку не знайдено.",
+    "validation": "Перевірте правильність введених даних."
+  },
+  "auth": {
+    "login": {
+      "title": "Вхід до Страйд",
+      "subtitle": "Продовжте своє навчання",
+      "email": "Електронна пошта",
+      "password": "Пароль",
+      "submit": "Увійти",
+      "google": "Вхід через Google",
+      "forgotPassword": "Забули пароль?",
+      "noAccount": "Немає акаунту?",
+      "register": "Зареєструватися",
+      "error": "Невірна пошта або пароль"
+    },
+    "register": {
+      "title": "Реєстрація",
+      "subtitle": "Почніть навчатися вже сьогодні",
+      "displayName": "Ім'я",
+      "email": "Електронна пошта",
+      "password": "Пароль",
+      "submit": "Зареєструватися",
+      "hasAccount": "Вже маєте акаунт?",
+      "login": "Увійти",
+      "passwordStrength": {
+        "weak": "Слабкий",
+        "medium": "Середній",
+        "strong": "Надійний"
+      },
+      "gdpr": "Я погоджуюсь з умовами використання та політикою конфіденційності"
+    },
+    "selectRole": {
+      "title": "Оберіть роль",
+      "subtitle": "Як ви будете використовувати Страйд?",
+      "student": {
+        "title": "Учень",
+        "description": "Навчайтесь та здобувайте досягнення"
+      },
+      "teacher": {
+        "title": "Вчитель",
+        "description": "Керуйте класами та аналізуйте прогрес"
+      }
+    },
+    "forgotPassword": {
+      "title": "Відновлення паролю",
+      "subtitle": "Введіть вашу пошту і ми надішлемо інструкції",
+      "email": "Електронна пошта",
+      "submit": "Надіслати",
+      "success": "Лист надіслано! Перевірте вашу пошту.",
+      "backToLogin": "Повернутися до входу"
+    },
+    "resetPassword": {
+      "title": "Новий пароль",
+      "password": "Новий пароль",
+      "confirmPassword": "Підтвердіть пароль",
+      "submit": "Змінити пароль",
+      "mismatch": "Паролі не збігаються"
+    },
+    "brand": {
+      "headline": "СТРАЙД",
+      "tagline": "Адаптивне навчання для кожного учня",
+      "testimonial": "«Страйд змінив моє ставлення до навчання» — Учень 9-го класу"
+    }
+  },
+  "nav": {
+    "dashboard": "Головна",
+    "learn": "Навчання",
+    "leaderboard": "Рейтинг",
+    "achievements": "Досягнення",
+    "profile": "Профіль",
+    "classes": "Класи",
+    "analytics": "Аналітика",
+    "review": "Перевірка",
+    "users": "Користувачі",
+    "content": "Контент",
+    "aiReview": "AI-перевірка",
+    "system": "Система",
+    "notifications": "Сповіщення",
+    "noNotifications": "Немає нових сповіщень"
+  },
+  "dashboard": {
+    "hero": {
+      "greetingMorning": "Доброго ранку",
+      "greetingDay": "Добрий день",
+      "greetingEvening": "Доброго вечора",
+      "subtitle": "Готові до навчання?"
+    },
+    "xpBar": {
+      "level": "Рівень",
+      "xpTo": "до наступного рівня"
+    },
+    "streak": {
+      "title": "Серія",
+      "days": "днів поспіль",
+      "freeze": "Заморожень",
+      "freezeAction": "Заморозити",
+      "repair": "Відновити"
+    },
+    "continueLearning": {
+      "title": "Продовжити навчання",
+      "empty": "Почніть своє перше заняття!"
+    },
+    "dailyGoal": {
+      "title": "Щоденна ціль",
+      "tasks": "завдань"
+    },
+    "leaderboardPreview": {
+      "title": "Рейтинг тижня",
+      "viewAll": "Дивитися всі"
+    },
+    "recentAchievements": {
+      "title": "Недавні досягнення",
+      "empty": "Починайте навчатися, щоб здобути досягнення!"
+    },
+    "firstTaskBonus": {
+      "title": "Перше завдання дня",
+      "description": "Виконайте перше завдання і отримайте бонус +50 ОД!",
+      "cta": "Почати навчання"
+    }
+  },
+  "learn": {
+    "browse": {
+      "title": "Предмети",
+      "subtitle": "Оберіть предмет для навчання",
+      "topics": "тем",
+      "start": "Почати",
+      "empty": "Предмети ще не додано",
+      "filters": {
+        "all": "Усі класи",
+        "primary": "1-4 клас",
+        "middle": "5-9 клас",
+        "high": "10-11 клас"
+      }
+    },
+    "subjectDetail": {
+      "topics": "Теми",
+      "mastery": "Опанування",
+      "difficulty": "Складність",
+      "start": "Розпочати",
+      "continue": "Продовжити",
+      "locked": "Заблоковано"
+    },
+    "session": {
+      "progress": "Прогрес",
+      "check": "Перевірити",
+      "next": "Наступне",
+      "streak": "Серія",
+      "correct": "Правильно!",
+      "incorrect": "Неправильно",
+      "explanation": "Пояснення",
+      "exit": "Вийти"
+    },
+    "summary": {
+      "title": "Результати заняття",
+      "accuracy": "Точність",
+      "xpEarned": "ОД отримано",
+      "mastery": "Опанування",
+      "incorrectReview": "Перегляд помилок",
+      "continue": "Продовжити",
+      "backToTopic": "Назад до теми"
+    },
+    "joinClass": {
+      "title": "Приєднатися до класу",
+      "subtitle": "Введіть код запрошення від вчителя",
+      "codePlaceholder": "Код класу",
+      "submit": "Приєднатися",
+      "success": "Успішно приєднано до класу!",
+      "error": "Невірний або прострочений код"
+    }
+  },
+  "leaderboard": {
+    "title": "Рейтинг",
+    "filters": {
+      "weekly": "Тижневий",
+      "allTime": "Весь час",
+      "class": "Клас"
+    },
+    "rank": "Ранг",
+    "xp": "ОД",
+    "you": "Ви",
+    "empty": "Рейтинг порожній",
+    "tiers": {
+      "Bronze": "Бронза",
+      "Silver": "Срібло",
+      "Gold": "Золото",
+      "Platinum": "Платина",
+      "Diamond": "Діамант"
+    }
+  },
+  "profile": {
+    "title": "Профіль",
+    "editTitle": "Редагувати профіль",
+    "memberSince": "Учасник з",
+    "stats": {
+      "totalXp": "Всього ОД",
+      "currentStreak": "Поточна серія",
+      "longestStreak": "Найдовша серія",
+      "tasksCompleted": "Завдань виконано",
+      "accuracy": "Точність"
+    },
+    "achievements": {
+      "title": "Досягнення",
+      "locked": "Заблоковано",
+      "unlocked": "Розблоковано"
+    },
+    "activity": {
+      "title": "Активність",
+      "empty": "Ще немає активності"
+    },
+    "settings": {
+      "title": "Налаштування",
+      "language": "Мова",
+      "notifications": "Сповіщення",
+      "installApp": "Встановити додаток",
+      "exportData": "Експорт даних",
+      "logout": "Вийти",
+      "deleteAccount": "Видалити акаунт"
+    }
+  },
+  "teacher": {
+    "dashboard": {
+      "title": "Панель вчителя",
+      "classes": "Класи",
+      "students": "Учні",
+      "pendingReviews": "На перевірці",
+      "weekXp": "ОД за тиждень"
+    },
+    "classes": {
+      "title": "Мої класи",
+      "create": "Створити клас",
+      "empty": "Створіть перший клас",
+      "students": "учнів",
+      "avgMastery": "Сер. опанування",
+      "manage": "Управляти",
+      "shareCode": "Поділитися кодом"
+    },
+    "classDetail": {
+      "students": "Учні",
+      "assignments": "Завдання",
+      "analytics": "Аналітика",
+      "newAssignment": "Нове завдання",
+      "lastActive": "Остання активність"
+    },
+    "createClass": {
+      "title": "Створити клас",
+      "name": "Назва класу",
+      "grade": "Клас",
+      "description": "Опис"
+    },
+    "shareCode": {
+      "title": "Код запрошення",
+      "instruction": "Поділіться цим кодом з учнями"
+    },
+    "taskReview": {
+      "title": "Перевірка завдань AI",
+      "approve": "Схвалити",
+      "edit": "Редагувати",
+      "reject": "Відхилити",
+      "empty": "Немає завдань для перевірки"
+    }
+  },
+  "admin": {
+    "dashboard": {
+      "title": "Адмін-панель",
+      "health": "Стан системи",
+      "online": "Онлайн",
+      "degraded": "Деградація",
+      "offline": "Офлайн"
+    },
+    "users": {
+      "title": "Користувачі",
+      "search": "Пошук користувача",
+      "role": "Роль",
+      "status": "Статус",
+      "changeRole": "Змінити роль",
+      "disable": "Заблокувати",
+      "export": "Експорт"
+    },
+    "subjects": {
+      "title": "Предмети",
+      "new": "Новий предмет",
+      "name": "Назва",
+      "slug": "Slug",
+      "sortOrder": "Порядок",
+      "active": "Активний"
+    },
+    "topics": {
+      "title": "Теми",
+      "new": "Нова тема",
+      "subject": "Предмет",
+      "difficulty": "Складність"
+    },
+    "achievements": {
+      "title": "Досягнення",
+      "new": "Нове досягнення",
+      "code": "Код",
+      "xpReward": "Нагорода ОД",
+      "hidden": "Приховане"
+    },
+    "aiReview": {
+      "title": "AI-перевірка",
+      "approve": "Схвалити",
+      "reject": "Відхилити",
+      "empty": "Немає завдань у черзі"
+    }
+  },
+  "notifications": {
+    "achievement": "Досягнення розблоковано",
+    "levelUp": "Новий рівень!",
+    "streakReminder": "Не забудьте підтримати серію!",
+    "rankChanged": "Ваш ранг змінився",
+    "classJoined": "Ви приєднались до класу",
+    "taskApproved": "Завдання схвалено"
+  },
+  "pwa": {
+    "installPrompt": "Встановіть Страйд як додаток",
+    "install": "Встановити",
+    "dismiss": "Пізніше",
+    "offline": {
+      "title": "Ви офлайн",
+      "description": "Перевірте з'єднання з інтернетом та спробуйте знову.",
+      "retry": "Спробувати ще раз"
+    }
+  }
+}

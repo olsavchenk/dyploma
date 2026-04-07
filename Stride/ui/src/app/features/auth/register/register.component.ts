@@ -20,6 +20,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { AuthService } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
+import { AuthShellComponent } from '../shared/auth-shell.component';
 
 @Component({
   selector: 'app-register',
@@ -36,6 +37,7 @@ import { LoggingService } from '@app/core/services/logging.service';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatCheckboxModule,
+    AuthShellComponent,
   ],
   templateUrl: './register.component.html',
   styleUrl: './register.component.scss',
@@ -187,6 +189,13 @@ export class RegisterComponent {
       return 'Паролі не співпадають';
     }
     return '';
+  }
+
+  protected getPasswordStrength(): 'weak' | 'medium' | 'strong' {
+    const pwd: string = this.registerForm.get('password')?.value ?? '';
+    if (pwd.length > 12) return 'strong';
+    if (pwd.length >= 8) return 'medium';
+    return 'weak';
   }
 
   private passwordMatchValidator(): ValidatorFn {

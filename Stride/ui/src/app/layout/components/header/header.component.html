@@ -1,79 +1,83 @@
-<mat-toolbar color="primary" class="app-header">
-  <!-- Menu Toggle (Mobile) -->
+<header class="app-header" role="banner">
+  <!-- Mobile menu toggle -->
   <button
     mat-icon-button
-    class="menu-toggle md:hidden"
+    class="menu-toggle"
     (click)="onMenuToggle()"
-    aria-label="Toggle menu"
+    aria-label="Відкрити меню"
   >
     <mat-icon>menu</mat-icon>
   </button>
 
-  <!-- Logo -->
-  <a routerLink="/" class="logo-container">
-    <img src="assets/images/logo.svg" alt="Stride" class="logo" />
-    <span class="logo-text hidden md:inline">Stride</span>
+  <!-- Brand mark -->
+  <a routerLink="/dashboard" class="brand sun-underline" aria-label="Страйд — головна">
+    <span class="brand-text font-display">СТРАЙД</span>
   </a>
 
-  <div class="spacer"></div>
+  <div class="header-spacer"></div>
 
   @if (isAuthenticated() && showStats()) {
-    <!-- Streak Counter -->
+    <!-- Streak mini-chip -->
     @if (userStats(); as stats) {
-      <div class="stat-item streak-counter" matTooltip="Поточна серія">
+      <div
+        class="streak-chip"
+        [matTooltip]="'Серія: ' + stats.currentStreak + ' днів'"
+        matTooltipPosition="below"
+      >
         <mat-icon class="streak-icon">local_fire_department</mat-icon>
-        <span class="stat-value">{{ stats.currentStreak }}</span>
+        <span class="streak-count font-mono">{{ stats.currentStreak }}</span>
       </div>
 
-      <!-- XP Mini-Bar -->
-      <div class="stat-item xp-bar-container hidden md:flex" matTooltip="XP до наступного рівня">
-        <div class="xp-info">
-          <mat-icon class="xp-icon">stars</mat-icon>
-          <span class="level-badge">{{ stats.currentLevel }}</span>
+      <!-- XP mini-bar (desktop only) -->
+      <div
+        class="xp-bar-widget hidden md:flex"
+        [matTooltip]="stats.totalXp + ' / ' + stats.xpToNextLevel + ' XP'"
+        matTooltipPosition="below"
+      >
+        <span class="level-chip font-mono">{{ stats.currentLevel }}</span>
+        <div class="xp-track" role="progressbar"
+             [attr.aria-valuenow]="xpPercentage()"
+             aria-valuemin="0" aria-valuemax="100">
+          <div class="xp-fill sun-gradient" [style.width.%]="xpPercentage()"></div>
         </div>
-        <div class="xp-progress">
-          <div
-            class="xp-progress-fill"
-            [style.width.%]="xpPercentage()"
-            [attr.aria-valuenow]="xpPercentage()"
-            [attr.aria-valuemin]="0"
-            [attr.aria-valuemax]="100"
-            role="progressbar"
-          ></div>
-        </div>
-        <span class="xp-text hidden lg:inline">{{ stats.totalXp }} XP</span>
       </div>
     }
 
-    <!-- Notification Bell -->
+    <!-- Language toggle -->
+    <div class="lang-toggle hidden sm:flex" role="group" aria-label="Мова">
+      <button class="lang-btn font-sans" [class.active]="currentLang() === 'uk'" (click)="setLang('uk')">УК</button>
+      <span class="lang-sep">|</span>
+      <button class="lang-btn font-sans" [class.active]="currentLang() === 'en'" (click)="setLang('en')">EN</button>
+    </div>
+
+    <!-- Notification bell -->
     <button
       mat-icon-button
-      class="notification-button"
+      class="notif-btn"
+      (click)="notificationPanelToggle.emit()"
       [matBadge]="notificationCount()"
       [matBadgeHidden]="notificationCount() === 0"
       matBadgeColor="warn"
       matBadgeSize="small"
-      aria-label="Notifications"
+      aria-label="Сповіщення"
     >
       <mat-icon>notifications</mat-icon>
     </button>
 
-    <!-- Avatar Menu -->
+    <!-- Avatar menu -->
     <button
       mat-icon-button
       [matMenuTriggerFor]="userMenu"
-      class="avatar-button"
-      aria-label="User menu"
+      class="avatar-btn"
+      aria-label="Меню користувача"
     >
-      <img [src]="getAvatarUrl()" [alt]="getUserDisplayName()" class="avatar-image" />
+      <img [src]="getAvatarUrl()" [alt]="getUserDisplayName()" class="avatar-img" />
     </button>
 
     <mat-menu #userMenu="matMenu" xPosition="before">
       <div class="user-menu-header" mat-menu-item disabled>
-        <div class="user-info">
-          <span class="user-name">{{ getUserDisplayName() }}</span>
-          <span class="user-email">{{ getUserEmail() }}</span>
-        </div>
+        <span class="user-name font-sans">{{ getUserDisplayName() }}</span>
+        <span class="user-email font-sans">{{ getUserEmail() }}</span>
       </div>
       <mat-divider></mat-divider>
       <button mat-menu-item (click)="navigateToProfile()">
@@ -91,4 +95,4 @@
       </button>
     </mat-menu>
   }
-</mat-toolbar>
+</header>

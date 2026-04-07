@@ -1,212 +1,124 @@
 <div class="subject-detail">
-  <!-- Breadcrumb navigation -->
+
+  <!-- Breadcrumb -->
   <nav class="breadcrumbs" aria-label="breadcrumb">
     @for (crumb of breadcrumbs(); track $index; let isLast = $last) {
       @if (!isLast) {
-        <a [routerLink]="crumb.route" class="breadcrumb-link">
-          {{ crumb.label }}
-        </a>
-        <mat-icon class="breadcrumb-separator">chevron_right</mat-icon>
+        <a [routerLink]="crumb.route" class="breadcrumb-link">{{ crumb.label }}</a>
+        <span class="breadcrumb-sep">/</span>
       } @else {
         <span class="breadcrumb-current">{{ crumb.label }}</span>
       }
     }
   </nav>
 
-  <!-- Loading state -->
+  <!-- Loading -->
   @if (loading()) {
     <div class="loading-container">
-      <mat-progress-spinner mode="indeterminate" diameter="48"></mat-progress-spinner>
+      <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
       <p class="loading-text">Завантаження тем...</p>
     </div>
   }
 
-  <!-- Error state -->
+  <!-- Error -->
   @if (error() && !loading()) {
-    <div class="error-container">
-      <mat-icon class="error-icon">error_outline</mat-icon>
-      <p class="error-text">{{ error() }}</p>
-      <button mat-raised-button color="primary" (click)="onRefresh()">
-        <mat-icon>refresh</mat-icon>
-        Спробувати знову
-      </button>
+    <div class="empty-state">
+      <span class="empty-icon">⚠️</span>
+      <p class="empty-text">{{ error() }}</p>
+      <button class="btn-primary" (click)="onRefresh()">Спробувати знову</button>
     </div>
   }
 
-  <!-- Subject header -->
+  <!-- Hero block -->
   @if (subject() && !loading() && !error()) {
-    <div class="subject-header">
-      <div class="subject-info">
-        <div class="subject-icon">
-          @if (subject()!.iconUrl) {
-            <img [src]="subject()!.iconUrl" [alt]="subject()!.name" />
-          } @else {
-            <mat-icon>book</mat-icon>
+    <div class="subject-hero">
+      <div class="subject-hero-body">
+        <h1 class="subject-hero-title">{{ subject()!.name }}</h1>
+        @if (subject()!.description) {
+          <p class="subject-hero-desc">{{ subject()!.description }}</p>
+        }
+        <div class="subject-hero-meta">
+          <span class="meta-chip">
+            <mat-icon>topic</mat-icon>
+            {{ subject()!.topicCount }} тем
+          </span>
+          @if (subject()!.progress && subject()!.progress! > 0) {
+            <span class="meta-chip meta-chip--progress">
+              <mat-icon>trending_up</mat-icon>
+              {{ subject()!.progress }}% завершено
+            </span>
           }
         </div>
-        <div class="subject-text">
-          <h1 class="subject-title">{{ subject()!.name }}</h1>
-          <p class="subject-description">{{ subject()!.description }}</p>
-          <div class="subject-meta">
-            <mat-chip>
-              <mat-icon>topic</mat-icon>
-              {{ subject()!.topicCount }} тем
-            </mat-chip>
-            @if (subject()!.progress !== undefined && subject()!.progress! > 0) {
-              <mat-chip [color]="getProgressColor(subject()!.progress!)">
-                <mat-icon>trending_up</mat-icon>
-                {{ subject()!.progress }}% завершено
-              </mat-chip>
-            }
-          </div>
-        </div>
       </div>
-
-      @if (subject()!.progress !== undefined && subject()!.progress! > 0) {
-        <div class="overall-progress">
-          <div class="progress-label">
+      @if (subject()!.progress && subject()!.progress! > 0) {
+        <div class="subject-hero-progress">
+          <div class="hero-progress-label">
             <span>Загальний прогрес</span>
-            <span class="progress-value">{{ subject()!.progress }}%</span>
+            <span class="hero-progress-value">{{ subject()!.progress }}%</span>
           </div>
-          <mat-progress-bar
-            mode="determinate"
-            [value]="subject()!.progress!"
-            [color]="getProgressColor(subject()!.progress!)">
-          </mat-progress-bar>
+          <div class="hero-progress-track">
+            <div class="hero-progress-fill" [style.width.%]="subject()!.progress!"></div>
+          </div>
         </div>
       }
     </div>
   }
 
-  <!-- Topics tree -->
+  <!-- Topics accordion -->
   @if (!loading() && !error() && topics().length > 0) {
     <div class="topics-section">
       <div class="section-header">
         <h2 class="section-title">Теми для вивчення</h2>
-        <p class="section-subtitle">Обери тему щоб почати практику</p>
+        <p class="section-subtitle">Обери тему, щоб розпочати практику</p>
       </div>
 
-      <mat-tree [dataSource]="dataSource" [treeControl]="treeControl" class="topic-tree">
-        <!-- Nodes with children -->
-        <mat-tree-node
-          *matTreeNodeDef="let node; when: hasChild"
-          matTreeNodePadding
-          [style.padding-left.px]="node.level * 24"
-          class="tree-node">
-          <button
-            mat-icon-button
-            matTreeNodeToggle
-            [attr.aria-label]="'Toggle ' + node.name"
-            class="toggle-button">
-            <mat-icon>
-              {{ treeControl.isExpanded(node) ? 'expand_more' : 'chevron_right' }}
-            </mat-icon>
-          </button>
+      <mat-accordion class="topics-accordion" [multi]="false">
+        @for (topic of topics(); track topic.id) {
+          <mat-expansion-panel class="topic-panel" hideToggle>
+            <mat-expansion-panel-header class="topic-panel-header">
+              <mat-panel-title class="topic-panel-title">
+                <!-- Mastery color badge -->
+                <span class="mastery-dot" [class]="getMasteryClass(topic.masteryLevel ?? 0)"></span>
+                <span class="topic-name">{{ topic.name }}</span>
+              </mat-panel-title>
+              <mat-panel-description class="topic-panel-desc">
+                <!-- Difficulty dots -->
+                <span class="diff-dots">
+                  @for (dot of [1,2,3,4,5]; track dot) {
+                    <span class="diff-dot" [class.diff-dot--filled]="dot <= (topic.difficultyLevel ?? 1)"></span>
+                  }
+                </span>
+                <span class="topic-grade">{{ topic.gradeLevel }} кл.</span>
+              </mat-panel-description>
+            </mat-expansion-panel-header>
 
-          <div class="node-content parent-node">
-            <div class="node-header">
-              <mat-icon class="node-icon folder-icon">folder</mat-icon>
-              <span class="node-name">{{ node.name }}</span>
-              <mat-chip class="grade-chip" size="small">
-                {{ getGradeLevelLabel(node.gradeLevel) }}
-              </mat-chip>
-            </div>
-
-            @if (node.progress !== undefined && node.progress > 0) {
-              <div class="node-progress">
-                <mat-progress-bar
-                  mode="determinate"
-                  [value]="node.progress"
-                  [color]="getProgressColor(node.progress)">
-                </mat-progress-bar>
-                <span class="progress-text">{{ node.progress }}%</span>
+            <!-- Expanded content -->
+            <div class="topic-expand-body">
+              <div class="mastery-info">
+                <span class="mastery-badge" [class]="getMasteryClass(topic.masteryLevel ?? 0)">
+                  {{ getMasteryLabel(topic.masteryLevel ?? 0) }}
+                  @if ((topic.masteryLevel ?? 0) > 0) {
+                    &nbsp;{{ topic.masteryLevel }}%
+                  }
+                </span>
               </div>
-            }
-          </div>
-        </mat-tree-node>
-
-        <!-- Leaf nodes -->
-        <mat-tree-node
-          *matTreeNodeDef="let node"
-          matTreeNodePadding
-          [style.padding-left.px]="node.level * 24"
-          class="tree-node leaf-node"
-          (click)="onTopicClick(node)"
-          tabindex="0"
-          (keydown.enter)="onTopicClick(node)"
-          (keydown.space)="onTopicClick(node)">
-          
-          <div class="node-spacer"></div>
-
-          <div class="node-content">
-            <div class="node-header">
-              <mat-icon class="node-icon topic-icon">article</mat-icon>
-              <span class="node-name">{{ node.name }}</span>
-              <mat-chip class="grade-chip" size="small">
-                {{ getGradeLevelLabel(node.gradeLevel) }}
-              </mat-chip>
-            </div>
-
-            <div class="node-footer">
-              @if (node.masteryLevel !== undefined && node.masteryLevel > 0) {
-                <div class="mastery-badge" [attr.data-level]="getMasteryColor(node.masteryLevel)">
-                  <mat-icon class="mastery-icon">{{ getMasteryIcon(node.masteryLevel) }}</mat-icon>
-                  <span class="mastery-label">{{ getMasteryLabel(node.masteryLevel) }}</span>
-                  <span class="mastery-percent">{{ node.masteryLevel }}%</span>
-                </div>
-              } @else {
-                <div class="start-badge">
-                  <mat-icon>play_arrow</mat-icon>
-                  <span>Почати</span>
-                </div>
-              }
-
-              <button
-                mat-icon-button
-                class="action-button"
-                [matTooltip]="'Почати практику'"
-                (click)="onTopicClick(node); $event.stopPropagation()">
-                <mat-icon>arrow_forward</mat-icon>
+              <button class="btn-start-topic" (click)="onTopicClick(topic)">
+                Розпочати
               </button>
             </div>
-          </div>
-        </mat-tree-node>
-      </mat-tree>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
     </div>
   }
 
   <!-- Empty state -->
   @if (!loading() && !error() && topics().length === 0) {
     <div class="empty-state">
-      <mat-icon class="empty-icon">folder_off</mat-icon>
+      <span class="empty-icon">📂</span>
       <h3 class="empty-title">Поки що немає тем</h3>
-      <p class="empty-text">
-        Теми для цього предмету ще не додані. Спробуйте пізніше.
-      </p>
-      <button mat-raised-button color="primary" routerLink="/learn">
-        Повернутись до предметів
-      </button>
-    </div>
-  }
-
-  <!-- Loading skeleton -->
-  @if (loading()) {
-    <div class="skeleton-container">
-      <div class="skeleton-header">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-text-group">
-          <div class="skeleton-text skeleton-title"></div>
-          <div class="skeleton-text skeleton-subtitle"></div>
-        </div>
-      </div>
-
-      <div class="skeleton-tree">
-        @for (i of [1, 2, 3, 4, 5]; track i) {
-          <div class="skeleton-tree-node">
-            <div class="skeleton-text"></div>
-          </div>
-        }
-      </div>
+      <p class="empty-text">Теми для цього предмету ще не додані.</p>
+      <a class="btn-primary" routerLink="/learn">Повернутись до предметів</a>
     </div>
   }
 </div>

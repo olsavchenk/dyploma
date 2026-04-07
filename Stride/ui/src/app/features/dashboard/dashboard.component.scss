@@ -1,371 +1,142 @@
 .dashboard-container {
-  max-width: 1280px;
+  max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  min-height: calc(100vh - 120px);
+  padding: 0;
 }
 
-.dashboard-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 2rem;
+// ── Hero Row ──────────────────────────────────────────────────────────────────
+.hero-row {
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--color-rule);
 }
 
-.welcome-section {
-  flex: 1;
-}
-
-.welcome-title {
-  font-size: 2rem;
+.hero-greeting {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
   font-weight: 700;
-  color: rgba(0, 0, 0, 0.87);
-  margin: 0 0 0.5rem 0;
-  line-height: 1.2;
+  color: var(--color-ink);
+  margin: 0 0 4px;
+  letter-spacing: -0.02em;
 }
 
-.welcome-subtitle {
-  font-size: 1.125rem;
-  color: rgba(0, 0, 0, 0.6);
+.hero-date {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--color-ink-soft);
   margin: 0;
 }
 
-.refresh-button {
-  margin-top: 0.25rem;
+// ── 12-column dashboard grid ───────────────────────────────────────────────────
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  gap: 24px;
 }
 
-// Loading & Error States
-.loading-container,
+.col-8 { grid-column: span 8; }
+.col-4 { grid-column: span 4; }
+.col-6 { grid-column: span 6; }
+.col-12 { grid-column: span 12; }
+
+@media (max-width: 900px) {
+  .col-8, .col-4 { grid-column: span 12; }
+  .col-6 { grid-column: span 12; }
+}
+
+// ── Loading skeletons ─────────────────────────────────────────────────────────
+.skeleton-card {
+  height: 120px;
+  background: linear-gradient(
+    90deg,
+    var(--color-rule) 25%,
+    var(--color-surface-alt) 50%,
+    var(--color-rule) 75%
+  );
+  background-size: 200% 100%;
+  border-radius: var(--radius-md);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+// ── Section headers ───────────────────────────────────────────────────────────
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0;
+}
+
+.section-link {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--blue-600);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color var(--transition-fast);
+
+  &:hover { color: var(--blue-700); }
+  mat-icon { font-size: 16px; width: 16px; height: 16px; }
+}
+
+// ── Topics carousel ───────────────────────────────────────────────────────────
+.topics-carousel {
+  display: flex;
+  gap: 16px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar { height: 4px; }
+  &::-webkit-scrollbar-thumb { background: var(--color-rule); border-radius: 2px; }
+
+  > * { scroll-snap-align: start; }
+}
+
+// ── Two-column layout ─────────────────────────────────────────────────────────
+.two-col {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
+
+  @media (max-width: 768px) { grid-template-columns: 1fr; }
+}
+
+// ── Error state ───────────────────────────────────────────────────────────────
 .error-container {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
+  padding: 48px 24px;
+  gap: 16px;
   text-align: center;
-}
 
-.loading-container p,
-.error-container p {
-  margin-top: 1rem;
-  color: rgba(0, 0, 0, 0.6);
-  font-size: 1rem;
-}
-
-.error-container mat-icon {
-  font-size: 64px;
-  width: 64px;
-  height: 64px;
-  color: #EF4444;
-  margin-bottom: 1rem;
-}
-
-.error-container button {
-  margin-top: 1rem;
-}
-
-// Empty State
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem 2rem;
-  text-align: center;
-  background: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
-  border-radius: 24px;
-  margin-top: 2rem;
-}
-
-.empty-state-icon {
-  font-size: 5rem;
-  margin-bottom: 1.5rem;
-  animation: float 3s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-.empty-state h2 {
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.87);
-  margin: 0 0 0.75rem 0;
-}
-
-.empty-state p {
-  font-size: 1.125rem;
-  color: rgba(0, 0, 0, 0.6);
-  margin: 0 0 2rem 0;
-  max-width: 400px;
-}
-
-.start-button {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 2rem;
-  font-size: 1rem;
-}
-
-// Dashboard Content
-.dashboard-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
-// Gamification Grid
-.gamification-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 1.5rem;
-}
-
-// Dashboard Sections
-.dashboard-section {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.section-title {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.87);
-  margin: 0;
-}
-
-.section-title mat-icon {
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
-  color: #6366F1;
-}
-
-.section-link {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  font-weight: 500;
-}
-
-// Topics Grid
-.topics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 1.5rem;
-}
-
-// Two Column Layout
-.two-column-layout {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-  gap: 1.5rem;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-}
-
-// Quick Actions Card
-.quick-actions-card {
-  background: white;
-  border-radius: 16px;
-  padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-.quick-actions-title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
-  margin: 0;
-}
-
-.quick-actions-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-}
-
-.quick-action-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1.25rem;
-  background: #F9FAFB;
-  border-radius: 12px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.quick-action-item:hover {
-  background: #F3F4F6;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.quick-action-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-.quick-action-icon mat-icon {
-  color: white;
-  font-size: 28px;
-  width: 28px;
-  height: 28px;
-}
-
-.quick-action-label {
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: rgba(0, 0, 0, 0.87);
-  text-align: center;
-}
-
-.stats-summary {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-}
-
-.stat-item {
-  text-align: center;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 0.25rem;
-}
-
-.stat-value {
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: rgba(0, 0, 0, 0.87);
-}
-
-// Responsive Design
-@media (max-width: 1024px) {
-  .two-column-layout {
-    grid-template-columns: 1fr;
-  }
-}
-
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 1.5rem 1rem;
-  }
-
-  .welcome-title {
-    font-size: 1.5rem;
-  }
-
-  .welcome-subtitle {
-    font-size: 1rem;
-  }
-
-  .gamification-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .topics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .two-column-layout {
-    grid-template-columns: 1fr;
-    gap: 1.5rem;
-  }
-
-  .section-title {
-    font-size: 1.25rem;
-  }
-
-  .quick-actions-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .dashboard-container {
-    padding: 1rem;
-  }
-
-  .dashboard-header {
-    margin-bottom: 1.5rem;
-  }
-
-  .welcome-title {
-    font-size: 1.25rem;
-  }
-
-  .welcome-subtitle {
-    font-size: 0.875rem;
-  }
-
-  .dashboard-content {
-    gap: 1.5rem;
-  }
-
-  .empty-state {
-    padding: 3rem 1.5rem;
-  }
-
-  .empty-state h2 {
-    font-size: 1.5rem;
-  }
-
-  .empty-state p {
-    font-size: 1rem;
-  }
-
-  .quick-action-icon {
+  mat-icon {
+    font-size: 48px;
     width: 48px;
     height: 48px;
+    color: var(--color-danger);
   }
 
-  .quick-action-icon mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-  }
-
-  .quick-action-label {
-    font-size: 0.75rem;
+  p {
+    font-family: var(--font-sans);
+    color: var(--color-ink-soft);
+    margin: 0;
   }
 }

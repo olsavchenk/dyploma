@@ -1,16 +1,12 @@
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatButtonModule } from '@angular/material/button';
-import { MatDividerModule } from '@angular/material/divider';
-import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
+import { finalize } from 'rxjs';
 import { LearningService, StudentClass, StudentClassSubject } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
 
@@ -19,14 +15,10 @@ import { LoggingService } from '@app/core/services/logging.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatProgressBarModule,
-    MatInputModule,
     MatFormFieldModule,
+    MatInputModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatButtonModule,
-    MatDividerModule,
   ],
   templateUrl: './learn-browse.component.html',
   styleUrl: './learn-browse.component.scss',
@@ -47,6 +39,15 @@ export class LearnBrowseComponent implements OnInit {
   protected readonly joining = signal<boolean>(false);
   protected readonly joinError = signal<string | null>(null);
   protected readonly joinSuccess = signal<string | null>(null);
+
+  // Grade filter
+  protected readonly activeGradeFilter = signal<string>('all');
+  protected readonly gradeFilters = [
+    { label: 'Усі', value: 'all' },
+    { label: '1–4', value: '1-4' },
+    { label: '5–9', value: '5-9' },
+    { label: '10–11', value: '10-11' },
+  ];
 
   // Controls
   protected readonly searchControl = new FormControl('');
@@ -173,6 +174,29 @@ export class LearnBrowseComponent implements OnInit {
 
   protected onRefresh(): void {
     this.loadClasses();
+  }
+
+  protected setGradeFilter(value: string): void {
+    this.activeGradeFilter.set(value);
+    this.applyGradeFilter();
+  }
+
+  private applyGradeFilter(): void {
+    const filter = this.activeGradeFilter();
+    if (filter === 'all') {
+      this.filteredClasses.set(this.classes());
+      return;
+    }
+    const [min, max] = filter.split('-').map(Number);
+    const filtered = this.classes().filter(
+      (cls) => cls.gradeLevel >= min && cls.gradeLevel <= max
+    );
+    this.filteredClasses.set(filtered);
+  }
+
+  protected getMasteryDash(progress: number): string {
+    // circumference of r=20 circle = 2π*20 ≈ 125.66
+    return ((progress / 100) * 125.66).toFixed(2);
   }
 
   protected getProgressColor(progress: number): 'primary' | 'accent' | 'warn' {

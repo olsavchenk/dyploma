@@ -1,135 +1,109 @@
-<div class="classes-container">
-  <div class="header">
-    <div class="title-section">
-      <h1>Мої Класи</h1>
-      <p class="subtitle" *ngIf="quickStats()">
-        Управління {{ quickStats()!.totalClasses }} класами та {{ quickStats()!.totalStudents }} учнями
+<div class="classes-page">
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Мої Класи</h1>
+      <p class="page-subtitle" *ngIf="quickStats()">
+        {{ quickStats()!.totalClasses }} класів · {{ quickStats()!.totalStudents }} учнів
       </p>
     </div>
-    <button
-      mat-fab
-      extended
-      color="primary"
-      class="create-button"
-      (click)="openCreateDialog()"
-      aria-label="Створити клас"
-    >
-      <mat-icon>add</mat-icon>
-      Створити Клас
-    </button>
   </div>
 
-  <!-- Quick Stats -->
-  <div class="quick-stats" *ngIf="quickStats()">
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon">
-          <mat-icon>school</mat-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-value">{{ quickStats()!.totalClasses }}</div>
-          <div class="stat-label">Всього Класів</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon">
-          <mat-icon>people</mat-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-value">{{ quickStats()!.totalStudents }}</div>
-          <div class="stat-label">Всього Учнів</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon">
-          <mat-icon>trending_up</mat-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-value">{{ quickStats()!.activeThisWeek }}</div>
-          <div class="stat-label">Активних Цього Тижня</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
-
-    <mat-card class="stat-card">
-      <mat-card-content>
-        <div class="stat-icon">
-          <mat-icon>groups</mat-icon>
-        </div>
-        <div class="stat-info">
-          <div class="stat-value">{{ quickStats()!.averageClassSize.toFixed(1) }}</div>
-          <div class="stat-label">Середній Розмір Класу</div>
-        </div>
-      </mat-card-content>
-    </mat-card>
+  <!-- Loading -->
+  <div class="loading-state" *ngIf="loading()">
+    <div class="class-card class-card--skeleton" *ngFor="let i of [1,2,3]">
+      <div class="sk-avatar"></div>
+      <div class="sk-body">
+        <div class="sk-line sk-line--wide"></div>
+        <div class="sk-line sk-line--narrow"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Loading Spinner -->
-  <div class="loading-container" *ngIf="loading()">
-    <mat-spinner diameter="50"></mat-spinner>
-    <p>Завантаження класів...</p>
-  </div>
-
-  <!-- Classes Grid -->
-  <div class="classes-grid" *ngIf="!loading() && classes().length > 0">
-    <mat-card
-      *ngFor="let class of classes()"
-      class="class-card"
-      (click)="viewClass(class.id)"
-    >
-      <mat-card-header>
-        <div mat-card-avatar class="class-avatar">
-          <mat-icon>class</mat-icon>
-        </div>
-        <mat-card-title>{{ class.name }}</mat-card-title>
-        <mat-card-subtitle>{{ class.gradeLevel }}</mat-card-subtitle>
-      </mat-card-header>
-
-      <mat-card-content>
-        <div class="class-stats">
-          <div class="stat-item">
-            <mat-icon class="stat-item-icon">people</mat-icon>
-            <span>{{ class.studentCount }} учнів</span>
-          </div>
-          <div class="stat-item">
-            <mat-icon class="stat-item-icon">assignment</mat-icon>
-            <span>{{ class.assignmentCount }} завдань</span>
-          </div>
-          <div class="stat-item" *ngIf="class.averageAccuracy !== undefined">
-            <mat-icon class="stat-item-icon">analytics</mat-icon>
-            <span>{{ class.averageAccuracy.toFixed(0) }}% точність</span>
-          </div>
+  <!-- Classes card list -->
+  <div class="class-list" *ngIf="!loading() && classes().length > 0">
+    <div class="class-card" *ngFor="let cls of classes()">
+      <!-- Mastery ring + class info -->
+      <div class="card-left">
+        <div class="mastery-ring">
+          <svg width="56" height="56" viewBox="0 0 56 56">
+            <circle cx="28" cy="28" r="24" fill="none" stroke="var(--color-rule)" stroke-width="4"/>
+            <circle
+              cx="28" cy="28" r="24"
+              fill="none"
+              stroke="var(--blue-600)"
+              stroke-width="4"
+              stroke-linecap="round"
+              stroke-dasharray="150.8"
+              [attr.stroke-dashoffset]="150.8 - (150.8 * ((cls.averageAccuracy ?? 0) / 100))"
+              transform="rotate(-90 28 28)"
+            />
+            <text x="28" y="33" text-anchor="middle" class="ring-label">
+              {{ (cls.averageAccuracy ?? 0).toFixed(0) }}%
+            </text>
+          </svg>
         </div>
 
-        <div class="join-code">
-          <mat-icon>vpn_key</mat-icon>
-          <span>Код: <strong>{{ class.joinCode }}</strong></span>
+        <div class="card-info">
+          <h2 class="class-name">{{ cls.name }}</h2>
+          <div class="class-meta">
+            <span class="meta-chip">{{ cls.gradeLevel }} клас</span>
+            <span class="meta-chip">{{ cls.studentCount ?? 0 }} учнів</span>
+            <span class="meta-chip" *ngIf="cls.assignmentCount">{{ cls.assignmentCount }} завдань</span>
+          </div>
+          <div class="join-code-row">
+            <span class="join-label">Код:</span>
+            <span class="join-code">{{ cls.joinCode }}</span>
+          </div>
         </div>
-      </mat-card-content>
+      </div>
 
-      <mat-card-actions>
-        <button mat-button color="primary">
-          Переглянути
-          <mat-icon>arrow_forward</mat-icon>
+      <!-- Actions -->
+      <div class="card-actions">
+        <button class="btn-icon-action" (click)="shareCode(cls)" matTooltip="Поділитися кодом" title="Поділитися кодом">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
         </button>
-      </mat-card-actions>
-    </mat-card>
+        <button class="btn-manage" (click)="viewClass(cls.id)">
+          Управляти
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+            <polyline points="12 5 19 12 12 19"></polyline>
+          </svg>
+        </button>
+      </div>
+    </div>
   </div>
 
-  <!-- Empty State -->
+  <!-- Empty state -->
   <div class="empty-state" *ngIf="!loading() && classes().length === 0">
-    <mat-icon class="empty-icon">school</mat-icon>
-    <h2>Ще немає класів</h2>
-    <p>Створіть свій перший клас, щоб почати працювати з учнями</p>
-    <button mat-raised-button color="primary" (click)="openCreateDialog()">
-      <mat-icon>add</mat-icon>
-      Створити Перший Клас
+    <div class="empty-illustration">
+      <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--color-rule)" stroke-width="1.2">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+      </svg>
+    </div>
+    <h2 class="empty-title">Створіть перший клас</h2>
+    <p class="empty-desc">Після створення класу ви зможете запрошувати учнів і призначати завдання.</p>
+    <button class="btn-primary" (click)="openCreateDialog()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      Створити клас
     </button>
   </div>
+
+  <!-- FAB -->
+  <button class="fab" (click)="openCreateDialog()" *ngIf="classes().length > 0" title="Створити клас">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+      <line x1="12" y1="5" x2="12" y2="19"></line>
+      <line x1="5" y1="12" x2="19" y2="12"></line>
+    </svg>
+  </button>
 </div>

@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Stride.Services.Interfaces;
+using Stride.Services.Models.Admin;
 using Stride.Services.Models.Subject;
 using System.Security.Claims;
 
@@ -20,6 +21,79 @@ public class AdminSubjectsController : ControllerBase
     {
         _subjectService = subjectService;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Get paginated list of subjects with optional search
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(PaginatedResult<SubjectListItemDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    public async Task<IActionResult> GetSubjects(
+        [FromQuery] string? search = null,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var all = await _subjectService.GetAllSubjectsAsync();
+
+            var filtered = string.IsNullOrWhiteSpace(search)
+                ? all
+                : all.Where(s => s.Name.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            var totalCount = filtered.Count;
+            var items = filtered
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            var result = new PaginatedResult<SubjectListItemDto>
+            {
+                Items = items,
+                TotalCount = totalCount,
+                Page = page,
+                PageSize = pageSize
+            };
+
+            _logger.LogInformation(
+                "Admin {AdminId} retrieved subjects list - Page: {Page}, TotalCount: {TotalCount}",
+                GetCurrentUserId(), page, totalCount);
+
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving subjects list");
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Failed to retrieve subjects" });
+        }
+    }
+
+    /// <summary>
+    /// Get a subject by id
+    /// </summary>
+    [HttpGet("{id:guid}")]
+    [ProducesResponseType(typeof(SubjectDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> GetSubjectById(Guid id, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var subject = await _subjectService.GetSubjectByIdAsync(id);
+            if (subject is null)
+                return NotFound(new { message = "Subject not found" });
+
+            return Ok(subject);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving subject {SubjectId}", id);
+            return StatusCode(StatusCodes.Status500InternalServerError, new { message = "Failed to retrieve subject" });
+        }
     }
 
     /// <summary>

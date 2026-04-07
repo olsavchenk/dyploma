@@ -5,15 +5,12 @@ import {
   computed,
   inject,
   DestroyRef,
-  effect,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatCardModule } from '@angular/material/card';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 
 import {
@@ -45,8 +42,6 @@ type SessionState = 'loading' | 'task' | 'feedback' | 'error';
     CommonModule,
     MatButtonModule,
     MatIconModule,
-    MatProgressBarModule,
-    MatCardModule,
     MatSnackBarModule,
     MultipleChoiceTaskComponent,
     FillBlankTaskComponent,
@@ -56,356 +51,452 @@ type SessionState = 'loading' | 'task' | 'feedback' | 'error';
     AnswerFeedbackComponent,
   ],
   template: `
-    <div class="task-session-container">
-      <!-- Session Header -->
-      <div class="session-header">
-        <div class="header-top">
-          <button
-            mat-icon-button
-            class="back-button"
-            (click)="goBack()"
-            aria-label="Повернутись"
-          >
-            <mat-icon>arrow_back</mat-icon>
+    <div class="session-focus">
+
+      <!-- Top bar -->
+      <header class="session-topbar">
+        <div class="topbar-left">
+          @if (topic()) {
+            <span class="topbar-topic">{{ topic()!.name }}</span>
+          }
+        </div>
+
+        <!-- 5-segment progress bar -->
+        <div class="topbar-segments" aria-label="Прогрес сесії">
+          @for (seg of progressSegments(); track $index) {
+            <div class="segment" [class.segment--done]="seg === 'done'" [class.segment--active]="seg === 'active'"></div>
+          }
+        </div>
+
+        <div class="topbar-right">
+          @if (gamificationStats()?.currentStreak > 1) {
+            <span class="streak-chip">🔥 {{ gamificationStats().currentStreak }}</span>
+          }
+          <button class="close-btn" (click)="goBack()" aria-label="Закрити сесію">
+            <mat-icon>close</mat-icon>
           </button>
-
-          <div class="topic-info">
-            @if (topic(); as topicData) {
-              <h1 class="topic-name">{{ topicData.name }}</h1>
-            }
-          </div>
-
-          <div class="session-stats">
-            @if (gamificationStats(); as stats) {
-              <div class="stat streak-stat">
-                <span class="stat-icon">🔥</span>
-                <span class="stat-value">{{ stats.currentStreak }}</span>
-              </div>
-            }
-          </div>
         </div>
+      </header>
 
-        <div class="progress-section">
-          <div class="progress-info">
-            <span class="progress-text">Завдання {{ currentTaskNumber() }} з {{ targetCount() }}</span>
-            <span class="progress-percentage">{{ progressPercentage() }}%</span>
-          </div>
-          <mat-progress-bar
-            mode="determinate"
-            [value]="progressPercentage()"
-            class="session-progress"
-          ></mat-progress-bar>
-        </div>
+      <!-- Task counter -->
+      <div class="session-counter">
+        <span class="counter-text">{{ currentTaskNumber() }} / {{ targetCount() }}</span>
       </div>
 
-      <!-- Task Content Area -->
-      <div class="task-content">
+      <!-- Body -->
+      <main class="session-body">
         @switch (state()) {
           @case ('loading') {
-            <div class="loading-state">
-              <mat-progress-bar mode="indeterminate"></mat-progress-bar>
-              <p class="loading-text">Завантаження завдання...</p>
+            <div class="session-loading">
+              <div class="loading-ring"></div>
+              <p class="loading-label">Завантаження завдання...</p>
             </div>
           }
 
           @case ('task') {
             @if (currentTask(); as task) {
-              <mat-card class="task-card">
-                <mat-card-content>
-                  <div class="task-wrapper">
-                    <!-- Multiple Choice Task -->
-                    @if (task.type === 'MultipleChoice') {
-                      <app-multiple-choice-task
-                        [task]="task"
-                        (answerSelected)="onMultipleChoiceAnswer($event)"
-                      />
+              <div class="task-card">
+                <div class="task-inner">
+                  @switch (task.type) {
+                    @case ('MultipleChoice') {
+                      <app-multiple-choice-task [task]="task" (answerSelected)="onMultipleChoiceAnswer($event)" />
                     }
-
-                    <!-- Fill Blank Task -->
-                    @if (task.type === 'FillBlank') {
-                      <app-fill-blank-task
-                        [task]="task"
-                        (answersChanged)="onFillBlankAnswers($event)"
-                      />
+                    @case ('FillBlank') {
+                      <app-fill-blank-task [task]="task" (answersChanged)="onFillBlankAnswers($event)" />
                     }
-
-                    <!-- True/False Task -->
-                    @if (task.type === 'TrueFalse') {
-                      <app-true-false-task
-                        [task]="task"
-                        (answerSelected)="onTrueFalseAnswer($event)"
-                      />
+                    @case ('TrueFalse') {
+                      <app-true-false-task [task]="task" (answerSelected)="onTrueFalseAnswer($event)" />
                     }
-
-                    <!-- Matching Task -->
-                    @if (task.type === 'Matching') {
-                      <app-matching-task
-                        [task]="task"
-                        (matchesChanged)="onMatchingAnswers($event)"
-                      />
+                    @case ('Matching') {
+                      <app-matching-task [task]="task" (matchesChanged)="onMatchingAnswers($event)" />
                     }
-
-                    <!-- Ordering Task -->
-                    @if (task.type === 'Ordering') {
-                      <app-ordering-task
-                        [task]="task"
-                        (orderChanged)="onOrderingAnswer($event)"
-                      />
+                    @case ('Ordering') {
+                      <app-ordering-task [task]="task" (orderChanged)="onOrderingAnswer($event)" />
                     }
-                  </div>
+                  }
+                </div>
 
-                  <div class="task-actions">
-                    <button
-                      mat-stroked-button
-                      class="skip-button"
-                      (click)="skipTask()"
-                    >
-                      Пропустити
-                    </button>
-                    <button
-                      mat-raised-button
-                      color="primary"
-                      class="submit-button"
-                      [disabled]="!hasAnswer()"
-                      (click)="submitAnswer()"
-                    >
-                      Підтвердити відповідь
-                    </button>
-                  </div>
-                </mat-card-content>
-              </mat-card>
+                <div class="task-footer">
+                  <button class="btn-skip" (click)="skipTask()">Пропустити</button>
+                  <button
+                    class="btn-check"
+                    [disabled]="!hasAnswer()"
+                    (click)="submitAnswer()">
+                    Перевірити
+                  </button>
+                </div>
+              </div>
             }
           }
 
           @case ('feedback') {
             @if (feedbackData(); as feedback) {
-              <app-answer-feedback
-                [feedback]="feedback"
-                (continue)="loadNextTask()"
-              />
+              <div class="feedback-card" [class.feedback-card--correct]="feedback.isCorrect" [class.feedback-card--wrong]="!feedback.isCorrect">
+                <div class="feedback-icon-wrap">
+                  @if (feedback.isCorrect) {
+                    <mat-icon class="feedback-icon feedback-icon--ok">check_circle</mat-icon>
+                    <p class="feedback-label feedback-label--ok">Правильно!</p>
+                  } @else {
+                    <mat-icon class="feedback-icon feedback-icon--err">cancel</mat-icon>
+                    <p class="feedback-label feedback-label--err">Не зовсім правильно</p>
+                  }
+                </div>
+                @if (!feedback.isCorrect && feedback.correctAnswer) {
+                  <div class="feedback-answer">
+                    <span class="feedback-answer-label">Правильна відповідь:</span>
+                    <span class="feedback-answer-val">{{ formatAnswer(feedback.correctAnswer) }}</span>
+                  </div>
+                }
+                @if (feedback.explanation) {
+                  <div class="feedback-explanation">{{ feedback.explanation }}</div>
+                }
+                <div class="feedback-xp">
+                  <span class="xp-icon">⭐</span>
+                  <span class="xp-val">+{{ feedback.xpEarned }} XP</span>
+                </div>
+                <button class="btn-check" (click)="loadNextTask()">Продовжити</button>
+              </div>
             }
           }
 
           @case ('error') {
-            <div class="error-state">
+            <div class="session-error">
               <mat-icon class="error-icon">error_outline</mat-icon>
               <h2>Щось пішло не так</h2>
               <p>{{ errorMessage() }}</p>
-              <button mat-raised-button color="primary" (click)="retryLoadTask()">
-                Спробувати ще раз
-              </button>
+              <button class="btn-check" (click)="retryLoadTask()">Спробувати ще раз</button>
             </div>
           }
         }
-      </div>
+      </main>
     </div>
   `,
-  styles: [
-    `
-      .task-session-container {
-        min-height: 100vh;
-        background: linear-gradient(to bottom, #f8fafc 0%, #e2e8f0 100%);
-        padding-bottom: 2rem;
-      }
+  styles: [`
+    /* Focus-mode: full screen, no sidenav interference */
+    :host {
+      display: block;
+    }
 
-      .session-header {
-        background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-        padding: 1rem;
-        position: sticky;
-        top: 0;
-        z-index: 10;
-      }
+    .session-focus {
+      min-height: 100vh;
+      background: var(--color-surface, #f7f6f3);
+      display: flex;
+      flex-direction: column;
+    }
 
-      .header-top {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-        margin-bottom: 1rem;
-        max-width: 1200px;
-        margin-left: auto;
-        margin-right: auto;
-      }
+    /* ── Top bar ──────────────────────────────────────────────────── */
+    .session-topbar {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: var(--color-paper, #fff);
+      border-bottom: 1px solid var(--color-rule, #e5e5e3);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
 
-      .back-button {
-        flex-shrink: 0;
-      }
+    .topbar-left {
+      flex: 1;
+      min-width: 0;
+    }
 
-      .topic-info {
-        flex: 1;
-        min-width: 0;
-      }
+    .topbar-topic {
+      font-family: var(--font-display, 'Fraunces', serif);
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--color-ink, #1a1a18);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
 
-      .topic-name {
-        margin: 0;
-        font-size: 1.25rem;
+    .topbar-segments {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .segment {
+      width: 36px;
+      height: 6px;
+      border-radius: 100px;
+      background: var(--color-rule, #e5e5e3);
+      transition: background 0.3s;
+
+      &--done { background: var(--blue-600, #2563eb); }
+      &--active { background: var(--sun-400, #facc15); }
+    }
+
+    .topbar-right {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .streak-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.6rem;
+      background: #fff7ed;
+      border: 1px solid #fed7aa;
+      border-radius: 100px;
+      font-family: var(--font-mono, monospace);
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: #c2410c;
+    }
+
+    .close-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border: 1px solid var(--color-rule, #e5e5e3);
+      border-radius: 50%;
+      background: transparent;
+      color: var(--color-ink-soft, #6b6b63);
+      cursor: pointer;
+      transition: background 0.15s;
+      &:hover { background: var(--color-surface, #f7f6f3); }
+    }
+
+    /* ── Counter ────────────────────────────────────────────────── */
+    .session-counter {
+      text-align: center;
+      padding: 0.75rem 0 0;
+    }
+
+    .counter-text {
+      font-family: var(--font-mono, monospace);
+      font-size: 0.8rem;
+      color: var(--color-ink-soft, #6b6b63);
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Body ───────────────────────────────────────────────────── */
+    .session-body {
+      flex: 1;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 1.5rem 1rem 3rem;
+    }
+
+    /* ── Loading ─────────────────────────────────────────────────── */
+    .session-loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+      padding: 5rem 1rem;
+    }
+
+    .loading-ring {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--color-rule, #e5e5e3);
+      border-top-color: var(--blue-600, #2563eb);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-label {
+      font-size: 0.9rem;
+      color: var(--color-ink-soft, #6b6b63);
+    }
+
+    /* ── Task card ──────────────────────────────────────────────── */
+    .task-card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--color-paper, #fff);
+      border: 1px solid var(--color-rule, #e5e5e3);
+      border-radius: var(--radius-md, 12px);
+      box-shadow: var(--shadow-card, 0 1px 4px rgba(0,0,0,.06));
+      overflow: hidden;
+    }
+
+    .task-inner {
+      padding: 2rem 2rem 1rem;
+    }
+
+    .task-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 2rem;
+      border-top: 1px solid var(--color-rule, #e5e5e3);
+      background: var(--color-surface, #f7f6f3);
+    }
+
+    /* ── Buttons ────────────────────────────────────────────────── */
+    .btn-skip {
+      padding: 0.55rem 1.25rem;
+      background: transparent;
+      color: var(--color-ink-soft, #6b6b63);
+      border: 1px solid var(--color-rule, #e5e5e3);
+      border-radius: var(--radius-sm, 8px);
+      font-family: var(--font-sans, sans-serif);
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: border-color 0.15s;
+      &:hover { border-color: var(--color-ink-soft, #6b6b63); }
+    }
+
+    .btn-check {
+      padding: 0.7rem 2rem;
+      background: var(--blue-600, #2563eb);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-sm, 8px);
+      font-family: var(--font-sans, sans-serif);
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.2s;
+      &:hover { opacity: 0.88; }
+      &:disabled { opacity: 0.35; cursor: not-allowed; }
+    }
+
+    /* ── Feedback card ──────────────────────────────────────────── */
+    .feedback-card {
+      width: 100%;
+      max-width: 720px;
+      background: var(--color-paper, #fff);
+      border: 1px solid var(--color-rule, #e5e5e3);
+      border-radius: var(--radius-md, 12px);
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      align-items: center;
+      text-align: center;
+
+      &--correct { border-top: 4px solid #16a34a; }
+      &--wrong   { border-top: 4px solid #dc2626; }
+    }
+
+    .feedback-icon-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .feedback-icon {
+      font-size: 3rem;
+      width: 3rem;
+      height: 3rem;
+
+      &--ok  { color: #16a34a; }
+      &--err { color: #dc2626; }
+    }
+
+    .feedback-label {
+      font-family: var(--font-display, serif);
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin: 0;
+
+      &--ok  { color: #15803d; }
+      &--err { color: #b91c1c; }
+    }
+
+    .feedback-answer {
+      background: var(--color-surface, #f7f6f3);
+      border: 1px solid var(--color-rule, #e5e5e3);
+      border-radius: var(--radius-sm, 8px);
+      padding: 0.75rem 1.25rem;
+      font-size: 0.9rem;
+      text-align: left;
+      width: 100%;
+
+      .feedback-answer-label {
+        display: block;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-ink-soft, #6b6b63);
+        margin-bottom: 0.3rem;
         font-weight: 600;
-        color: #1a202c;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
       }
 
-      .session-stats {
-        display: flex;
-        gap: 0.75rem;
-        flex-shrink: 0;
-      }
-
-      .stat {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        background-color: #f7fafc;
-        border-radius: 0.5rem;
-        border: 1px solid #e2e8f0;
-      }
-
-      .stat-icon {
-        font-size: 1.25rem;
-        line-height: 1;
-      }
-
-      .stat-value {
+      .feedback-answer-val {
+        font-family: var(--font-mono, monospace);
         font-weight: 600;
-        color: #1a202c;
-        font-size: 1rem;
+        color: var(--color-ink, #1a1a18);
       }
+    }
 
-      .progress-section {
-        max-width: 1200px;
-        margin: 0 auto;
-      }
+    .feedback-explanation {
+      font-size: 0.9rem;
+      color: var(--color-ink-soft, #6b6b63);
+      line-height: 1.6;
+      text-align: left;
+      width: 100%;
+      padding: 0 0.25rem;
+    }
 
-      .progress-info {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 0.5rem;
-      }
+    .feedback-xp {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-family: var(--font-mono, monospace);
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #92400e;
+    }
 
-      .progress-text {
-        font-weight: 500;
-        color: #4a5568;
-        font-size: 0.875rem;
-      }
+    .xp-icon { font-size: 1.2rem; }
 
-      .progress-percentage {
-        font-weight: 600;
-        color: #667eea;
-        font-size: 0.875rem;
-      }
-
-      .session-progress {
-        height: 8px;
-        border-radius: 4px;
-      }
-
-      .task-content {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-      }
-
-      .loading-state {
-        text-align: center;
-        padding: 3rem 1rem;
-      }
-
-      .loading-text {
-        margin-top: 1rem;
-        color: #667eea;
-        font-weight: 500;
-      }
-
-      .task-card {
-        border-radius: 1rem;
-        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-      }
-
-      .task-wrapper {
-        margin-bottom: 1.5rem;
-      }
-
-      .task-actions {
-        display: flex;
-        justify-content: space-between;
-        gap: 1rem;
-        padding-top: 1.5rem;
-        border-top: 2px solid #e2e8f0;
-      }
-
-      .skip-button {
-        flex: 0 0 auto;
-      }
-
-      .submit-button {
-        flex: 1;
-        max-width: 300px;
-        margin-left: auto;
-        padding: 0.75rem 2rem;
-        font-size: 1rem;
-        font-weight: 600;
-      }
-
-      .error-state {
-        text-align: center;
-        padding: 3rem 1rem;
-      }
+    /* ── Error ──────────────────────────────────────────────────── */
+    .session-error {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 5rem 1rem;
+      text-align: center;
 
       .error-icon {
-        font-size: 4rem;
-        width: 4rem;
-        height: 4rem;
-        color: #ef4444;
-        margin-bottom: 1rem;
+        font-size: 3rem;
+        width: 3rem;
+        height: 3rem;
+        color: #dc2626;
       }
 
-      .error-state h2 {
-        font-size: 1.5rem;
-        font-weight: 600;
-        color: #1a202c;
-        margin-bottom: 0.5rem;
+      h2 {
+        font-family: var(--font-display, serif);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--color-ink, #1a1a18);
+        margin: 0;
       }
 
-      .error-state p {
-        color: #6b7280;
-        margin-bottom: 1.5rem;
+      p {
+        font-size: 0.9rem;
+        color: var(--color-ink-soft, #6b6b63);
+        margin: 0;
+        max-width: 360px;
       }
+    }
 
-      @media (max-width: 768px) {
-        .topic-name {
-          font-size: 1rem;
-        }
-
-        .session-stats {
-          gap: 0.5rem;
-        }
-
-        .stat {
-          padding: 0.375rem 0.5rem;
-        }
-
-        .stat-icon {
-          font-size: 1rem;
-        }
-
-        .stat-value {
-          font-size: 0.875rem;
-        }
-
-        .task-actions {
-          flex-direction: column;
-        }
-
-        .submit-button {
-          max-width: 100%;
-          order: -1;
-        }
-      }
-    `,
-  ],
+    /* ── Responsive ─────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      .session-topbar { padding: 0.6rem 1rem; }
+      .segment { width: 24px; }
+      .task-inner { padding: 1.25rem 1rem 0.75rem; }
+      .task-footer { padding: 0.75rem 1rem; }
+      .feedback-card { padding: 1.5rem 1rem; }
+    }
+  `],
 })
 export class TaskSessionComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
@@ -417,7 +508,7 @@ export class TaskSessionComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly logger = inject(LoggingService);
 
-  // Component State
+  // State
   protected readonly state = signal<SessionState>('loading');
   protected readonly currentTask = signal<Task | null>(null);
   protected readonly topic = signal<Topic | null>(null);
@@ -425,26 +516,34 @@ export class TaskSessionComponent implements OnInit {
   protected readonly errorMessage = signal<string>('');
   protected readonly gamificationStats = signal<any>(null);
 
-  // User Answer State
+  // Answer state
   protected readonly currentAnswer = signal<string | string[] | MatchingPair[] | null>(null);
   protected readonly startTime = signal<number>(Date.now());
 
-  // Session Progress
+  // Session progress
   protected readonly completedCount = signal<number>(0);
-  protected readonly targetCount = signal<number>(10); // Default 10 tasks per session
+  protected readonly targetCount = signal<number>(5);
 
-  // Computed Properties
-  protected readonly progressPercentage = computed(() => {
-    const completed = this.completedCount();
-    const target = this.targetCount();
-    return Math.round((completed / target) * 100);
-  });
+  private readonly SEGMENTS = 5;
+
+  protected readonly progressPercentage = computed(() =>
+    Math.round((this.completedCount() / this.targetCount()) * 100)
+  );
 
   protected readonly currentTaskNumber = computed(() =>
     Math.min(this.completedCount() + 1, this.targetCount())
   );
 
-  // Route Parameters
+  /** Returns array of 5 segment states: 'done' | 'active' | 'empty' */
+  protected readonly progressSegments = computed<string[]>(() => {
+    const done = this.completedCount();
+    return Array.from({ length: this.SEGMENTS }, (_, i) => {
+      if (i < done) return 'done';
+      if (i === done && this.state() === 'task') return 'active';
+      return 'empty';
+    });
+  });
+
   private topicId: string | null = null;
 
   ngOnInit(): void {
@@ -460,46 +559,31 @@ export class TaskSessionComponent implements OnInit {
     });
   }
 
-  /**
-   * Load topic information
-   */
   private loadTopic(): void {
     if (!this.topicId) return;
-
     this.learningService
       .getTopic(this.topicId)
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (topic: Topic) => this.topic.set(topic),
-        error: () => {
-          // Continue even if topic load fails
-        },
-      });
+      .subscribe({ next: (t) => this.topic.set(t), error: () => {} });
   }
 
-  /**
-   * Load gamification stats
-   */
   private loadGamificationStats(): void {
     this.gamificationService
       .getStats()
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (stats: any) => this.gamificationStats.set(stats),
-        error: () => {
-          // Continue even if stats load fails
-        },
-      });
+      .subscribe({ next: (s) => this.gamificationStats.set(s), error: () => {} });
   }
 
-  /**
-   * Load next task
-   */
   protected loadNextTask(): void {
     if (!this.topicId) return;
 
     if (this.completedCount() >= this.targetCount()) {
-      this.router.navigate(['/learn']);
+      this.router.navigate(['/learn/session', this.topicId, 'summary'], {
+        state: {
+          completed: this.completedCount(),
+          topicName: this.topic()?.name ?? '',
+        },
+      });
       return;
     }
 
@@ -511,151 +595,74 @@ export class TaskSessionComponent implements OnInit {
       .getNextTask(this.topicId)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (task: Task) => {
-          this.currentTask.set(task);
-          this.state.set('task');
-        },
-        error: (error: any) => {
+        next: (task) => { this.currentTask.set(task); this.state.set('task'); },
+        error: (err) => {
           this.showError('Не вдалося завантажити завдання. Спробуйте ще раз.');
-          this.logger.error('TaskSessionComponent', 'Error loading task', {}, error);
+          this.logger.error('TaskSessionComponent', 'Error loading task', {}, err);
         },
       });
   }
 
-  /**
-   * Retry loading task
-   */
-  protected retryLoadTask(): void {
-    this.loadNextTask();
-  }
+  protected retryLoadTask(): void { this.loadNextTask(); }
 
-  /**
-   * Handle multiple choice answer
-   */
-  protected onMultipleChoiceAnswer(selectedOption: string): void {
-    this.currentAnswer.set(selectedOption);
-  }
+  protected onMultipleChoiceAnswer(opt: string): void { this.currentAnswer.set(opt); }
+  protected onFillBlankAnswers(ans: string[]): void { this.currentAnswer.set(ans.join(',')); }
+  protected onTrueFalseAnswer(ans: boolean): void { this.currentAnswer.set(ans.toString()); }
+  protected onMatchingAnswers(pairs: MatchingPair[]): void { this.currentAnswer.set(pairs); }
+  protected onOrderingAnswer(items: string[]): void { this.currentAnswer.set(items); }
 
-  /**
-   * Handle fill blank answers
-   */
-  protected onFillBlankAnswers(answers: string[]): void {
-    this.currentAnswer.set(answers.join(','));
-  }
-
-  /**
-   * Handle true/false answer
-   */
-  protected onTrueFalseAnswer(answer: boolean): void {
-    this.currentAnswer.set(answer.toString());
-  }
-
-  /**
-   * Handle matching answers
-   */
-  protected onMatchingAnswers(pairs: MatchingPair[]): void {
-    this.currentAnswer.set(pairs);
-  }
-
-  /**
-   * Handle ordering answer
-   */
-  protected onOrderingAnswer(orderedItems: string[]): void {
-    this.currentAnswer.set(orderedItems);
-  }
-
-  /**
-   * Check if user has provided an answer
-   */
   protected hasAnswer(): boolean {
-    const answer = this.currentAnswer();
-    if (!answer) return false;
-
-    if (Array.isArray(answer)) {
-      return answer.length > 0;
-    }
-    return answer !== '';
+    const a = this.currentAnswer();
+    if (!a) return false;
+    return Array.isArray(a) ? a.length > 0 : a !== '';
   }
 
-  /**
-   * Submit answer to backend
-   */
   protected submitAnswer(): void {
     const task = this.currentTask();
     const answer = this.currentAnswer();
-
     if (!task || !answer) return;
 
     const responseTimeMs = Date.now() - this.startTime();
-
     this.state.set('loading');
 
     this.taskService
       .submitTask(task.id, answer, responseTimeMs)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
-        next: (response: TaskSubmitResponse) => {
+        next: (response) => {
           this.feedbackData.set(response);
           this.state.set('feedback');
-          this.completedCount.update((count) => count + 1);
-
-          // Refresh gamification stats
+          this.completedCount.update((c) => c + 1);
           this.loadGamificationStats();
-
-          // Check if session is complete
-          if (this.completedCount() >= this.targetCount()) {
-            this.showSessionComplete();
-          }
         },
-        error: (error: any) => {
+        error: (err) => {
           this.showError('Не вдалося відправити відповідь. Спробуйте ще раз.');
           this.state.set('task');
-          this.logger.error('TaskSessionComponent', 'Error submitting answer', {}, error);
+          this.logger.error('TaskSessionComponent', 'Error submitting answer', {}, err);
         },
       });
   }
 
-  /**
-   * Skip current task
-   */
   protected skipTask(): void {
-    this.snackBar.open('Завдання пропущено', 'OK', {
-      duration: 2000,
-      horizontalPosition: 'center',
-      verticalPosition: 'top',
-    });
+    this.snackBar.open('Завдання пропущено', 'OK', { duration: 2000, horizontalPosition: 'center', verticalPosition: 'top' });
     this.loadNextTask();
   }
 
-  /**
-   * Go back to previous page
-   */
-  protected goBack(): void {
-    this.router.navigate(['/learn']);
+  protected goBack(): void { this.router.navigate(['/learn']); }
+
+  protected formatAnswer(answer: string | string[] | MatchingPair[]): string {
+    if (typeof answer === 'string') return answer;
+    if (Array.isArray(answer)) {
+      if (answer.length > 0 && typeof answer[0] === 'object' && 'leftId' in (answer[0] as object)) {
+        return (answer as MatchingPair[]).map((p) => `${p.leftId} → ${p.rightId}`).join(', ');
+      }
+      return (answer as string[]).join(', ');
+    }
+    return '';
   }
 
-  /**
-   * Show error state
-   */
   private showError(message: string): void {
     this.errorMessage.set(message);
     this.state.set('error');
-  }
-
-  /**
-   * Show session complete notification
-   */
-  private showSessionComplete(): void {
-    setTimeout(() => {
-      this.snackBar.open(
-        `🎉 Сесію завершено! Виконано ${this.completedCount()} завдань`,
-        'Повернутись',
-        {
-          duration: 5000,
-          horizontalPosition: 'center',
-          verticalPosition: 'top',
-        }
-      );
-    }, 2000);
   }
 }

@@ -1,6 +1,7 @@
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Moq;
 using Stride.Adaptive.Configuration;
 using Stride.Adaptive.Models;
@@ -71,7 +72,8 @@ public class AdaptiveAIServiceIntegrationTests : IDisposable
             _context,
             gamificationSettings,
             Mock.Of<IAchievementService>(),
-            Mock.Of<ILeaderboardService>());
+            Mock.Of<ILeaderboardService>(),
+            NullLogger<GamificationService>.Instance);
 
         _taskPoolServiceMock = new Mock<ITaskPoolService>();
         _instanceRepositoryMock = new Mock<ITaskInstanceRepository>();

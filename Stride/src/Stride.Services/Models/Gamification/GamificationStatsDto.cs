@@ -12,4 +12,7 @@ public class GamificationStatsDto
     public int StreakFreezes { get; set; }
     public string League { get; set; } = "Bronze";
     public DateTime? LastActiveDate { get; set; }
+    public bool FirstTaskOfDayCompleted { get; set; }
+    public int TasksCompleted { get; set; }
+    public double Accuracy { get; set; }
 }

@@ -1,13 +1,16 @@
 {
-  "name": "Stride — Адаптивна навчальна платформа",
-  "short_name": "Stride",
-  "description": "AI-powered adaptive learning platform for Ukrainian students",
-  "theme_color": "#6366f1",
-  "background_color": "#ffffff",
+  "name": "Страйд — Адаптивна навчальна платформа",
+  "short_name": "Страйд",
+  "description": "AI-платформа адаптивного навчання для українських учнів",
+  "theme_color": "#0B3D91",
+  "background_color": "#FAF7F1",
   "display": "standalone",
   "scope": "/",
-  "start_url": "/",
+  "start_url": "/dashboard",
   "orientation": "portrait-primary",
+  "lang": "uk",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "assets/icons/icon-72x72.png.svg",
@@ -69,8 +72,5 @@
       "type": "image/svg+xml",
       "purpose": "maskable"
     }
-  ],
-  "categories": ["education", "productivity"],
-  "lang": "uk",
-  "dir": "ltr"
+  ]
 }

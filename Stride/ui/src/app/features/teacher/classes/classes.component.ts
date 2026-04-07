@@ -7,10 +7,12 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { TeacherService } from '@app/core/services/teacher.service';
 import { LoggingService } from '@app/core/services/logging.service';
 import { Class, ClassQuickStats } from '@app/core/models';
 import { CreateClassDialogComponent } from '../dialogs/create-class-dialog.component';
+import { ShareJoinCodeDialogComponent } from '../dialogs/share-join-code-dialog.component';
 
 @Component({
   selector: 'app-classes',
@@ -23,6 +25,7 @@ import { CreateClassDialogComponent } from '../dialogs/create-class-dialog.compo
     MatDialogModule,
     MatProgressSpinnerModule,
     MatTooltipModule,
+    MatSnackBarModule,
   ],
   templateUrl: './classes.component.html',
   styleUrls: ['./classes.component.scss'],
@@ -31,6 +34,7 @@ export class ClassesComponent implements OnInit {
   private readonly teacherService = inject(TeacherService);
   private readonly router = inject(Router);
   private readonly dialog = inject(MatDialog);
+  private readonly snackBar = inject(MatSnackBar);
   private readonly logger = inject(LoggingService);
 
   readonly classes = signal<Class[]>([]);
@@ -75,5 +79,12 @@ export class ClassesComponent implements OnInit {
 
   viewClass(classId: string): void {
     this.router.navigate(['/teacher/classes', classId]);
+  }
+
+  shareCode(cls: Class): void {
+    this.dialog.open(ShareJoinCodeDialogComponent, {
+      width: '420px',
+      data: { joinCode: cls.joinCode, className: cls.name },
+    });
   }
 }

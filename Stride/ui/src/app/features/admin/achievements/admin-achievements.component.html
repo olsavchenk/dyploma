@@ -1,0 +1,62 @@
+<div class="achievements-page">
+  <div class="page-header">
+    <h1 class="page-title">Досягнення</h1>
+    <button mat-flat-button color="primary" (click)="openCreate()">
+      <mat-icon>add</mat-icon>
+      Нове досягнення
+    </button>
+  </div>
+
+  @if (loading()) {
+    <div class="spinner-wrap">
+      <mat-spinner diameter="48"></mat-spinner>
+    </div>
+  } @else {
+    <div class="cards-grid">
+      @for (item of achievements(); track item.id) {
+        <div class="achievement-card">
+          <div class="card-icon-wrap">
+            @if (item.iconUrl) {
+              <img [src]="item.iconUrl" [alt]="item.name" class="card-icon-img" />
+            } @else {
+              <mat-icon class="card-icon-placeholder">emoji_events</mat-icon>
+            }
+            @if (item.isHidden) {
+              <span class="hidden-badge" matTooltip="Приховане">
+                <mat-icon>visibility_off</mat-icon>
+              </span>
+            }
+          </div>
+          <div class="card-body">
+            <p class="card-code">{{ item.code }}</p>
+            <h3 class="card-name">{{ item.name }}</h3>
+            <p class="card-desc">{{ item.description }}</p>
+            <div class="card-xp">
+              <mat-icon class="xp-icon">bolt</mat-icon>
+              <span>{{ item.xpReward }} XP</span>
+            </div>
+          </div>
+          <div class="card-actions">
+            <button mat-icon-button matTooltip="Редагувати" (click)="openEdit(item)">
+              <mat-icon>edit</mat-icon>
+            </button>
+            <button mat-icon-button matTooltip="Видалити" color="warn" (click)="delete(item)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </div>
+        </div>
+      }
+    </div>
+
+    @if (achievements().length === 0) {
+      <div class="empty-state">
+        <mat-icon>emoji_events</mat-icon>
+        <p>Досягнень ще немає</p>
+      </div>
+    }
+
+    <div class="page-footer">
+      <span class="total-label">Всього: {{ total() }}</span>
+    </div>
+  }
+</div>

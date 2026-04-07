@@ -1,0 +1,88 @@
+// ─── Stride Decorative Backgrounds ──────────────────────────────────────────
+
+// Subtle paper grain overlay (4% opacity SVG noise)
+%grain-overlay {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.04;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 256px 256px;
+  }
+}
+
+// Auth split-screen radial gradient mesh (right panel)
+.auth-mesh-bg {
+  background:
+    radial-gradient(ellipse at 20% 20%, rgba(11,61,145,.08) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 80%, rgba(255,213,0,.06) 0%, transparent 60%),
+    var(--color-paper);
+}
+
+// Auth split-screen deep blue left panel
+.auth-brand-panel {
+  background:
+    radial-gradient(ellipse at 30% 70%, rgba(255,213,0,.12) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 20%, rgba(63,104,186,.6) 0%, transparent 60%),
+    var(--blue-600);
+  position: relative;
+  overflow: hidden;
+}
+
+// Abstract line-geometry hero decor (SVG inline)
+.decor-geo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.08;
+  background-image:
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 40px,
+      rgba(255,255,255,.5) 40px,
+      rgba(255,255,255,.5) 41px
+    );
+}
+
+// Paper surface with grain
+.surface-paper {
+  background-color: var(--color-paper);
+  position: relative;
+  @extend %grain-overlay;
+}
+
+// Sun underline for brand mark
+.sun-underline {
+  position: relative;
+  display: inline-block;
+
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -3px;
+    left: 0;
+    width: 0;
+    height: 3px;
+    background: var(--sun-400);
+    border-radius: 2px;
+    transition: width 350ms var(--ease-editorial);
+  }
+
+  &:hover::after,
+  &:focus-visible::after {
+    width: 100%;
+  }
+}
+
+// Sun gradient for progress bars / accents
+.sun-gradient {
+  background: linear-gradient(90deg, var(--sun-400) 0%, var(--sun-500) 100%);
+}
+
+// Blue gradient for hero blocks
+.brand-gradient {
+  background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-500) 100%);
+}

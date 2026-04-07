@@ -65,10 +65,11 @@ interface BlankSegment {
         display: flex;
         flex-wrap: wrap;
         align-items: center;
-        gap: 0.5rem;
-        font-size: 1.125rem;
+        gap: 0.4rem;
+        font-family: var(--font-sans, sans-serif);
+        font-size: 1.1rem;
         line-height: 1.8;
-        color: #1a202c;
+        color: var(--color-ink, #1a1a18);
       }
 
       .text-segment {
@@ -83,53 +84,54 @@ interface BlankSegment {
         max-width: 200px;
 
         ::ng-deep {
-          .mat-mdc-form-field-subscript-wrapper {
-            display: none;
+          .mat-mdc-form-field-subscript-wrapper { display: none; }
+          .mat-mdc-text-field-wrapper { padding-bottom: 0; }
+          .mat-mdc-form-field-infix { min-height: 40px; padding: 8px 0; }
+          .mdc-notched-outline__notch { border-right-style: hidden; }
+
+          input {
+            font-family: var(--font-mono, monospace);
+            font-size: 0.95rem;
+            color: var(--color-ink, #1a1a18);
           }
 
-          .mat-mdc-text-field-wrapper {
-            padding-bottom: 0;
+          .mdc-notched-outline__leading,
+          .mdc-notched-outline__notch,
+          .mdc-notched-outline__trailing {
+            border-color: var(--color-rule, #e5e5e3) !important;
           }
 
-          .mat-mdc-form-field-infix {
-            min-height: 40px;
-            padding: 8px 0;
-          }
-
-          .mdc-notched-outline__notch {
-            border-right-style: hidden;
+          .mdc-text-field--focused .mdc-notched-outline__leading,
+          .mdc-text-field--focused .mdc-notched-outline__notch,
+          .mdc-text-field--focused .mdc-notched-outline__trailing {
+            border-color: var(--sun-400, #facc15) !important;
           }
         }
       }
 
       .hints-section {
-        padding: 1rem;
-        background-color: #fffbeb;
-        border-left: 4px solid #fbbf24;
-        border-radius: 0.5rem;
-        margin-top: 0.5rem;
+        padding: 0.875rem 1rem;
+        background: #fffbeb;
+        border-left: 3px solid var(--sun-400, #facc15);
+        border-radius: var(--radius-sm, 8px);
       }
 
       .hint-label {
         font-weight: 600;
+        font-size: 0.8rem;
         color: #92400e;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
       }
 
       .hint-text {
+        font-size: 0.875rem;
         color: #78350f;
         line-height: 1.5;
       }
 
       @media (max-width: 640px) {
-        .question-container {
-          font-size: 1rem;
-        }
-
-        .blank-input {
-          min-width: 100px;
-          max-width: 150px;
-        }
+        .question-container { font-size: 1rem; }
+        .blank-input { min-width: 90px; max-width: 150px; }
       }
     `,
   ],

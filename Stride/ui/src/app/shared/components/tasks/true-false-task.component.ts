@@ -57,10 +57,11 @@ import { TrueFalseTask } from '@app/core';
       }
 
       .question {
-        font-size: 1.125rem;
+        font-family: var(--font-sans, sans-serif);
+        font-size: 1.1rem;
         font-weight: 500;
-        line-height: 1.6;
-        color: #1a202c;
+        line-height: 1.65;
+        color: var(--color-ink, #1a1a18);
         text-align: center;
       }
 
@@ -78,118 +79,93 @@ import { TrueFalseTask } from '@app/core';
         align-items: center;
         gap: 0.5rem;
         padding: 1.5rem 2rem;
-        min-width: 180px;
-        border: 3px solid transparent;
-        border-radius: 1rem;
-        transition: all 0.2s;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        min-width: 160px;
+        border: 2px solid var(--color-rule, #e5e5e3);
+        border-radius: var(--radius-md, 12px);
+        transition: border-color 0.15s, background 0.15s, transform 0.15s;
+        background: var(--color-paper, #fff);
+        cursor: pointer;
+        box-shadow: var(--shadow-card, 0 1px 4px rgba(0,0,0,.06));
 
         mat-icon {
-          font-size: 3rem;
-          width: 3rem;
-          height: 3rem;
+          font-size: 2.5rem;
+          width: 2.5rem;
+          height: 2.5rem;
         }
 
         .button-text {
-          font-size: 1.125rem;
+          font-family: var(--font-sans, sans-serif);
+          font-size: 1rem;
           font-weight: 600;
+          color: var(--color-ink, #1a1a18);
         }
 
         .keyboard-hint {
           position: absolute;
           top: 0.5rem;
           right: 0.5rem;
-          font-size: 0.75rem;
-          color: #718096;
-          background: #e2e8f0;
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.25rem;
-          font-weight: 600;
+          font-family: var(--font-mono, monospace);
+          font-size: 0.7rem;
+          color: var(--color-ink-soft, #6b6b63);
+          background: var(--color-surface, #f7f6f3);
+          border: 1px solid var(--color-rule, #e5e5e3);
+          padding: 0.15rem 0.4rem;
+          border-radius: 4px;
+          font-weight: 700;
         }
 
         &:hover {
+          border-color: var(--sun-400, #facc15);
           transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
 
         &.selected {
-          transform: scale(1.05);
+          border-color: var(--sun-400, #facc15);
+          transform: scale(1.04);
         }
       }
 
       .true-button {
-        color: #10b981;
+        mat-icon { color: #16a34a; }
 
-        mat-icon {
-          color: #10b981;
-        }
-
-        &:hover {
-          background-color: #d1fae5;
-        }
-
-        &.selected {
-          border-color: #10b981;
-          background-color: #d1fae5;
+        &:hover, &.selected {
+          background: #f0fdf4;
+          border-color: #16a34a;
         }
       }
 
       .false-button {
-        color: #ef4444;
+        mat-icon { color: #dc2626; }
 
-        mat-icon {
-          color: #ef4444;
-        }
-
-        &:hover {
-          background-color: #fee2e2;
-        }
-
-        &.selected {
-          border-color: #ef4444;
-          background-color: #fee2e2;
+        &:hover, &.selected {
+          background: #fef2f2;
+          border-color: #dc2626;
         }
       }
 
       .hints-section {
-        padding: 1rem;
-        background-color: #fffbeb;
-        border-left: 4px solid #fbbf24;
-        border-radius: 0.5rem;
-        margin-top: 0.5rem;
+        padding: 0.875rem 1rem;
+        background: #fffbeb;
+        border-left: 3px solid var(--sun-400, #facc15);
+        border-radius: var(--radius-sm, 8px);
       }
 
       .hint-label {
         font-weight: 600;
+        font-size: 0.8rem;
         color: #92400e;
-        margin-bottom: 0.5rem;
+        margin-bottom: 0.4rem;
       }
 
       .hint-text {
+        font-size: 0.875rem;
         color: #78350f;
         line-height: 1.5;
       }
 
       @media (max-width: 640px) {
-        .question {
-          font-size: 1rem;
-        }
-
-        .answer-button {
-          min-width: 140px;
-          padding: 1rem 1.5rem;
-
-          mat-icon {
-            font-size: 2.5rem;
-            width: 2.5rem;
-            height: 2.5rem;
-          }
-
-          .button-text {
-            font-size: 1rem;
-          }
-        }
+        .question { font-size: 1rem; }
+        .answer-button { min-width: 130px; padding: 1.25rem 1.5rem; }
       }
     `,
   ],

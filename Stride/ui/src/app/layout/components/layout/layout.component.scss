@@ -16,8 +16,10 @@
 }
 
 .app-sidenav {
-  width: 260px;
-  border-right: 1px solid rgba(0, 0, 0, 0.12);
+  width: 264px;
+  border-right: 1px solid var(--color-rule) !important;
+  background: var(--color-surface) !important;
+  box-shadow: none !important;
 
   @media (max-width: 767px) {
     width: 280px;
@@ -28,49 +30,33 @@
   display: flex;
   flex-direction: column;
   min-height: 100%;
-  background-color: #f5f5f5;
+  background-color: var(--color-paper);
+  scroll-behavior: smooth;
 }
 
 .content-wrapper {
   flex: 1;
-  padding: 1.5rem;
-  padding-bottom: calc(1.5rem + 64px); // Extra padding for bottom nav on mobile
+  padding: 24px 16px;
   overflow-y: auto;
   overflow-x: hidden;
 
+  @media (max-width: 767px) {
+    padding-bottom: calc(24px + 64px); // extra space for bottom nav
+  }
+
   @media (min-width: 768px) {
-    padding: 2rem;
-    padding-bottom: 2rem; // No bottom nav on desktop
+    padding: 32px 24px;
   }
 
   @media (min-width: 1024px) {
-    padding: 2.5rem;
+    padding: 40px 32px;
   }
-}
 
-// Smooth scrolling
-.main-content {
-  scroll-behavior: smooth;
-}
-
-// Custom scrollbar for desktop
-@media (min-width: 768px) {
-  .content-wrapper {
-    &::-webkit-scrollbar {
-      width: 8px;
-    }
-
-    &::-webkit-scrollbar-track {
-      background: #f1f1f1;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #888;
-      border-radius: 4px;
-
-      &:hover {
-        background: #555;
-      }
-    }
+  &::-webkit-scrollbar { width: 6px; }
+  &::-webkit-scrollbar-track { background: transparent; }
+  &::-webkit-scrollbar-thumb {
+    background: var(--color-rule);
+    border-radius: 3px;
+    &:hover { background: var(--blue-200); }
   }
 }

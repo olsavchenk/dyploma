@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
+import { AuthShellComponent } from '../shared/auth-shell.component';
 
 @Component({
   selector: 'app-login',
@@ -26,6 +27,7 @@ import { LoggingService } from '@app/core/services/logging.service';
     MatIconModule,
     MatProgressSpinnerModule,
     MatDividerModule,
+    AuthShellComponent,
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',

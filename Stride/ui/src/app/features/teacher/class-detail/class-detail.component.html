@@ -1,276 +1,225 @@
-<div class="class-detail-container" *ngIf="classInfo()">
+<div class="detail-page" *ngIf="classInfo()">
   <!-- Header -->
-  <div class="header">
-    <button mat-icon-button (click)="goBack()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
+  <div class="detail-header">
+    <button class="btn-back" (click)="goBack()" title="Назад">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
     </button>
-    <div class="title-section">
-      <h1>{{ classInfo()!.name }}</h1>
-      <p class="subtitle">{{ classInfo()!.gradeLevel }}</p>
+    <div class="header-info">
+      <h1 class="header-title">{{ classInfo()!.name }}</h1>
+      <span class="header-grade">{{ classInfo()!.gradeLevel }} клас</span>
+    </div>
+    <div class="header-code">
+      <span class="code-label">Код класу:</span>
+      <span class="code-value">{{ classInfo()!.joinCode }}</span>
+      <button class="btn-copy" (click)="copyJoinCode()" title="Скопіювати код">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+          <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+        </svg>
+      </button>
     </div>
   </div>
 
-  <!-- Join Code Card -->
-  <mat-card class="join-code-card">
-    <mat-card-content>
-      <div class="join-code-content">
-        <div class="code-info">
-          <mat-icon>vpn_key</mat-icon>
-          <div>
-            <div class="label">Код для приєднання</div>
-            <div class="code">{{ classInfo()!.joinCode }}</div>
-          </div>
-        </div>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="copyJoinCode()"
-          matTooltip="Скопіювати код"
-        >
-          <mat-icon>content_copy</mat-icon>
-          Скопіювати
-        </button>
-      </div>
-    </mat-card-content>
-  </mat-card>
-
   <!-- Loading -->
-  <div class="loading-container" *ngIf="loading()">
-    <mat-spinner diameter="50"></mat-spinner>
+  <div class="loading-bar" *ngIf="loading()">
+    <mat-spinner diameter="36"></mat-spinner>
   </div>
 
   <!-- Tabs -->
-  <mat-tab-group [(selectedIndex)]="selectedTab" *ngIf="!loading()">
-    <!-- Students Tab -->
+  <mat-tab-group [(selectedIndex)]="selectedTab" *ngIf="!loading()" class="detail-tabs">
+
+    <!-- ── Учні ── -->
     <mat-tab label="Учні">
-      <div class="tab-content">
-        <div class="tab-header">
-          <h2>Учні класу ({{ students().length }})</h2>
+      <div class="tab-pane">
+        <div class="tab-toolbar">
+          <span class="tab-count">{{ students().length }} учнів</span>
         </div>
 
-        <div class="students-table" *ngIf="students().length > 0">
-          <table mat-table [dataSource]="students()" class="mat-elevation-z2">
+        <div class="students-table-wrap" *ngIf="students().length > 0">
+          <table mat-table [dataSource]="students()" class="students-table">
+            <!-- Avatar -->
             <ng-container matColumnDef="avatar">
               <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let student">
-                <img
-                  [src]="student.studentAvatar || '/assets/default-avatar.png'"
-                  [alt]="student.studentName"
-                  class="student-avatar"
-                />
+              <td mat-cell *matCellDef="let s">
+                <img [src]="s.studentAvatar || '/assets/default-avatar.png'" [alt]="s.studentName" class="s-avatar"/>
               </td>
             </ng-container>
 
+            <!-- Name -->
             <ng-container matColumnDef="name">
               <th mat-header-cell *matHeaderCellDef>Ім'я</th>
-              <td mat-cell *matCellDef="let student">
-                <div class="student-name">
-                  {{ student.studentName }}
-                </div>
-              </td>
+              <td mat-cell *matCellDef="let s" class="s-name-cell">{{ s.studentName }}</td>
             </ng-container>
 
+            <!-- Level -->
             <ng-container matColumnDef="level">
               <th mat-header-cell *matHeaderCellDef>Рівень</th>
-              <td mat-cell *matCellDef="let student">
-                <div class="level-badge">{{ student.currentLevel }}</div>
+              <td mat-cell *matCellDef="let s">
+                <span class="level-badge">{{ s.currentLevel }}</span>
               </td>
             </ng-container>
 
+            <!-- Streak -->
+            <ng-container matColumnDef="streak">
+              <th mat-header-cell *matHeaderCellDef>Стрік</th>
+              <td mat-cell *matCellDef="let s">
+                <span class="streak-cell">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--sun-400)" stroke="none">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                  </svg>
+                  {{ s.streakDays ?? 0 }}
+                </span>
+              </td>
+            </ng-container>
+
+            <!-- Accuracy -->
             <ng-container matColumnDef="accuracy">
               <th mat-header-cell *matHeaderCellDef>Точність</th>
-              <td mat-cell *matCellDef="let student">
-                {{ (student.accuracy ?? 0).toFixed(0) }}%
-              </td>
+              <td mat-cell *matCellDef="let s">{{ (s.accuracy ?? 0).toFixed(0) }}%</td>
             </ng-container>
 
-            <ng-container matColumnDef="tasksCompleted">
-              <th mat-header-cell *matHeaderCellDef>Завдань</th>
-              <td mat-cell *matCellDef="let student">
-                {{ student.tasksCompleted }}
-              </td>
-            </ng-container>
-
+            <!-- Last active -->
             <ng-container matColumnDef="lastActive">
               <th mat-header-cell *matHeaderCellDef>Остання активність</th>
-              <td mat-cell *matCellDef="let student">
-                {{ formatDate(student.lastActive) }}
-              </td>
+              <td mat-cell *matCellDef="let s" class="muted">{{ formatDate(s.lastActive) }}</td>
             </ng-container>
 
+            <!-- Actions -->
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let student">
-                <button
-                  mat-icon-button
-                  color="primary"
-                  (click)="viewStudentDetail(student.studentId)"
-                  matTooltip="Детальніше"
-                >
-                  <mat-icon>visibility</mat-icon>
+              <td mat-cell *matCellDef="let s">
+                <button class="btn-row-action" (click)="viewStudentDetail(s.studentId)" title="Детальніше">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                  </svg>
                 </button>
               </td>
             </ng-container>
 
             <tr mat-header-row *matHeaderRowDef="studentColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: studentColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: studentColumns"
+                class="student-row"
+                (click)="viewStudentDetail(row.studentId)">
+            </tr>
           </table>
         </div>
 
         <div class="empty-state" *ngIf="students().length === 0">
-          <mat-icon>people_outline</mat-icon>
-          <h3>Ще немає учнів</h3>
-          <p>Поділіться кодом класу з учнями, щоб вони могли приєднатися</p>
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--color-rule)" stroke-width="1.2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+          </svg>
+          <p>Ще немає учнів. Поділіться кодом класу.</p>
         </div>
       </div>
     </mat-tab>
 
-    <!-- Analytics Tab -->
-    <mat-tab label="Аналітика">
-      <div class="tab-content">
-        <div class="analytics-grid" *ngIf="analytics()">
-          <mat-card>
-            <mat-card-header>
-              <mat-card-title>Загальна статистика</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="stats-list">
-                <div class="stat-row">
-                  <span class="stat-label">Всього учнів:</span>
-                  <span class="stat-value">{{ analytics()!.totalStudents }}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Активних учнів:</span>
-                  <span class="stat-value">{{ analytics()!.activeStudents }}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Завершено завдань:</span>
-                  <span class="stat-value">{{ analytics()!.totalTasksCompleted }}</span>
-                </div>
-                <div class="stat-row">
-                  <span class="stat-label">Середня точність:</span>
-                  <span class="stat-value">{{ (analytics()!.averageAccuracy ?? 0).toFixed(1) }}%</span>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card *ngIf="analytics()!.topPerformers.length > 0">
-            <mat-card-header>
-              <mat-card-title>Кращі учні</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="performer-list">
-                <div *ngFor="let student of analytics()!.topPerformers" class="performer-item">
-                  <img
-                    [src]="student.studentAvatar || '/assets/default-avatar.png'"
-                    [alt]="student.studentName"
-                    class="performer-avatar"
-                  />
-                  <div class="performer-info">
-                    <div class="performer-name">{{ student.studentName }}</div>
-                    <div class="performer-stats">
-                      Рівень {{ student.currentLevel }} • {{ (student.accuracy ?? 0).toFixed(0) }}% точність
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-
-          <mat-card *ngIf="analytics()!.strugglingStudents.length > 0">
-            <mat-card-header>
-              <mat-card-title>Потребують допомоги</mat-card-title>
-            </mat-card-header>
-            <mat-card-content>
-              <div class="performer-list">
-                <div *ngFor="let student of analytics()!.strugglingStudents" class="performer-item">
-                  <img
-                    [src]="student.studentAvatar || '/assets/default-avatar.png'"
-                    [alt]="student.studentName"
-                    class="performer-avatar"
-                  />
-                  <div class="performer-info">
-                    <div class="performer-name">{{ student.studentName }}</div>
-                    <div class="performer-stats">
-                      Рівень {{ student.currentLevel }} • {{ (student.accuracy ?? 0).toFixed(0) }}% точність
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </mat-card-content>
-          </mat-card>
-        </div>
-      </div>
-    </mat-tab>
-
-    <!-- Assignments Tab -->
+    <!-- ── Завдання ── -->
     <mat-tab label="Завдання">
-      <div class="tab-content">
-        <div class="tab-header">
-          <h2>Завдання</h2>
-          <button mat-raised-button color="primary" (click)="openCreateAssignmentDialog()">
-            <mat-icon>add</mat-icon>
-            Створити Завдання
+      <div class="tab-pane">
+        <div class="tab-toolbar">
+          <span class="tab-count">{{ assignments().length }} завдань</span>
+          <button class="btn-primary" (click)="openCreateAssignmentDialog()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Нове завдання
           </button>
         </div>
 
-        <div class="assignments-grid" *ngIf="assignments().length > 0">
-          <mat-card *ngFor="let assignment of assignments()" class="assignment-card">
-            <mat-card-header>
-              <mat-card-title>{{ assignment.title }}</mat-card-title>
-              <mat-card-subtitle>{{ assignment.topicName }}</mat-card-subtitle>
-            </mat-card-header>
-            <mat-card-content>
-              <p *ngIf="assignment.description">{{ assignment.description }}</p>
-              <div class="assignment-stats">
-                <div class="stat-item">
-                  <mat-icon>assignment</mat-icon>
-                  <span>{{ assignment.taskCount }} завдань</span>
-                </div>
-                <div class="stat-item" *ngIf="assignment.dueDate">
-                  <mat-icon>event</mat-icon>
-                  <span>До {{ formatDate(assignment.dueDate) }}</span>
-                </div>
-                <div class="stat-item">
-                  <mat-icon>person</mat-icon>
-                  <span>{{ (assignment.completionRate ?? 0).toFixed(0) }}% завершено</span>
-                </div>
-                <div class="stat-item">
-                  <mat-icon>analytics</mat-icon>
-                  <span>{{ (assignment.averageScore ?? 0).toFixed(0) }}% середній бал</span>
-                </div>
+        <div class="assignments-list" *ngIf="assignments().length > 0">
+          <div class="assignment-item" *ngFor="let a of assignments()">
+            <div class="a-info">
+              <div class="a-title">{{ a.title }}</div>
+              <div class="a-topic muted">{{ a.topicName }}</div>
+              <div class="a-meta">
+                <span class="meta-chip">{{ a.taskCount }} завдань</span>
+                <span class="meta-chip" *ngIf="a.dueDate">До {{ formatDate(a.dueDate) }}</span>
+                <span class="meta-chip">{{ (a.completionRate ?? 0).toFixed(0) }}% завершено</span>
+                <span class="meta-chip">Бал: {{ (a.averageScore ?? 0).toFixed(0) }}%</span>
               </div>
-
-              <!-- Generation status -->
-              <app-generation-status
-                *ngIf="assignment.generationJobId"
-                [jobId]="assignment.generationJobId"
-                [topicId]="assignment.topicId"
-              ></app-generation-status>
-            </mat-card-content>
-            <mat-card-actions *ngIf="assignment.topicId">
-              <button
-                mat-stroked-button
-                color="primary"
-                (click)="viewTasks(assignment.topicId)"
-              >
-                <mat-icon>rate_review</mat-icon>
-                Переглянути завдання
-              </button>
-            </mat-card-actions>
-          </mat-card>
+              <app-generation-status *ngIf="a.generationJobId" [jobId]="a.generationJobId" [topicId]="a.topicId"></app-generation-status>
+            </div>
+            <button class="btn-outline" *ngIf="a.topicId" (click)="viewTasks(a.topicId)">Переглянути</button>
+          </div>
         </div>
 
         <div class="empty-state" *ngIf="assignments().length === 0">
-          <mat-icon>assignment</mat-icon>
-          <h3>Ще немає завдань</h3>
-          <p>Створіть перше завдання для учнів</p>
-          <button mat-raised-button color="primary" (click)="openCreateAssignmentDialog()">
-            <mat-icon>add</mat-icon>
-            Створити Завдання
-          </button>
+          <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--color-rule)" stroke-width="1.2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+          </svg>
+          <p>Ще немає завдань.</p>
+          <button class="btn-primary" (click)="openCreateAssignmentDialog()">Нове завдання</button>
         </div>
+      </div>
+    </mat-tab>
+
+    <!-- ── Аналітика ── -->
+    <mat-tab label="Аналітика">
+      <div class="tab-pane">
+        <div class="analytics-grid" *ngIf="analytics(); else noAnalytics">
+          <!-- Overall stats -->
+          <div class="analytics-card">
+            <h3 class="analytics-card-title">Загальна статистика</h3>
+            <div class="stats-rows">
+              <div class="stats-row">
+                <span class="sr-label">Всього учнів</span>
+                <span class="sr-value">{{ analytics()!.totalStudents }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="sr-label">Активних учнів</span>
+                <span class="sr-value">{{ analytics()!.activeStudents }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="sr-label">Завершено завдань</span>
+                <span class="sr-value">{{ analytics()!.totalTasksCompleted }}</span>
+              </div>
+              <div class="stats-row">
+                <span class="sr-label">Середня точність</span>
+                <span class="sr-value accent">{{ (analytics()!.averageAccuracy ?? 0).toFixed(1) }}%</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top performers -->
+          <div class="analytics-card" *ngIf="analytics()!.topPerformers.length > 0">
+            <h3 class="analytics-card-title">Кращі учні</h3>
+            <div class="performer-list">
+              <div class="performer-row" *ngFor="let p of analytics()!.topPerformers; let i = index">
+                <span class="perf-rank">{{ i + 1 }}</span>
+                <img [src]="p.studentAvatar || '/assets/default-avatar.png'" [alt]="p.studentName" class="perf-avatar"/>
+                <div class="perf-info">
+                  <span class="perf-name">{{ p.studentName }}</span>
+                  <span class="perf-stats muted">Рівень {{ p.currentLevel }} · {{ (p.accuracy ?? 0).toFixed(0) }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Struggling students -->
+          <div class="analytics-card" *ngIf="analytics()!.strugglingStudents.length > 0">
+            <h3 class="analytics-card-title">Потребують допомоги</h3>
+            <div class="performer-list">
+              <div class="performer-row" *ngFor="let p of analytics()!.strugglingStudents">
+                <img [src]="p.studentAvatar || '/assets/default-avatar.png'" [alt]="p.studentName" class="perf-avatar"/>
+                <div class="perf-info">
+                  <span class="perf-name">{{ p.studentName }}</span>
+                  <span class="perf-stats muted">Рівень {{ p.currentLevel }} · {{ (p.accuracy ?? 0).toFixed(0) }}%</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #noAnalytics>
+          <div class="empty-state"><p>Дані аналітики недоступні.</p></div>
+        </ng-template>
       </div>
     </mat-tab>
   </mat-tab-group>

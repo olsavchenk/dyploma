@@ -1,192 +1,88 @@
-<div class="leaderboard-page">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-content">
-      <mat-icon class="trophy-icon">emoji_events</mat-icon>
-      <div class="header-text">
-        <h1>Таблиця лідерів</h1>
-        <p class="subtitle">{{ getCurrentWeek() }}</p>
+<div class="lb-page">
+
+  <!-- ═══════════════ HERO SECTION ═══════════════ -->
+  <section class="lb-hero">
+    <app-league-medallion
+      [tier]="currentTier()"
+      [rank]="currentRank()" />
+
+    <div class="lb-hero__info">
+      <p class="lb-hero__tier">{{ currentTier() }}</p>
+
+      <div class="lb-hero__rank-row">
+        <span class="lb-hero__rank">#{{ currentRank() || '—' }}</span>
+        @if (currentRankChange() > 0) {
+          <span class="lb-hero__delta lb-hero__delta--up">↑{{ currentRankChange() }}</span>
+        } @else if (currentRankChange() < 0) {
+          <span class="lb-hero__delta lb-hero__delta--down">↓{{ -currentRankChange() }}</span>
+        }
       </div>
+
+      <p class="lb-hero__xp">
+        <span class="lb-hero__xp-value">{{ currentWeeklyXp() | number:'1.0-0' }}</span>
+        <span class="lb-hero__xp-label">&nbsp;XP цього тижня</span>
+      </p>
     </div>
-    <button
-      mat-icon-button
-      class="refresh-button"
-      (click)="loadLeaderboard()"
-      [disabled]="loading()"
-      matTooltip="Оновити">
-      <mat-icon>refresh</mat-icon>
-    </button>
+  </section>
+
+  <!-- ═══════════════ FILTER TABS ═══════════════ -->
+  <div class="lb-filters" role="tablist" aria-label="Фільтр рейтингу">
+    @for (f of filters; track f.value) {
+      <button
+        class="lb-filter-btn"
+        role="tab"
+        [class.lb-filter-btn--active]="activeFilter() === f.value"
+        [attr.aria-selected]="activeFilter() === f.value"
+        (click)="setFilter(f.value)">
+        {{ f.label }}
+      </button>
+    }
   </div>
 
-  <!-- League Tabs -->
-  <mat-tab-group
-    [(selectedIndex)]="selectedTabIndex"
-    (selectedIndexChange)="onTabChange($event)"
-    class="league-tabs"
-    animationDuration="300ms"
-    [color]="'primary'">
-    @for (league of leagues; track league.value; let idx = $index) {
-      <mat-tab>
-        <ng-template mat-tab-label>
-          <span class="league-tab-label">
-            <span class="league-icon">{{ league.icon }}</span>
-            <span class="league-name">{{ league.label }}</span>
-          </span>
-        </ng-template>
+  <!-- ═══════════════ LOADING SKELETON ═══════════════ -->
+  @if (loading()) {
+    <div class="lb-list" aria-busy="true" aria-label="Завантаження...">
+      @for (i of skeletonRows; track i) {
+        <div class="lb-skeleton">
+          <div class="lb-skeleton__rank shimmer"></div>
+          <div class="lb-skeleton__avatar shimmer"></div>
+          <div class="lb-skeleton__name shimmer"></div>
+          <div class="lb-skeleton__xp shimmer"></div>
+          <div class="lb-skeleton__delta shimmer"></div>
+        </div>
+      }
+    </div>
+  }
 
-        <!-- Loading State -->
-        @if (loading()) {
-          <div class="loading-container">
-            <mat-spinner diameter="48"></mat-spinner>
-            <p>Завантаження рейтингу...</p>
-          </div>
-        }
+  <!-- ═══════════════ ERROR ═══════════════ -->
+  @else if (error()) {
+    <div class="lb-error">
+      <span class="lb-error__icon">⚠</span>
+      <p class="lb-error__msg">{{ error() }}</p>
+      <button class="lb-retry-btn" (click)="loadLeaderboard()">Спробувати знову</button>
+    </div>
+  }
 
-        <!-- Error State -->
-        @else if (error()) {
-          <div class="error-container">
-            <mat-icon>error_outline</mat-icon>
-            <p>{{ error() }}</p>
-            <button mat-raised-button color="primary" (click)="loadLeaderboard()">
-              <mat-icon>refresh</mat-icon>
-              Спробувати знову
-            </button>
-          </div>
-        }
+  <!-- ═══════════════ EMPTY ═══════════════ -->
+  @else if (entries().length === 0) {
+    <div class="lb-empty">
+      <span class="lb-empty__icon">🏆</span>
+      <h3 class="lb-empty__title">Ще немає учасників</h3>
+      <p class="lb-empty__sub">Будьте першим, хто з'явиться у цьому рейтингу!</p>
+    </div>
+  }
 
-        <!-- Empty State -->
-        @else if (leaderboardData() && leaderboardData()!.entries.length === 0) {
-          <div class="empty-container">
-            <mat-icon>emoji_events</mat-icon>
-            <h3>Ще немає учасників</h3>
-            <p>Будьте першим, хто з'явиться в цій лізі!</p>
-          </div>
-        }
+  <!-- ═══════════════ LEADERBOARD LIST ═══════════════ -->
+  @else {
+    <div class="lb-list" role="list">
+      @for (entry of entries(); track entry.studentId) {
+        <app-leaderboard-row
+          role="listitem"
+          [entry]="entry"
+          [isCurrentUser]="entry.isCurrentUser"
+          [highlight]="isTopThree(entry)" />
+      }
+    </div>
+  }
 
-        <!-- Leaderboard Content -->
-        @else if (leaderboardData()) {
-          <div class="leaderboard-content">
-            <!-- Info Banner -->
-            <div class="info-banner">
-              <div class="info-item">
-                <mat-icon>groups</mat-icon>
-                <span>{{ leaderboardData()!.totalParticipants }} учасників</span>
-              </div>
-              <div class="info-item promotion">
-                <mat-icon>arrow_upward</mat-icon>
-                <span>Топ {{ promotionZone() }} — підвищення</span>
-              </div>
-              <div class="info-item demotion">
-                <mat-icon>arrow_downward</mat-icon>
-                <span>Останні {{ leaderboardData()!.demotionZone }} — пониження</span>
-              </div>
-            </div>
-
-            <!-- Leaderboard List -->
-            <div class="leaderboard-list">
-              @for (entry of leaderboardData()!.entries; track entry.studentId) {
-                <div
-                  class="leaderboard-entry"
-                  [class.current-user]="isCurrentUser(entry)"
-                  [class.top-three]="entry.rank <= 3"
-                  [class.promotion-zone]="isPromotionZone(entry.rank)"
-                  [class.demotion-zone]="isDemotionZone(entry.rank)">
-                  <!-- Rank -->
-                  <div class="rank-column">
-                    @if (entry.rank === 1) {
-                      <span class="medal gold">🥇</span>
-                    } @else if (entry.rank === 2) {
-                      <span class="medal silver">🥈</span>
-                    } @else if (entry.rank === 3) {
-                      <span class="medal bronze">🥉</span>
-                    } @else {
-                      <span class="rank-number">{{ entry.rank }}</span>
-                    }
-                  </div>
-
-                  <!-- Avatar -->
-                  <div class="avatar-column">
-                    @if (entry.avatarUrl) {
-                      <img [src]="entry.avatarUrl" [alt]="entry.displayName" class="avatar" />
-                    } @else {
-                      <div class="avatar-placeholder">
-                        {{ getInitials(entry.displayName) }}
-                      </div>
-                    }
-                  </div>
-
-                  <!-- User Info -->
-                  <div class="user-info">
-                    <div class="user-name">
-                      {{ entry.displayName }}
-                      @if (isCurrentUser(entry)) {
-                        <span class="you-badge">Ви</span>
-                      }
-                    </div>
-                    @if (isPromotionZone(entry.rank) && !isCurrentUser(entry)) {
-                      <div class="zone-indicator promotion">
-                        <mat-icon>trending_up</mat-icon>
-                        <span>Зона підвищення</span>
-                      </div>
-                    }
-                    @if (isDemotionZone(entry.rank) && !isCurrentUser(entry)) {
-                      <div class="zone-indicator demotion">
-                        <mat-icon>trending_down</mat-icon>
-                        <span>Зона пониження</span>
-                      </div>
-                    }
-                  </div>
-
-                  <!-- XP Badge -->
-                  <div class="xp-column">
-                    <div class="xp-badge">
-                      <mat-icon>stars</mat-icon>
-                      <span>{{ entry.weeklyXp | number : '1.0-0' }}</span>
-                    </div>
-                  </div>
-                </div>
-              }
-
-              <!-- Current User Not in List -->
-              @if (showCurrentUserSeparately()) {
-                <div class="divider">
-                  <span>...</span>
-                </div>
-
-                <div class="leaderboard-entry current-user">
-                  <div class="rank-column">
-                    <span class="rank-number">{{ leaderboardData()?.currentUserRank }}</span>
-                  </div>
-
-                  <div class="avatar-column">
-                    @if (user()?.avatarUrl) {
-                      <img [src]="user()!.avatarUrl" [alt]="user()!.displayName" class="avatar" />
-                    } @else {
-                      <div class="avatar-placeholder">
-                        {{ getInitials(user()?.displayName ?? 'U') }}
-                      </div>
-                    }
-                  </div>
-
-                  <div class="user-info">
-                    <div class="user-name">
-                      {{ user()?.displayName }}
-                      <span class="you-badge">Ви</span>
-                    </div>
-                  </div>
-
-                  <div class="xp-column">
-                    <div class="xp-badge">
-                      <mat-icon>stars</mat-icon>
-                      <span>0</span>
-                    </div>
-                  </div>
-                </div>
-              }
-            </div>
-          </div>
-        }
-      </mat-tab>
-    }
-  </mat-tab-group>
 </div>

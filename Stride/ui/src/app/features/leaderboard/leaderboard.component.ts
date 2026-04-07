@@ -1,141 +1,167 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  effect,
+  inject,
+  OnInit,
+  signal,
+} from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
-import { MatTabsModule } from '@angular/material/tabs';
-import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatTooltipModule } from '@angular/material/tooltip';
 import { finalize } from 'rxjs';
+
 import {
   LeaderboardService,
   AuthService,
-  LeaderboardResponse,
   LeaderboardEntry,
   League,
 } from '@app/core';
+import { SignalRService } from '@app/core/services/signalr.service';
 import { LoggingService } from '@app/core/services/logging.service';
+import { LeaderboardRowComponent } from './leaderboard-row.component';
+import { LeagueMedallionComponent } from './league-medallion.component';
+
+type FilterMode = 'weekly' | 'allTime' | 'class';
 
 @Component({
   selector: 'app-leaderboard',
+  standalone: true,
   imports: [
     CommonModule,
-    MatTabsModule,
-    MatCardModule,
-    MatButtonModule,
-    MatIconModule,
-    MatProgressSpinnerModule,
-    MatTooltipModule,
+    LeaderboardRowComponent,
+    LeagueMedallionComponent,
   ],
   templateUrl: './leaderboard.component.html',
   styleUrl: './leaderboard.component.scss',
 })
 export class LeaderboardComponent implements OnInit {
   private readonly leaderboardService = inject(LeaderboardService);
-  private readonly authService = inject(AuthService);
-  private readonly logger = inject(LoggingService);
-
-  // TODO (US-039): Inject SignalRService for real-time updates
-  // - Subscribe to LeaderboardUpdated events
-  // - Subscribe to RankChanged events
-  // - Auto-refresh on updates
+  private readonly authService        = inject(AuthService);
+  private readonly signalRService     = inject(SignalRService);
+  private readonly logger             = inject(LoggingService);
+  private readonly destroyRef         = inject(DestroyRef);
 
   // State signals
-  protected readonly loading = signal<boolean>(true);
-  protected readonly error = signal<string | null>(null);
-  protected readonly leaderboardData = signal<LeaderboardResponse | null>(null);
-  protected readonly selectedLeague = signal<League>('Bronze');
-  protected selectedTabIndex = 0;
+  protected readonly entries          = signal<LeaderboardEntry[]>([]);
+  protected readonly loading          = signal<boolean>(false);
+  protected readonly activeFilter     = signal<FilterMode>('weekly');
+  protected readonly currentUserEntry = signal<LeaderboardEntry | null>(null);
+  protected readonly error            = signal<string | null>(null);
 
-  // Computed values
+  // Auth
   protected readonly user = this.authService.user;
-  protected readonly currentUserId = computed(() => this.user()?.id);
-  protected readonly promotionZone = computed(() => {
-    const data = this.leaderboardData();
-    return data?.promotionZone ?? 10;
-  });
-  protected readonly demotionZone = computed(() => {
-    const data = this.leaderboardData();
-    if (!data) return 0;
-    return data.totalParticipants - data.demotionZone;
-  });
 
-  // Helper to check if current user is not in top entries
-  protected readonly showCurrentUserSeparately = computed(() => {
-    const data = this.leaderboardData();
-    if (!data || !data.currentUserRank) return false;
-    return data.currentUserRank > data.entries.length;
-  });
+  // Skeleton rows array (10 items)
+  protected readonly skeletonRows = Array.from({ length: 10 }, (_, i) => i);
 
-  // League configuration
-  protected readonly leagues: { value: League; label: string; icon: string; color: string }[] = [
-    { value: 'Bronze', label: 'Бронза', icon: '🥉', color: '#CD7F32' },
-    { value: 'Silver', label: 'Срібло', icon: '🥈', color: '#C0C0C0' },
-    { value: 'Gold', label: 'Золото', icon: '🥇', color: '#FFD700' },
-    { value: 'Platinum', label: 'Платина', icon: '💎', color: '#E5E4E2' },
-    { value: 'Diamond', label: 'Діамант', icon: '💠', color: '#B9F2FF' },
+  // Filter tab definitions
+  protected readonly filters: { value: FilterMode; label: string }[] = [
+    { value: 'weekly',  label: 'Тижневий' },
+    { value: 'allTime', label: 'Весь час' },
+    { value: 'class',   label: 'Клас'     },
   ];
 
-  ngOnInit(): void {
-    // Set initial league to user's current league
-    const userLeague = this.user()?.role === 'Student' ? 'Bronze' : 'Bronze'; // TODO: Get from user profile
-    this.selectedLeague.set(userLeague);
-    this.loadLeaderboard();
+  // Track previous filter for SignalR league switching
+  private previousFilter: FilterMode = 'weekly';
+
+  constructor() {
+    // Re-load whenever activeFilter changes (skip initial — ngOnInit handles first load)
+    let initialized = false;
+    effect(() => {
+      const next = this.activeFilter();
+      if (!initialized) {
+        initialized = true;
+        return;
+      }
+      const prev = this.previousFilter;
+      this.previousFilter = next;
+
+      // Switch SignalR league group
+      this.signalRService.leaveLeague(prev);
+      this.signalRService.joinLeague(next);
+
+      this.loadLeaderboard();
+    });
   }
 
-  protected onTabChange(index: number): void {
-    const league = this.leagues[index].value;
-    this.selectedLeague.set(league);
+  ngOnInit(): void {
+    this.previousFilter = this.activeFilter();
     this.loadLeaderboard();
+
+    // Real-time: leaderboard updated
+    this.signalRService.onLeaderboardUpdated
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadLeaderboard();
+        this.signalRService.joinLeague(this.activeFilter());
+      });
+
+    // Real-time: rank changed
+    this.signalRService.onRankChanged
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        this.loadLeaderboard();
+        this.signalRService.joinLeague(this.activeFilter());
+      });
+  }
+
+  protected setFilter(filter: FilterMode): void {
+    if (filter === this.activeFilter()) return;
+    this.activeFilter.set(filter);
   }
 
   protected loadLeaderboard(): void {
     this.loading.set(true);
     this.error.set(null);
 
+    // Map filter to league for the existing API (allTime/class fall back to current user league)
+    const league = this.resolveLeague();
+
     this.leaderboardService
-      .getLeaderboard(this.selectedLeague())
+      .getLeaderboard(league)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (data) => {
-          this.leaderboardData.set(data);
+          this.entries.set(data.entries);
+          const me = data.entries.find((e) => e.isCurrentUser) ?? null;
+          this.currentUserEntry.set(me);
         },
         error: (err) => {
-          this.logger.error('LeaderboardComponent', 'Failed to load leaderboard', { league: this.selectedLeague() }, err);
+          this.logger.error(
+            'LeaderboardComponent',
+            'Failed to load leaderboard',
+            { filter: this.activeFilter() },
+            err
+          );
           this.error.set('Не вдалося завантажити таблицю лідерів. Спробуйте оновити сторінку.');
         },
       });
   }
 
-  protected getInitials(name: string): string {
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+  protected isTopThree(entry: LeaderboardEntry): boolean {
+    return entry.rank <= 3;
   }
 
-  protected isPromotionZone(rank: number): boolean {
-    return rank <= this.promotionZone();
+  protected currentTier(): string {
+    const entry = this.currentUserEntry();
+    return (entry as any)?.tier ?? 'Bronze';
   }
 
-  protected isDemotionZone(rank: number): boolean {
-    const demotionStart = this.demotionZone();
-    return demotionStart > 0 && rank >= demotionStart;
+  protected currentRank(): number {
+    return this.currentUserEntry()?.rank ?? 0;
   }
 
-  protected isCurrentUser(entry: LeaderboardEntry): boolean {
-    return entry.isCurrentUser;
+  protected currentWeeklyXp(): number {
+    return this.currentUserEntry()?.weeklyXp ?? 0;
   }
 
-  protected getLeagueColor(league: League): string {
-    return this.leagues.find((l) => l.value === league)?.color ?? '#6366F1';
+  protected currentRankChange(): number {
+    return (this.currentUserEntry() as any)?.rankChange ?? 0;
   }
 
-  protected getCurrentWeek(): string {
-    const data = this.leaderboardData();
-    if (!data) return '';
-    return `Тиждень ${data.weekNumber}, ${data.year}`;
+  private resolveLeague(): League {
+    // In a fuller implementation this would differ per filter.
+    // For MVP we always pass the user's league (or Bronze as default).
+    return 'Bronze';
   }
 }

@@ -1,227 +1,197 @@
-<div class="task-review-container">
+<div class="task-review-page">
   <!-- Header -->
-  <div class="header">
-    <button mat-icon-button (click)="goBack()" class="back-button">
-      <mat-icon>arrow_back</mat-icon>
+  <div class="review-header">
+    <button class="btn-back" (click)="goBack()" title="Назад">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+      </svg>
     </button>
-    <div class="title-section">
-      <h1>Перегляд завдань</h1>
-      <p class="subtitle">{{ totalCount() }} завдань знайдено</p>
+    <div>
+      <h1 class="review-title">Перегляд завдань</h1>
+      <p class="review-subtitle">{{ totalCount() }} завдань знайдено</p>
     </div>
   </div>
 
-  <!-- Filters -->
-  <mat-card class="filters-card">
-    <mat-card-content>
-      <div class="filters-row">
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Статус</mat-label>
-          <mat-select
-            (selectionChange)="onFilterChange('reviewStatus', $event.value)"
-          >
-            <mat-option [value]="undefined">Усі</mat-option>
-            <mat-option value="Pending">Очікує</mat-option>
-            <mat-option value="Approved">Затверджено</mat-option>
-            <mat-option value="Rejected">Відхилено</mat-option>
-          </mat-select>
-        </mat-form-field>
+  <!-- Filters bar -->
+  <div class="filters-bar">
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Статус</mat-label>
+      <mat-select (selectionChange)="onFilterChange('reviewStatus', $event.value)">
+        <mat-option [value]="undefined">Усі</mat-option>
+        <mat-option value="Pending">Очікує</mat-option>
+        <mat-option value="Approved">Затверджено</mat-option>
+        <mat-option value="Rejected">Відхилено</mat-option>
+      </mat-select>
+    </mat-form-field>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Тип завдання</mat-label>
-          <mat-select
-            (selectionChange)="onFilterChange('taskType', $event.value)"
-          >
-            <mat-option [value]="undefined">Усі</mat-option>
-            <mat-option value="multiple_choice">Вибір відповіді</mat-option>
-            <mat-option value="fill_blank">Заповнити пропуск</mat-option>
-            <mat-option value="true_false">Правда/Хибність</mat-option>
-            <mat-option value="matching">Відповідність</mat-option>
-            <mat-option value="ordering">Впорядкування</mat-option>
-          </mat-select>
-        </mat-form-field>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Тип</mat-label>
+      <mat-select (selectionChange)="onFilterChange('taskType', $event.value)">
+        <mat-option [value]="undefined">Усі</mat-option>
+        <mat-option value="multiple_choice">Вибір відповіді</mat-option>
+        <mat-option value="fill_blank">Заповнити пропуск</mat-option>
+        <mat-option value="true_false">Правда/Хибність</mat-option>
+        <mat-option value="matching">Відповідність</mat-option>
+        <mat-option value="ordering">Впорядкування</mat-option>
+      </mat-select>
+    </mat-form-field>
 
-        <mat-form-field appearance="outline" class="filter-field">
-          <mat-label>Складність</mat-label>
-          <mat-select
-            (selectionChange)="onFilterChange('difficultyBand', $event.value)"
-          >
-            <mat-option [value]="undefined">Усі</mat-option>
-            <mat-option *ngFor="let band of [1,2,3,4,5,6,7,8,9,10]" [value]="band">
-              Рівень {{ band }}
-            </mat-option>
-          </mat-select>
-        </mat-form-field>
-      </div>
-    </mat-card-content>
-  </mat-card>
+    <mat-form-field appearance="outline" class="filter-field">
+      <mat-label>Складність</mat-label>
+      <mat-select (selectionChange)="onFilterChange('difficultyBand', $event.value)">
+        <mat-option [value]="undefined">Усі</mat-option>
+        <mat-option *ngFor="let band of [1,2,3,4,5,6,7,8,9,10]" [value]="band">Рівень {{ band }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
 
   <!-- Bulk actions -->
-  <div class="bulk-actions" *ngIf="hasSelection()">
-    <span class="selection-count">Обрано: {{ selection.selected.length }}</span>
-    <button mat-raised-button color="primary" (click)="bulkApprove()" [disabled]="actionLoading()">
-      <mat-icon>check</mat-icon> Затвердити
+  <div class="bulk-bar" *ngIf="hasSelection()">
+    <span class="bulk-count">Обрано: {{ selection.selected.length }}</span>
+    <button class="btn-approve-sm" (click)="bulkApprove()" [disabled]="actionLoading()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+      Затвердити
     </button>
-    <button mat-raised-button color="warn" (click)="bulkReject()" [disabled]="actionLoading()">
-      <mat-icon>close</mat-icon> Відхилити
+    <button class="btn-reject-sm" (click)="bulkReject()" [disabled]="actionLoading()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      Відхилити
     </button>
-    <button mat-stroked-button color="warn" (click)="bulkDelete()" [disabled]="actionLoading()">
-      <mat-icon>delete</mat-icon> Видалити
-    </button>
+    <button class="btn-delete-sm" (click)="bulkDelete()" [disabled]="actionLoading()">Видалити</button>
   </div>
 
-  <!-- Loading -->
-  <div class="loading-container" *ngIf="loading()">
-    <mat-spinner diameter="50"></mat-spinner>
+  <!-- Loading skeleton -->
+  <div class="queue-list" *ngIf="loading()">
+    <div class="task-card task-card--skeleton" *ngFor="let i of [1,2,3,4,5]">
+      <div class="sk-line sk-line--wide"></div>
+      <div class="sk-line sk-line--narrow"></div>
+      <div class="sk-chips">
+        <div class="sk-chip"></div>
+        <div class="sk-chip"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- Table -->
-  <div class="table-container" *ngIf="!loading() && tasks().length > 0">
-    <table mat-table [dataSource]="tasks()" class="mat-elevation-z2" multiTemplateDataRows>
-      <!-- Checkbox Column -->
-      <ng-container matColumnDef="select">
-        <th mat-header-cell *matHeaderCellDef>
-          <mat-checkbox
-            [checked]="isAllSelected()"
-            [indeterminate]="selection.hasValue() && !isAllSelected()"
-            (change)="toggleAll()"
-          ></mat-checkbox>
-        </th>
-        <td mat-cell *matCellDef="let task">
-          <mat-checkbox
+  <!-- Task queue -->
+  <div class="queue-list" *ngIf="!loading() && tasks().length > 0">
+    <!-- Bulk select all -->
+    <div class="select-all-row">
+      <label class="check-label">
+        <input
+          type="checkbox"
+          [checked]="isAllSelected()"
+          (change)="toggleAll()"
+          class="check-input"
+        />
+        Вибрати всі
+      </label>
+    </div>
+
+    <div
+      class="task-card"
+      *ngFor="let task of tasks()"
+      [class.task-card--expanded]="expandedTaskId() === task.id"
+      [class.task-card--approved]="task.reviewStatus === 'Approved'"
+      [class.task-card--rejected]="task.reviewStatus === 'Rejected'"
+    >
+      <!-- Card header row -->
+      <div class="task-card-header">
+        <label class="check-label" (click)="$event.stopPropagation()">
+          <input
+            type="checkbox"
             [checked]="selection.isSelected(task.id)"
             (change)="selection.toggle(task.id)"
-          ></mat-checkbox>
-        </td>
-      </ng-container>
+            class="check-input"
+          />
+        </label>
 
-      <!-- Question Column -->
-      <ng-container matColumnDef="question">
-        <th mat-header-cell *matHeaderCellDef>Запитання</th>
-        <td mat-cell *matCellDef="let task" class="question-cell">
-          <span class="question-text" (click)="toggleExpand(task)">
-            {{ task.question | slice:0:120 }}{{ (task.question?.length ?? 0) > 120 ? '...' : '' }}
-          </span>
-        </td>
-      </ng-container>
+        <div class="task-question" (click)="toggleExpand(task)">
+          {{ task.question | slice:0:140 }}{{ (task.question?.length ?? 0) > 140 ? '…' : '' }}
+        </div>
 
-      <!-- Task Type Column -->
-      <ng-container matColumnDef="taskType">
-        <th mat-header-cell *matHeaderCellDef>Тип</th>
-        <td mat-cell *matCellDef="let task">
-          <span class="type-chip">{{ getTaskTypeLabel(task.taskType) }}</span>
-        </td>
-      </ng-container>
+        <div class="task-chips">
+          <span class="chip chip--type">{{ getTaskTypeLabel(task.taskType) }}</span>
+          <span class="chip chip--diff">Рівень {{ task.difficultyBand }}</span>
+          <span class="chip" [ngClass]="{
+            'chip--pending': task.reviewStatus === 'Pending',
+            'chip--approved': task.reviewStatus === 'Approved',
+            'chip--rejected': task.reviewStatus === 'Rejected'
+          }">{{ getStatusLabel(task.reviewStatus) }}</span>
+        </div>
 
-      <!-- Difficulty Band Column -->
-      <ng-container matColumnDef="difficultyBand">
-        <th mat-header-cell *matHeaderCellDef>Складність</th>
-        <td mat-cell *matCellDef="let task">
-          <span class="difficulty-badge">{{ task.difficultyBand }}</span>
-        </td>
-      </ng-container>
-
-      <!-- Review Status Column -->
-      <ng-container matColumnDef="reviewStatus">
-        <th mat-header-cell *matHeaderCellDef>Статус</th>
-        <td mat-cell *matCellDef="let task">
-          <span class="status-chip" [ngClass]="task.reviewStatus.toLowerCase()">
-            {{ getStatusLabel(task.reviewStatus) }}
-          </span>
-        </td>
-      </ng-container>
-
-      <!-- Actions Column -->
-      <ng-container matColumnDef="actions">
-        <th mat-header-cell *matHeaderCellDef></th>
-        <td mat-cell *matCellDef="let task">
-          <div class="action-buttons">
-            <button
-              mat-icon-button
-              color="primary"
-              matTooltip="Затвердити"
-              [disabled]="actionLoading() || task.reviewStatus === 'Approved'"
-              (click)="approve(task.id)"
-            >
-              <mat-icon>check_circle</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              color="warn"
-              matTooltip="Відхилити"
-              [disabled]="actionLoading() || task.reviewStatus === 'Rejected'"
-              (click)="reject(task.id)"
-            >
-              <mat-icon>cancel</mat-icon>
-            </button>
-            <button
-              mat-icon-button
-              matTooltip="Видалити"
-              [disabled]="actionLoading()"
-              (click)="deleteTask(task.id)"
-            >
-              <mat-icon>delete</mat-icon>
-            </button>
-          </div>
-        </td>
-      </ng-container>
-
-      <!-- Expanded detail row -->
-      <ng-container matColumnDef="expandedDetail">
-        <td mat-cell *matCellDef="let task" [attr.colspan]="displayedColumns.length">
-          <div
-            class="expanded-detail"
-            *ngIf="expandedTaskId() === task.id"
+        <!-- Row actions -->
+        <div class="task-actions">
+          <button
+            class="action-btn action-btn--approve"
+            title="Затвердити"
+            [disabled]="actionLoading() || task.reviewStatus === 'Approved'"
+            (click)="approve(task.id); $event.stopPropagation()"
           >
-            <div *ngIf="expandedDetail(); else detailLoading">
-              <div class="detail-section">
-                <strong>Запитання:</strong>
-                <p>{{ expandedDetail()!.question }}</p>
-              </div>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+          </button>
+          <button
+            class="action-btn action-btn--reject"
+            title="Відхилити"
+            [disabled]="actionLoading() || task.reviewStatus === 'Rejected'"
+            (click)="reject(task.id); $event.stopPropagation()"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <line x1="18" y1="6" x2="6" y2="18"></line>
+              <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+          </button>
+          <button
+            class="action-btn action-btn--delete"
+            title="Видалити"
+            [disabled]="actionLoading()"
+            (click)="deleteTask(task.id); $event.stopPropagation()"
+          >
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+              <path d="M10 11v6"></path><path d="M14 11v6"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
 
-              <div class="detail-section" *ngIf="expandedDetail()!.options?.length">
-                <strong>Варіанти:</strong>
-                <ul>
-                  <li *ngFor="let opt of expandedDetail()!.options ?? []">{{ opt }}</li>
-                </ul>
-              </div>
-
-              <div class="detail-section">
-                <strong>Відповідь:</strong>
-                <p>{{ expandedDetail()!.answer }}</p>
-              </div>
-
-              <div class="detail-section" *ngIf="expandedDetail()!.explanation">
-                <strong>Пояснення:</strong>
-                <p>{{ expandedDetail()!.explanation }}</p>
-              </div>
-
-              <div class="detail-section" *ngIf="expandedDetail()!.hints?.length">
-                <strong>Підказки:</strong>
-                <ul>
-                  <li *ngFor="let hint of expandedDetail()!.hints ?? []">{{ hint }}</li>
-                </ul>
-              </div>
-            </div>
-            <ng-template #detailLoading>
-              <mat-spinner diameter="24"></mat-spinner>
-            </ng-template>
+      <!-- Expanded detail -->
+      <div class="task-expanded" *ngIf="expandedTaskId() === task.id">
+        <div class="expand-loading" *ngIf="!expandedDetail()">
+          <mat-spinner diameter="24"></mat-spinner>
+        </div>
+        <div class="expand-body" *ngIf="expandedDetail()">
+          <div class="expand-section">
+            <span class="expand-label">Запитання</span>
+            <p class="expand-text">{{ expandedDetail()!.question }}</p>
           </div>
-        </td>
-      </ng-container>
+          <div class="expand-section" *ngIf="expandedDetail()!.options?.length">
+            <span class="expand-label">Варіанти відповідей</span>
+            <ul class="expand-options">
+              <li *ngFor="let opt of expandedDetail()!.options ?? []">{{ opt }}</li>
+            </ul>
+          </div>
+          <div class="expand-section">
+            <span class="expand-label">Правильна відповідь</span>
+            <p class="expand-text expand-text--answer">{{ expandedDetail()!.answer }}</p>
+          </div>
+          <div class="expand-section" *ngIf="expandedDetail()!.explanation">
+            <span class="expand-label">Пояснення</span>
+            <p class="expand-text">{{ expandedDetail()!.explanation }}</p>
+          </div>
+          <div class="expand-section" *ngIf="expandedDetail()!.hints?.length">
+            <span class="expand-label">Підказки</span>
+            <ul class="expand-options">
+              <li *ngFor="let hint of expandedDetail()!.hints ?? []">{{ hint }}</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: displayedColumns"
-        [class.expanded-row]="expandedTaskId() === row.id"
-      ></tr>
-      <tr
-        mat-row
-        *matRowDef="let row; columns: ['expandedDetail']"
-        class="detail-row"
-      ></tr>
-    </table>
-
+    <!-- Pagination -->
     <mat-paginator
       [length]="totalCount()"
       [pageSize]="filters().pageSize || 20"
@@ -233,8 +203,11 @@
 
   <!-- Empty state -->
   <div class="empty-state" *ngIf="!loading() && tasks().length === 0">
-    <mat-icon>task</mat-icon>
-    <h3>Немає завдань</h3>
-    <p>Для цієї теми ще не згенеровано жодного завдання</p>
+    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="var(--color-rule)" stroke-width="1.2">
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+      <polyline points="14 2 14 8 20 8"></polyline>
+    </svg>
+    <h3 class="empty-title">Немає завдань</h3>
+    <p class="empty-desc">Для цієї теми ще не згенеровано жодного завдання.</p>
   </div>
 </div>

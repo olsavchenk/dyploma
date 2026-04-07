@@ -1,118 +1,144 @@
-
-// Include theming for Angular Material with `mat.theme()`.
-// This Sass mixin will define CSS variables that are used for styling Angular Material
-// components according to the Material 3 design spec.
-// Learn more about theming and how to use it for your application's
-// custom components at https://material.angular.dev/guide/theming
+// ─── Stride Global Styles ────────────────────────────────────────────────────
 @use '@angular/material' as mat;
+@use 'sass:map';
+
+// ── 1. Design Tokens (must be first — Material overrides reference vars) ─────
+@import 'styles/tokens';
+
+// ── 2. Material 3 Theme ───────────────────────────────────────────────────────
+// Custom palettes generated from brand blue #0B3D91 and sun yellow #FFD500.
+// M3 palettes use tone-based maps; we map our brand shades to the closest tones.
+$stride-primary-palette: (
+  0:   #000000,
+  10:  #03112A,
+  20:  #061F4B,
+  25:  #082E6E,
+  30:  #082E6E,
+  35:  #0B3D91,
+  40:  #1F4CA4,
+  50:  #3F68BA,
+  60:  #6D91D2,
+  70:  #A7BEE6,
+  80:  #D6E2F4,
+  90:  #EEF3FB,
+  95:  #F6F9FD,
+  98:  #FAFCFE,
+  99:  #FDFEFF,
+  100: #FFFFFF,
+);
+
+$stride-secondary-palette: (
+  0:   #000000,
+  10:  #8A7100,
+  20:  #B79700,
+  25:  #C8A800,
+  30:  #D4B400,
+  35:  #E6BE00,
+  40:  #FFD500,
+  50:  #FFD94C,
+  60:  #FFE580,
+  70:  #FFF1B8,
+  80:  #FFFAE5,
+  90:  #FFFDF2,
+  95:  #FFFEF8,
+  98:  #FFFFFF,
+  99:  #FFFFFF,
+  100: #FFFFFF,
+);
 
 html {
   @include mat.theme((
     color: (
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
+      primary:   $stride-primary-palette,
+      secondary: $stride-secondary-palette,
+      tertiary:  mat.$cyan-palette,
     ),
-    typography: Roboto,
+    typography: (
+      plain-family:  'Manrope, system-ui, sans-serif',
+      brand-family:  'Fraunces, Georgia, serif',
+      bold-weight:   700,
+      medium-weight: 600,
+      regular-weight: 400,
+    ),
     density: 0,
   ));
 }
 
-body {
-  // Default the application to a light color theme. This can be changed to
-  // `dark` to enable the dark color theme, or to `light dark` to defer to the
-  // user's system settings.
-  color-scheme: light;
-
-  // Set a default background, font and text colors for the application using
-  // Angular Material's system-level CSS variables. Learn more about these
-  // variables at https://material.angular.dev/guide/system-variables
-  background-color: var(--mat-sys-surface);
-  color: var(--mat-sys-on-surface);
-  font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
-}
-/* Tailwind CSS */
+// ── 3. Tailwind ───────────────────────────────────────────────────────────────
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-.mat-mdc-notch-piece.mdc-notched-outline__notch {
-  border-right-style: none !important;
+// ── 4. Partial imports ────────────────────────────────────────────────────────
+@import 'styles/motion';
+@import 'styles/material-overrides';
+@import 'styles/decor';
+
+// ── 5. Base reset & global rules ─────────────────────────────────────────────
+html,
+body {
+  height: 100%;
+  margin: 0;
+  color-scheme: light;
 }
 
-/* You can add global styles to this file, and also import other style files */
-
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-
-/* Custom CSS Variables */
-:root {
-  --primary: #1976d2;
-  --primary-dark: #115293;
-  --primary-light: #e3f2fd;
-  --accent: #00bcd4;
-  --accent-light: #e0f7fa;
-  --warn: #f44336;
-  --primary-text: rgba(0, 0, 0, 0.87);
-  --secondary-text: rgba(0, 0, 0, 0.54);
+body {
+  font-family: var(--font-sans);
+  font-size: 1rem;
+  line-height: 1.6;
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* PWA Update Snackbar Styles */
-.update-snackbar {
-  .mdc-snackbar__surface {
-    background-color: #6366f1 !important;
-  }
+// ── 6. Typography utilities ───────────────────────────────────────────────────
+.font-display { font-family: var(--font-display) !important; }
+.font-sans    { font-family: var(--font-sans) !important; }
+.font-mono    { font-family: var(--font-mono) !important; }
 
-  .mat-mdc-snack-bar-label {
-    color: white !important;
-  }
-
-  .mat-mdc-button {
-    --mdc-text-button-label-text-color: white !important;
-    font-weight: 600;
-    
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-  }
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-ink);
 }
 
-.error-snackbar {
-  .mdc-snackbar__surface {
-    background-color: #ef4444 !important;
-  }
-
-  .mat-mdc-snack-bar-label {
-    color: white !important;
-  }
-
-  .mat-mdc-button {
-    --mdc-text-button-label-text-color: white !important;
-    font-weight: 600;
-    
-    &:hover {
-      background-color: rgba(255, 255, 255, 0.1);
-    }
-  }
+// ── 7. Focus rings ─────────────────────────────────────────────────────────────
+:focus-visible {
+  outline: 2px solid var(--sun-400);
+  outline-offset: 3px;
+  border-radius: 4px;
 }
 
-/* PWA Install Prompt */
+// ── 8. Scrollbar styling (Webkit) ─────────────────────────────────────────────
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: var(--color-rule);
+  border-radius: 3px;
+
+  &:hover { background: var(--blue-200); }
+}
+
+// ── 9. PWA Install Prompt ─────────────────────────────────────────────────────
 .install-pwa-prompt {
   position: fixed;
   bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
   padding: 16px 24px;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-hero);
   display: flex;
   align-items: center;
   gap: 16px;
   z-index: 1000;
   max-width: 90%;
+  font-family: var(--font-sans);
 
   @media (max-width: 640px) {
     bottom: 80px;
@@ -121,3 +147,40 @@ body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
   }
 }
 
+// ── 10. Tier badge colors ─────────────────────────────────────────────────────
+.tier-bronze   { color: var(--tier-bronze) !important; }
+.tier-silver   { color: var(--tier-silver) !important; }
+.tier-gold     { color: var(--tier-gold) !important; }
+.tier-platinum { color: var(--tier-platinum) !important; }
+.tier-diamond  { color: var(--tier-diamond) !important; }
+
+// ── 11. Editorial card ────────────────────────────────────────────────────────
+.card-editorial {
+  background: var(--color-surface);
+  border: 1px solid var(--color-rule);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+
+  &:hover {
+    box-shadow: var(--shadow-hero);
+    transform: translateY(-2px);
+  }
+}
+
+// ── 12. Active nav indicator ──────────────────────────────────────────────────
+.nav-active-indicator {
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 3px;
+    height: 24px;
+    background: var(--sun-400);
+    border-radius: 0 2px 2px 0;
+  }
+}

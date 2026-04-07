@@ -1,162 +1,224 @@
-.select-role-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
+.select-role-page {
   min-height: 100vh;
-  padding: 2rem 1rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background-color: var(--color-paper);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 15% 50%, rgba(11,61,145,0.06) 0%, transparent 50%),
+      radial-gradient(circle at 85% 20%, rgba(255,213,0,0.06) 0%, transparent 40%);
+    pointer-events: none;
+  }
 }
 
-.select-role-content {
+.select-role-inner {
+  position: relative;
+  z-index: 1;
   width: 100%;
-  max-width: 800px;
+  max-width: 720px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-.header {
+.page-header {
   text-align: center;
   margin-bottom: 3rem;
+}
 
-  .logo-container {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 1rem;
+.brand-mark {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-sm);
+  background: var(--blue-600);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem;
+}
 
-    .logo-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
-      color: white;
-    }
+.brand-mark-letter {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--sun-400);
+  line-height: 1;
+}
 
-    .app-name {
-      margin: 0;
-      font-size: 2.5rem;
-      font-weight: 700;
-      color: white;
-    }
-  }
+.page-title {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 800;
+  color: var(--color-ink);
+  letter-spacing: -0.02em;
+  margin: 0 0 0.5rem;
+}
 
-  .title {
-    margin: 0 0 0.5rem;
-    font-size: 2rem;
-    font-weight: 600;
-    color: white;
-  }
-
-  .subtitle {
-    margin: 0;
-    font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.9);
-  }
+.page-subtitle {
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  color: var(--color-ink-soft);
+  opacity: 0.7;
+  margin: 0;
 }
 
 .error-banner {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 1rem 1.25rem;
+  padding: 0.75rem 1rem;
   margin-bottom: 2rem;
-  background-color: #fee;
-  border: 1px solid #fcc;
-  border-radius: 8px;
-  color: #c33;
+  background-color: rgba(198, 40, 40, 0.08);
+  border: 1px solid rgba(198, 40, 40, 0.2);
+  border-radius: var(--radius-sm);
+  color: var(--color-danger);
+  width: 100%;
 
-  mat-icon {
-    font-size: 24px;
-    width: 24px;
-    height: 24px;
-  }
-
-  span {
-    flex: 1;
-    font-size: 0.95rem;
-  }
+  mat-icon { font-size: 18px; width: 18px; height: 18px; flex-shrink: 0; }
+  span { font-family: var(--font-sans); font-size: 0.875rem; }
 }
 
 .role-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  width: 100%;
   margin-bottom: 2.5rem;
 
-  @media (max-width: 768px) {
+  @media (max-width: 560px) {
     grid-template-columns: 1fr;
-    gap: 1.5rem;
   }
 }
 
 .role-card {
   position: relative;
-  padding: 2.5rem 2rem;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 2.25rem 2rem;
+  background: var(--color-surface);
+  border: 2px solid var(--color-rule);
+  border-radius: var(--radius-lg);
   cursor: pointer;
-  transition: all 0.3s ease;
-  border: 3px solid transparent;
-  background: white;
+  text-align: left;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+  overflow: hidden;
 
-  &:hover:not(.disabled) {
-    transform: translateY(-8px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  &:hover:not(.role-card--disabled) {
+    border-color: var(--blue-300);
+    box-shadow: var(--shadow-card);
+    transform: translateY(-3px);
   }
 
-  &.selected {
-    border-color: #667eea;
-    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  &--selected {
+    border-color: var(--blue-600) !important;
+    box-shadow: var(--shadow-hero) !important;
     transform: translateY(-4px);
+
+    .role-name {
+      color: var(--blue-600);
+    }
   }
 
-  &.disabled {
+  &--disabled {
     cursor: not-allowed;
     opacity: 0.6;
   }
 
   &:focus-visible {
-    outline: 2px solid #667eea;
-    outline-offset: 2px;
+    outline: none;
+    box-shadow: var(--shadow-focus);
+  }
+}
+
+.role-card-accent {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+
+  &--student {
+    background: var(--blue-600);
   }
 
-  .role-icon-wrapper {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 80px;
-    height: 80px;
-    margin-bottom: 1.5rem;
-    border-radius: 50%;
+  &--teacher {
+    background: var(--sun-400);
+  }
+}
+
+.role-icon-wrap {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.25rem;
+
+  &--student {
+    background: var(--blue-50);
 
     .role-icon {
-      font-size: 48px;
-      width: 48px;
-      height: 48px;
+      color: var(--blue-600);
     }
   }
 
-  .role-title {
-    margin: 0 0 0.75rem;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: #333;
-  }
+  &--teacher {
+    background: rgba(255, 213, 0, 0.12);
 
-  .role-description {
-    margin: 0;
-    font-size: 1rem;
-    line-height: 1.5;
-    color: #666;
-  }
-
-  .selected-indicator {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-
-    mat-icon {
-      font-size: 32px;
-      width: 32px;
-      height: 32px;
-      color: #667eea;
+    .role-icon {
+      color: var(--sun-600);
     }
+  }
+}
+
+.role-icon {
+  font-size: 36px;
+  width: 36px;
+  height: 36px;
+}
+
+.role-name {
+  font-family: var(--font-display);
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--color-ink);
+  margin: 0 0 0.5rem;
+  letter-spacing: -0.01em;
+  transition: color var(--transition-fast);
+}
+
+.role-desc {
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  color: var(--color-ink-soft);
+  opacity: 0.7;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.role-check {
+  position: absolute;
+  top: 1.25rem;
+  right: 1.25rem;
+
+  mat-icon {
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+    color: var(--blue-600);
   }
 }
 
@@ -164,70 +226,48 @@
   display: flex;
   justify-content: center;
   margin-bottom: 1.5rem;
+}
 
-  .confirm-button {
-    min-width: 200px;
-    height: 48px;
-    font-size: 1.1rem;
-    font-weight: 500;
+.confirm-btn {
+  height: 52px;
+  min-width: 220px;
+  font-family: var(--font-sans);
+  font-size: 1.0625rem;
+  font-weight: 600;
+  background-color: var(--blue-600) !important;
+  color: #ffffff !important;
+  border-radius: var(--radius-sm) !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color var(--transition-base), box-shadow var(--transition-base);
 
-    .button-spinner {
-      display: inline-block;
-      margin-right: 0.5rem;
-    }
+  &:hover:not([disabled]) {
+    background-color: var(--blue-500) !important;
+    box-shadow: var(--shadow-card);
+  }
+
+  &[disabled] {
+    opacity: 0.45;
+  }
+
+  .btn-spinner {
+    flex-shrink: 0;
+  }
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
   }
 }
 
 .help-text {
-  text-align: center;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  color: var(--color-ink-soft);
+  opacity: 0.5;
   margin: 0;
-  font-size: 0.875rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-// Responsive adjustments
-@media (max-width: 768px) {
-  .header {
-    margin-bottom: 2rem;
-
-    .logo-container {
-      .logo-icon {
-        font-size: 40px;
-        width: 40px;
-        height: 40px;
-      }
-
-      .app-name {
-        font-size: 2rem;
-      }
-    }
-
-    .title {
-      font-size: 1.5rem;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-    }
-  }
-
-  .role-card {
-    padding: 2rem 1.5rem;
-
-    .role-icon-wrapper {
-      width: 64px;
-      height: 64px;
-      margin-bottom: 1rem;
-
-      .role-icon {
-        font-size: 40px;
-        width: 40px;
-        height: 40px;
-      }
-    }
-
-    .role-title {
-      font-size: 1.25rem;
-    }
-  }
+  text-align: center;
 }

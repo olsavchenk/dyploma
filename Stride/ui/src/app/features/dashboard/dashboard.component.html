@@ -1,165 +1,94 @@
-<div class="dashboard-container">
-  <!-- Header -->
-  <div class="dashboard-header">
-    <div class="welcome-section">
-      <h1 class="welcome-title">
-        Привіт, {{ user()?.displayName || 'Студент' }}! 👋
-      </h1>
-      <p class="welcome-subtitle">
-        Готові продовжити навчання?
-      </p>
-    </div>
-    
-    @if (!loading()) {
-      <button 
-        mat-icon-button 
-        class="refresh-button" 
-        (click)="onRefresh()"
-        matTooltip="Оновити">
-        <mat-icon>refresh</mat-icon>
-      </button>
-    }
-  </div>
+<div class="dashboard-container animate-fade-in">
 
-  <!-- Loading State -->
-  @if (loading()) {
-    <div class="loading-container">
-      <mat-spinner diameter="48"></mat-spinner>
-      <p>Завантаження...</p>
-    </div>
-  }
-
-  <!-- Error State -->
-  @else if (error()) {
+  <!-- Error state -->
+  @if (error()) {
     <div class="error-container">
       <mat-icon>error_outline</mat-icon>
       <p>{{ error() }}</p>
-      <button mat-raised-button color="primary" (click)="onRefresh()">
-        Спробувати ще раз
-      </button>
+      <button mat-flat-button (click)="onRefresh()">Спробувати ще раз</button>
     </div>
   }
 
-  <!-- Dashboard Content -->
+  <!-- Loading skeletons -->
+  @else if (loading()) {
+    <div class="hero-row">
+      <div class="skeleton-card" style="height:48px; max-width:360px;"></div>
+    </div>
+    <div class="dashboard-grid">
+      <div class="col-8"><div class="skeleton-card"></div></div>
+      <div class="col-4"><div class="skeleton-card"></div></div>
+      <div class="col-12"><div class="skeleton-card" style="height:160px;"></div></div>
+      <div class="col-6"><div class="skeleton-card" style="height:180px;"></div></div>
+      <div class="col-6"><div class="skeleton-card" style="height:180px;"></div></div>
+    </div>
+  }
+
+  <!-- Dashboard content -->
   @else {
-    <!-- Empty State -->
-    @if (!hasActivities()) {
-      <div class="empty-state">
-        <div class="empty-state-icon">🚀</div>
-        <h2>Розпочніть навчання!</h2>
-        <p>Виберіть предмет та розпочніть своє навчальне подорож.</p>
-        <button mat-raised-button color="primary" routerLink="/learn" class="start-button">
-          <mat-icon>play_arrow</mat-icon>
-          Розпочати навчання
-        </button>
+    <!-- Hero row: greeting + rule divider -->
+    <div class="hero-row animate-rise-in">
+      <h1 class="hero-greeting">
+        {{ greeting }}, {{ user()?.displayName || 'Студент' }}
+      </h1>
+      <p class="hero-date">{{ todayLabel }}</p>
+    </div>
+
+    <!-- First task bonus banner (conditional) -->
+    @if (stats() && !stats()!.firstTaskOfDayCompleted) {
+      <div class="col-12">
+        <app-first-task-bonus [isCompleted]="false" />
       </div>
     }
 
-    <!-- Main Content -->
-    @else {
-      <div class="dashboard-content">
-        <!-- First Task of Day Bonus -->
-        @if (stats()) {
-          <app-first-task-bonus [isCompleted]="stats()!.firstTaskOfDayCompleted" />
-        }
+    <div class="dashboard-grid">
+      <!-- XP bar (8 cols) -->
+      @if (stats()) {
+        <div class="col-8">
+          <app-xp-bar
+            [currentXp]="stats()!.totalXp"
+            [currentLevel]="stats()!.currentLevel"
+            [xpToNextLevel]="stats()!.xpToNextLevel"
+            [xpProgress]="stats()!.xpProgress"
+          />
+        </div>
 
-        <!-- Gamification Section -->
-        @if (stats()) {
-          <div class="gamification-grid">
-            <app-streak-widget 
-              [currentStreak]="stats()!.currentStreak"
-              [longestStreak]="stats()!.longestStreak" />
-            
-            <app-xp-bar 
-              [currentXp]="stats()!.totalXp"
-              [currentLevel]="stats()!.currentLevel"
-              [xpToNextLevel]="stats()!.xpToNextLevel"
-              [xpProgress]="stats()!.xpProgress" />
+        <!-- Streak widget (4 cols) -->
+        <div class="col-4">
+          <app-streak-widget
+            [currentStreak]="stats()!.currentStreak"
+            [longestStreak]="stats()!.longestStreak"
+          />
+        </div>
+      }
+
+      <!-- Continue learning carousel (12 cols) -->
+      @if (continueLearning().length > 0) {
+        <div class="col-12">
+          <div class="section-header">
+            <h2 class="section-title">Продовжити навчання</h2>
+            <a routerLink="/learn" class="section-link">
+              Всі предмети <mat-icon>arrow_forward</mat-icon>
+            </a>
           </div>
-        }
-
-        <!-- Continue Learning Section -->
-        @if (continueLearning().length > 0) {
-          <section class="dashboard-section">
-            <div class="section-header">
-              <h2 class="section-title">
-                <mat-icon>school</mat-icon>
-                Продовжити навчання
-              </h2>
-              <a mat-button routerLink="/learn" class="section-link">
-                Переглянути все
-                <mat-icon>arrow_forward</mat-icon>
-              </a>
-            </div>
-            
-            <div class="topics-grid">
-              @for (topic of continueLearning(); track topic.topicId) {
-                <app-topic-card [topic]="topic" />
-              }
-            </div>
-          </section>
-        }
-
-        <!-- Two Column Layout for Leaderboard and Quick Stats -->
-        <div class="two-column-layout">
-          <!-- Leaderboard Preview -->
-          @if (leaderboard()) {
-            <div class="column">
-              <app-leaderboard-preview [preview]="leaderboard()" />
-            </div>
-          }
-
-          <!-- Quick Actions / Stats -->
-          <div class="column">
-            <div class="quick-actions-card">
-              <h3 class="quick-actions-title">Швидкі дії</h3>
-              
-              <div class="quick-actions-grid">
-                <a routerLink="/learn" class="quick-action-item">
-                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);">
-                    <mat-icon>school</mat-icon>
-                  </div>
-                  <div class="quick-action-label">Вибрати тему</div>
-                </a>
-
-                <a routerLink="/profile" class="quick-action-item">
-                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #EC4899 0%, #DB2777 100%);">
-                    <mat-icon>person</mat-icon>
-                  </div>
-                  <div class="quick-action-label">Профіль</div>
-                </a>
-
-                <a routerLink="/leaderboard" class="quick-action-item">
-                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);">
-                    <mat-icon>emoji_events</mat-icon>
-                  </div>
-                  <div class="quick-action-label">Рейтинг</div>
-                </a>
-
-                <a routerLink="/profile?tab=achievements" class="quick-action-item">
-                  <div class="quick-action-icon" style="background: linear-gradient(135deg, #10B981 0%, #059669 100%);">
-                    <mat-icon>military_tech</mat-icon>
-                  </div>
-                  <div class="quick-action-label">Досягнення</div>
-                </a>
-              </div>
-
-              @if (stats()) {
-                <div class="stats-summary">
-                  <div class="stat-item">
-                    <div class="stat-label">Ліга</div>
-                    <div class="stat-value">{{ getLeagueLabel(stats()!.league) }}</div>
-                  </div>
-                  <div class="stat-item">
-                    <div class="stat-label">Заморозки</div>
-                    <div class="stat-value">{{ stats()!.streakFreezes }}</div>
-                  </div>
-                </div>
-              }
-            </div>
+          <div class="topics-carousel">
+            @for (topic of continueLearning(); track topic.topicId) {
+              <app-topic-card [topic]="topic" />
+            }
           </div>
         </div>
+      }
+
+      <!-- Daily goal + Leaderboard preview (6+6 cols) -->
+      @if (leaderboard()) {
+        <div class="col-6">
+          <app-leaderboard-preview [preview]="leaderboard()" />
+        </div>
+      }
+
+      <!-- Daily goal (6 cols) when no leaderboard, else recent achievements -->
+      <div class="col-6">
+        <app-recent-achievements [achievements]="[]" />
       </div>
-    }
+    </div>
   }
 </div>

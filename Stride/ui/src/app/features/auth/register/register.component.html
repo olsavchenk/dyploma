@@ -1,164 +1,182 @@
-<div class="register-container">
-  <mat-card class="register-card">
-    <mat-card-header>
-      <div class="logo-container">
-        <mat-icon class="logo-icon">school</mat-icon>
-        <h1 class="app-name">Stride</h1>
-      </div>
-      <p class="subtitle">Створити обліковий запис</p>
-    </mat-card-header>
+<app-auth-shell>
+  <div class="form-panel">
+    <div class="form-header">
+      <h2 class="form-title font-display">Реєстрація</h2>
+      <p class="form-subtitle font-sans">Почніть навчання вже сьогодні</p>
+    </div>
 
-    <mat-card-content>
-      @if (errorMessage()) {
-        <div class="error-banner" role="alert">
-          <mat-icon>error_outline</mat-icon>
-          <span>{{ errorMessage() }}</span>
+    @if (errorMessage()) {
+      <div class="error-banner" role="alert">
+        <mat-icon>error_outline</mat-icon>
+        <span>{{ errorMessage() }}</span>
+      </div>
+    }
+
+    <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Ім'я</mat-label>
+        <input
+          matInput
+          type="text"
+          formControlName="displayName"
+          placeholder="Олексій Петренко"
+          autocomplete="name"
+          required
+        />
+        <mat-icon matPrefix>person</mat-icon>
+        @if (registerForm.get('displayName')?.invalid && registerForm.get('displayName')?.touched) {
+          <mat-error>{{ getDisplayNameError() }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Email</mat-label>
+        <input
+          matInput
+          type="email"
+          formControlName="email"
+          placeholder="example@mail.com"
+          autocomplete="email"
+          required
+        />
+        <mat-icon matPrefix>email</mat-icon>
+        @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
+          <mat-error>{{ getEmailError() }}</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Пароль</mat-label>
+        <input
+          matInput
+          [type]="hidePassword() ? 'password' : 'text'"
+          formControlName="password"
+          placeholder="••••••••"
+          autocomplete="new-password"
+          required
+        />
+        <mat-icon matPrefix>lock</mat-icon>
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="togglePasswordVisibility()"
+          [attr.aria-label]="'Показати пароль'"
+        >
+          <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+        </button>
+        @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
+          <mat-error>{{ getPasswordError() }}</mat-error>
+        }
+      </mat-form-field>
+
+      <!-- Password strength meter -->
+      @if (registerForm.get('password')?.value) {
+        <div class="strength-meter" aria-label="Рівень надійності паролю">
+          <div class="strength-bars">
+            <div
+              class="strength-bar"
+              [class.strength-bar--weak]="getPasswordStrength() === 'weak'"
+              [class.strength-bar--medium]="getPasswordStrength() === 'medium' || getPasswordStrength() === 'strong'"
+              [class.strength-bar--strong]="getPasswordStrength() === 'strong'"
+            ></div>
+            <div
+              class="strength-bar"
+              [class.strength-bar--medium]="getPasswordStrength() === 'medium' || getPasswordStrength() === 'strong'"
+              [class.strength-bar--strong]="getPasswordStrength() === 'strong'"
+            ></div>
+            <div
+              class="strength-bar"
+              [class.strength-bar--strong]="getPasswordStrength() === 'strong'"
+            ></div>
+          </div>
+          <span class="strength-label font-sans">
+            @switch (getPasswordStrength()) {
+              @case ('weak') { Слабкий }
+              @case ('medium') { Середній }
+              @case ('strong') { Надійний }
+            }
+          </span>
         </div>
       }
 
-      <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Ім'я</mat-label>
-          <input
-            matInput
-            type="text"
-            formControlName="displayName"
-            placeholder="Олексій Петренко"
-            autocomplete="name"
-            required
-          />
-          <mat-icon matPrefix>person</mat-icon>
-          @if (registerForm.get('displayName')?.invalid && registerForm.get('displayName')?.touched) {
-            <mat-error>{{ getDisplayNameError() }}</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Email</mat-label>
-          <input
-            matInput
-            type="email"
-            formControlName="email"
-            placeholder="example@mail.com"
-            autocomplete="email"
-            required
-          />
-          <mat-icon matPrefix>email</mat-icon>
-          @if (registerForm.get('email')?.invalid && registerForm.get('email')?.touched) {
-            <mat-error>{{ getEmailError() }}</mat-error>
-          }
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Пароль</mat-label>
-          <input
-            matInput
-            [type]="hidePassword() ? 'password' : 'text'"
-            formControlName="password"
-            placeholder="••••••••"
-            autocomplete="new-password"
-            required
-          />
-          <mat-icon matPrefix>lock</mat-icon>
-          <button
-            mat-icon-button
-            matSuffix
-            type="button"
-            (click)="togglePasswordVisibility()"
-            [attr.aria-label]="'Показати пароль'"
-          >
-            <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          @if (registerForm.get('password')?.invalid && registerForm.get('password')?.touched) {
-            <mat-error>{{ getPasswordError() }}</mat-error>
-          }
-          <mat-hint>Мінімум 8 символів, великі та малі літери, цифри</mat-hint>
-        </mat-form-field>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Підтвердження паролю</mat-label>
-          <input
-            matInput
-            [type]="hideConfirmPassword() ? 'password' : 'text'"
-            formControlName="confirmPassword"
-            placeholder="••••••••"
-            autocomplete="new-password"
-            required
-          />
-          <mat-icon matPrefix>lock</mat-icon>
-          <button
-            mat-icon-button
-            matSuffix
-            type="button"
-            (click)="toggleConfirmPasswordVisibility()"
-            [attr.aria-label]="'Показати пароль'"
-          >
-            <mat-icon>{{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
-          </button>
-          @if (
-            (registerForm.get('confirmPassword')?.invalid || registerForm.hasError('passwordMismatch')) && 
-            registerForm.get('confirmPassword')?.touched
-          ) {
-            <mat-error>{{ getConfirmPasswordError() }}</mat-error>
-          }
-        </mat-form-field>
-
-        <div class="gdpr-consent">
-          <mat-checkbox formControlName="gdprConsent" color="primary">
-            <span class="consent-text">
-              Я погоджуюсь з
-              <a href="/privacy-policy" target="_blank" class="link">Політикою конфіденційності</a>
-              та
-              <a href="/terms" target="_blank" class="link">Умовами використання</a>
-            </span>
-          </mat-checkbox>
-          @if (
-            registerForm.get('gdprConsent')?.invalid && 
-            registerForm.get('gdprConsent')?.touched
-          ) {
-            <div class="consent-error">
-              Для реєстрації необхідно прийняти умови
-            </div>
-          }
-        </div>
-
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Підтвердження паролю</mat-label>
+        <input
+          matInput
+          [type]="hideConfirmPassword() ? 'password' : 'text'"
+          formControlName="confirmPassword"
+          placeholder="••••••••"
+          autocomplete="new-password"
+          required
+        />
+        <mat-icon matPrefix>lock</mat-icon>
         <button
-          mat-raised-button
-          color="primary"
-          type="submit"
-          class="full-width register-button"
-          [disabled]="loading"
+          mat-icon-button
+          matSuffix
+          type="button"
+          (click)="toggleConfirmPasswordVisibility()"
+          [attr.aria-label]="'Показати пароль'"
         >
-          @if (loading) {
-            <mat-spinner diameter="24" class="button-spinner"></mat-spinner>
-            <span>Реєстрація...</span>
-          } @else {
-            <span>Зареєструватися</span>
-          }
+          <mat-icon>{{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
-      </form>
+        @if (
+          (registerForm.get('confirmPassword')?.invalid || registerForm.hasError('passwordMismatch')) &&
+          registerForm.get('confirmPassword')?.touched
+        ) {
+          <mat-error>{{ getConfirmPasswordError() }}</mat-error>
+        }
+      </mat-form-field>
 
-      <mat-divider class="divider">
-        <span class="divider-text">або</span>
-      </mat-divider>
+      <div class="gdpr-consent">
+        <mat-checkbox formControlName="gdprConsent" color="primary">
+          <span class="consent-text font-sans">
+            Я погоджуюсь з
+            <a href="/privacy-policy" target="_blank" class="auth-link">Політикою конфіденційності</a>
+            та
+            <a href="/terms" target="_blank" class="auth-link">Умовами використання</a>
+          </span>
+        </mat-checkbox>
+        @if (registerForm.get('gdprConsent')?.invalid && registerForm.get('gdprConsent')?.touched) {
+          <div class="consent-error font-sans">Для реєстрації необхідно прийняти умови</div>
+        }
+      </div>
 
       <button
-        mat-stroked-button
-        type="button"
-        class="full-width google-button"
-        (click)="onGoogleRegister()"
+        mat-flat-button
+        type="submit"
+        class="full-width submit-btn"
         [disabled]="loading"
       >
-        <mat-icon svgIcon="google" class="google-icon"></mat-icon>
-        <span>Зареєструватися через Google</span>
+        @if (loading) {
+          <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
+          <span>Реєстрація...</span>
+        } @else {
+          <span>Зареєструватися</span>
+        }
       </button>
-    </mat-card-content>
+    </form>
 
-    <mat-card-footer>
-      <p class="login-prompt">
-        Вже є обліковий запис?
-        <a routerLink="/auth/login" class="link">Увійти</a>
-      </p>
-    </mat-card-footer>
-  </mat-card>
-</div>
+    <div class="divider-row">
+      <span class="divider-line"></span>
+      <span class="divider-label font-sans">або</span>
+      <span class="divider-line"></span>
+    </div>
+
+    <button
+      mat-stroked-button
+      type="button"
+      class="full-width google-btn"
+      (click)="onGoogleRegister()"
+      [disabled]="loading"
+    >
+      <mat-icon>g_mobiledata</mat-icon>
+      <span>Зареєструватися через Google</span>
+    </button>
+
+    <p class="switch-prompt font-sans">
+      Вже є обліковий запис?
+      <a routerLink="/auth/login" class="auth-link auth-link--bold">Увійти</a>
+    </p>
+  </div>
+</app-auth-shell>

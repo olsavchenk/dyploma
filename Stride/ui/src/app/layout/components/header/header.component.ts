@@ -10,6 +10,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoggingService } from '../../../core/services/logging.service';
+import { TranslationService } from '../../../core/services/translation.service';
 import { UserStats } from '../../models';
 
 @Component({
@@ -32,6 +33,7 @@ export class HeaderComponent implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggingService);
+  private readonly translationService = inject(TranslationService);
 
   // Inputs
   readonly userStats = input<UserStats | null>(null);
@@ -39,11 +41,13 @@ export class HeaderComponent implements OnInit {
 
   // Outputs
   readonly menuToggle = output<void>();
+  readonly notificationPanelToggle = output<void>();
 
   // State
   protected readonly user = this.authService.user;
   protected readonly isAuthenticated = this.authService.isAuthenticated;
   protected readonly showStats = signal<boolean>(false);
+  protected readonly currentLang = this.translationService.currentLanguage;
 
   // Computed values
   protected readonly xpPercentage = computed(() => {
@@ -81,6 +85,10 @@ export class HeaderComponent implements OnInit {
         this.router.navigate(['/auth/login']);
       },
     });
+  }
+
+  protected setLang(lang: 'uk' | 'en'): void {
+    this.translationService.setLanguage(lang);
   }
 
   protected getAvatarUrl(): string {
