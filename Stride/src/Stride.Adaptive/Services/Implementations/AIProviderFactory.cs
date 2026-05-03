@@ -24,10 +24,8 @@ public class AIProviderFactory : IAIProviderFactory
         
         _providers = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase)
         {
-            { "gemini", typeof(GeminiProvider) }
-            // Future providers can be added here:
-            // { "gpt", typeof(GPTProvider) },
-            // { "claude", typeof(ClaudeProvider) }
+            { "gemini", typeof(GeminiProvider) },
+            { "anthropic", typeof(AnthropicProvider) }
         };
     }
 

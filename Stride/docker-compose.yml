@@ -26,8 +26,9 @@ services:
       - MinIO__UseSSL=false
       - Meilisearch__Url=http://meilisearch:7700
       - Meilisearch__MasterKey=masterKey
-      - AIProvider__Gemini__ApiKey=${GEMINI_API_KEY:-your-gemini-api-key-here}
-      - AIProvider__Gemini__Model=gemini-3-flash-preview
+      - AIProvider__DefaultProvider=anthropic
+      - AIProvider__Anthropic__ApiKey=${ANTHROPIC_API_KEY:-your-anthropic-api-key-here}
+      - AIProvider__Anthropic__Model=claude-haiku-4-5-20251001
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,8 +66,9 @@ services:
       - Valkey__ConnectionString=valkey:6379,abortConnect=false
       - DifficultyEngine__ModelFilePath=MLModels/difficulty_model.zip
       - ModelTraining__RetrainingIntervalHours=168
-      - AIProvider__Gemini__ApiKey=${GEMINI_API_KEY:-your-gemini-api-key-here}
-      - AIProvider__Gemini__Model=gemini-3-flash-preview
+      - AIProvider__DefaultProvider=anthropic
+      - AIProvider__Anthropic__ApiKey=${ANTHROPIC_API_KEY:-your-anthropic-api-key-here}
+      - AIProvider__Anthropic__Model=claude-haiku-4-5-20251001
     depends_on:
       postgres:
         condition: service_healthy

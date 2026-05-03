@@ -69,7 +69,7 @@ function passwordMatchValidator(group: AbstractControl): ValidationErrors | null
                 required
               />
               <mat-icon matPrefix>lock</mat-icon>
-              <button mat-icon-button matSuffix type="button" (click)="hidePassword.update(v => !v)">
+              <button mat-icon-button matSuffix type="button" (click)="togglePassword()">
                 <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
               </button>
               @if (form.get('password')?.hasError('minlength') && form.get('password')?.touched) {
@@ -129,6 +129,10 @@ export class ResetPasswordComponent implements OnInit {
   protected readonly success = signal(false);
 
   private token = '';
+
+  togglePassword(): void {
+    this.hidePassword.update(v => !v);
+  }
 
   constructor() {
     this.form = this.fb.group(
