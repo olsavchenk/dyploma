@@ -79,26 +79,27 @@ import { ContinueLearningTopic } from '@app/core';
   styles: [`
     .topic-card {
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: box-shadow var(--transition-base), transform var(--transition-base);
       height: 100%;
       display: flex;
       flex-direction: column;
+      min-width: 280px;
+      max-width: 360px;
+      flex-shrink: 0;
     }
 
     .topic-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-hero);
     }
 
-    mat-card-header {
-      gap: 1rem;
-    }
+    mat-card-header { gap: 1rem; }
 
     .subject-icon {
       width: 48px;
       height: 48px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-700) 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -114,13 +115,16 @@ import { ContinueLearningTopic } from '@app/core';
     }
 
     mat-card-title {
+      font-family: var(--font-display);
       font-size: 1.125rem;
       font-weight: 600;
       margin-bottom: 0.25rem;
+      color: var(--color-ink);
     }
 
     mat-card-subtitle {
-      color: rgba(0, 0, 0, 0.6);
+      color: var(--color-ink-soft);
+      font-family: var(--font-sans);
       font-size: 0.875rem;
     }
 
@@ -129,27 +133,27 @@ import { ContinueLearningTopic } from '@app/core';
       padding-top: 1rem;
     }
 
-    .progress-section {
-      margin-bottom: 1rem;
-    }
+    .progress-section { margin-bottom: 1rem; }
 
     .progress-label {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 0.5rem;
+      font-family: var(--font-sans);
       font-size: 0.875rem;
-      color: rgba(0, 0, 0, 0.7);
+      color: var(--color-ink-soft);
     }
 
     .progress-value {
+      font-family: var(--font-mono);
       font-weight: 600;
-      color: #6366F1;
+      color: var(--blue-600);
     }
 
     mat-progress-bar {
       height: 8px;
-      border-radius: 4px;
+      border-radius: var(--radius-pill);
     }
 
     .stats-grid {
@@ -158,7 +162,7 @@ import { ContinueLearningTopic } from '@app/core';
       gap: 1rem;
       margin-bottom: 1rem;
       padding-bottom: 1rem;
-      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+      border-bottom: 1px solid var(--color-rule);
     }
 
     .stat-item {
@@ -168,34 +172,35 @@ import { ContinueLearningTopic } from '@app/core';
     }
 
     .stat-icon {
-      color: #6366F1;
+      color: var(--blue-600);
       font-size: 20px;
       width: 20px;
       height: 20px;
     }
 
-    .stat-content {
-      flex: 1;
-    }
+    .stat-content { flex: 1; }
 
     .stat-label {
+      font-family: var(--font-sans);
       font-size: 0.75rem;
-      color: rgba(0, 0, 0, 0.6);
+      color: var(--color-ink-soft);
       margin-bottom: 0.125rem;
     }
 
     .stat-value {
+      font-family: var(--font-sans);
       font-size: 0.875rem;
       font-weight: 600;
-      color: rgba(0, 0, 0, 0.87);
+      color: var(--color-ink);
     }
 
     .last-active {
       display: flex;
       align-items: center;
       gap: 0.5rem;
+      font-family: var(--font-sans);
       font-size: 0.875rem;
-      color: rgba(0, 0, 0, 0.6);
+      color: var(--color-ink-soft);
     }
 
     .last-active mat-icon {
@@ -215,13 +220,13 @@ import { ContinueLearningTopic } from '@app/core';
       align-items: center;
       justify-content: center;
       gap: 0.5rem;
+      font-family: var(--font-sans);
+      font-weight: 600;
     }
 
     @media (max-width: 640px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 0.75rem;
-      }
+      .topic-card { min-width: 260px; }
+      .stats-grid { grid-template-columns: 1fr; gap: 0.75rem; }
     }
   `],
 })

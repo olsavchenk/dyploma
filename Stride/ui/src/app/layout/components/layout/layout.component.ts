@@ -124,7 +124,7 @@ export class LayoutComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((event: AchievementUnlockedEvent) => {
         this.notificationService.showAchievementToast(event);
-        this.enqueueNotification('achievement', `Досягнення розблоковано: ${event.achievementName}`, event);
+        this.enqueueNotification('achievement', `Досягнення розблоковано: ${event.name}`, event);
       });
 
     // Level up → celebration overlay + notification

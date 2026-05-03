@@ -13,6 +13,7 @@ import { finalize } from 'rxjs';
 import {
   LeaderboardService,
   AuthService,
+  GamificationService,
   LeaderboardEntry,
   League,
 } from '@app/core';
@@ -35,11 +36,12 @@ type FilterMode = 'weekly' | 'allTime' | 'class';
   styleUrl: './leaderboard.component.scss',
 })
 export class LeaderboardComponent implements OnInit {
-  private readonly leaderboardService = inject(LeaderboardService);
-  private readonly authService        = inject(AuthService);
-  private readonly signalRService     = inject(SignalRService);
-  private readonly logger             = inject(LoggingService);
-  private readonly destroyRef         = inject(DestroyRef);
+  private readonly leaderboardService  = inject(LeaderboardService);
+  private readonly authService         = inject(AuthService);
+  private readonly gamificationService = inject(GamificationService);
+  private readonly signalRService      = inject(SignalRService);
+  private readonly logger              = inject(LoggingService);
+  private readonly destroyRef          = inject(DestroyRef);
 
   // State signals
   protected readonly entries          = signal<LeaderboardEntry[]>([]);
@@ -47,6 +49,7 @@ export class LeaderboardComponent implements OnInit {
   protected readonly activeFilter     = signal<FilterMode>('weekly');
   protected readonly currentUserEntry = signal<LeaderboardEntry | null>(null);
   protected readonly error            = signal<string | null>(null);
+  private readonly userLeague         = signal<League>('Bronze');
 
   // Auth
   protected readonly user = this.authService.user;
@@ -86,7 +89,14 @@ export class LeaderboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.previousFilter = this.activeFilter();
-    this.loadLeaderboard();
+
+    this.gamificationService.getStats().subscribe({
+      next: (stats) => {
+        this.userLeague.set(stats.league);
+        this.loadLeaderboard();
+      },
+      error: () => this.loadLeaderboard(),
+    });
 
     // Real-time: leaderboard updated
     this.signalRService.onLeaderboardUpdated
@@ -160,8 +170,6 @@ export class LeaderboardComponent implements OnInit {
   }
 
   private resolveLeague(): League {
-    // In a fuller implementation this would differ per filter.
-    // For MVP we always pass the user's league (or Bronze as default).
-    return 'Bronze';
+    return this.userLeague();
   }
 }

@@ -85,7 +85,7 @@
                 <!-- Difficulty dots -->
                 <span class="diff-dots">
                   @for (dot of [1,2,3,4,5]; track dot) {
-                    <span class="diff-dot" [class.diff-dot--filled]="dot <= (topic.difficultyLevel ?? 1)"></span>
+                    <span class="diff-dot" [class.diff-dot--filled]="dot <= (topic.gradeLevel ?? 1)"></span>
                   }
                 </span>
                 <span class="topic-grade">{{ topic.gradeLevel }} кл.</span>

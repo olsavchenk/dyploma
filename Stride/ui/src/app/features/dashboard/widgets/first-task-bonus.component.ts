@@ -36,20 +36,20 @@ import { MatIconModule } from '@angular/material/icon';
     .bonus-banner {
       position: relative;
       padding: 1rem 1.5rem;
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       overflow: hidden;
-      transition: all 0.3s ease;
+      transition: all var(--transition-base);
     }
 
     .bonus-banner.available {
-      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
-      box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+      background: linear-gradient(135deg, var(--sun-400) 0%, var(--sun-500) 100%);
+      box-shadow: 0 4px 12px rgba(255, 213, 0, 0.3);
       animation: gentle-bounce 2s ease-in-out infinite;
     }
 
     .bonus-banner.completed {
-      background: linear-gradient(135deg, #34D399 0%, #10B981 100%);
-      box-shadow: 0 4px 12px rgba(52, 211, 153, 0.3);
+      background: linear-gradient(135deg, var(--color-success) 0%, #15803d 100%);
+      box-shadow: 0 4px 12px rgba(31, 143, 92, 0.3);
     }
 
     @keyframes gentle-bounce {
@@ -88,17 +88,18 @@ import { MatIconModule } from '@angular/material/icon';
     }
 
     .bonus-title {
+      font-family: var(--font-sans);
       font-size: 1rem;
       font-weight: 700;
-      color: white;
+      color: var(--blue-900);
       margin-bottom: 0.25rem;
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
     }
 
     .bonus-subtitle {
+      font-family: var(--font-sans);
       font-size: 0.875rem;
-      color: rgba(255, 255, 255, 0.95);
-      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+      color: var(--blue-800);
+      opacity: 0.85;
     }
 
     .bonus-pulse {

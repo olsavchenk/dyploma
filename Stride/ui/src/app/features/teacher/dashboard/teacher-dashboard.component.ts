@@ -50,8 +50,8 @@ export class TeacherDashboardComponent implements OnInit {
           this.stats.set({
             classes: qs.totalClasses,
             students: qs.totalStudents,
-            pendingReviews: qs.pendingReviews ?? 0,
-            weekXp: qs.weekXp ?? 0,
+            pendingReviews: 0,
+            weekXp: 0,
           });
           this.loading.set(false);
         },

@@ -43,14 +43,15 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
   styles: [`
     .xp-bar-container {
       padding: 1.5rem;
-      background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
-      border-radius: 16px;
-      box-shadow: 0 4px 6px rgba(99, 102, 241, 0.1);
-      transition: all 0.3s ease;
+      background: linear-gradient(135deg, var(--blue-50) 0%, var(--blue-100) 100%);
+      border: 1px solid var(--color-rule);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-card);
+      transition: box-shadow var(--transition-base), transform var(--transition-base);
     }
 
     .xp-bar-container:hover {
-      box-shadow: 0 8px 12px rgba(99, 102, 241, 0.15);
+      box-shadow: var(--shadow-hero);
       transform: translateY(-2px);
     }
 
@@ -68,9 +69,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       justify-content: center;
       width: 70px;
       height: 70px;
-      background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%);
+      background: linear-gradient(135deg, var(--blue-600) 0%, var(--blue-700) 100%);
       border-radius: 50%;
-      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 12px rgba(11, 61, 145, 0.35);
       position: relative;
     }
 
@@ -78,7 +79,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       content: '';
       position: absolute;
       inset: -3px;
-      background: linear-gradient(135deg, #818CF8, #6366F1);
+      background: linear-gradient(135deg, var(--blue-400), var(--blue-600));
       border-radius: 50%;
       z-index: -1;
       animation: rotate 3s linear infinite;
@@ -90,6 +91,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     }
 
     .level-number {
+      font-family: var(--font-display);
       font-size: 1.75rem;
       font-weight: 700;
       color: white;
@@ -97,6 +99,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     }
 
     .level-label {
+      font-family: var(--font-sans);
       font-size: 0.625rem;
       color: rgba(255, 255, 255, 0.9);
       text-transform: uppercase;
@@ -109,8 +112,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     }
 
     .xp-label {
+      font-family: var(--font-sans);
       font-size: 0.875rem;
-      color: #4338CA;
+      color: var(--blue-600);
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
@@ -118,9 +122,10 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     }
 
     .xp-count {
+      font-family: var(--font-mono);
       font-size: 1.125rem;
       font-weight: 700;
-      color: #312E81;
+      color: var(--blue-900);
     }
 
     .progress-bar-container {
@@ -131,18 +136,18 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       width: 100%;
       height: 12px;
       background: rgba(255, 255, 255, 0.5);
-      border-radius: 6px;
+      border-radius: var(--radius-pill);
       overflow: hidden;
       box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
     }
 
     .progress-bar-fill {
       height: 100%;
-      background: linear-gradient(90deg, #6366F1 0%, #818CF8 50%, #6366F1 100%);
+      background: linear-gradient(90deg, var(--sun-400) 0%, var(--sun-300) 50%, var(--sun-400) 100%);
       background-size: 200% 100%;
-      border-radius: 6px;
+      border-radius: var(--radius-pill);
       position: relative;
-      transition: width 1s ease-out;
+      transition: width 1s var(--ease-editorial);
       animation: shimmer 2s ease-in-out infinite;
     }
 
@@ -157,12 +162,7 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       left: -100%;
       width: 100%;
       height: 100%;
-      background: linear-gradient(
-        90deg,
-        transparent,
-        rgba(255, 255, 255, 0.3),
-        transparent
-      );
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
       animation: shine 2s ease-in-out infinite;
     }
 
@@ -176,22 +176,24 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       top: 50%;
       right: 0.5rem;
       transform: translateY(-50%);
+      font-family: var(--font-mono);
       font-size: 0.75rem;
       font-weight: 600;
-      color: #312E81;
+      color: var(--blue-900);
       text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
     }
 
     .level-up-hint {
       margin-top: 0.75rem;
       padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, #FBBF24 0%, #F59E0B 100%);
-      color: #78350F;
+      background: linear-gradient(135deg, var(--sun-400) 0%, var(--sun-500) 100%);
+      color: var(--blue-900);
+      font-family: var(--font-sans);
       font-size: 0.875rem;
       font-weight: 600;
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       text-align: center;
-      box-shadow: 0 2px 4px rgba(245, 158, 11, 0.2);
+      box-shadow: 0 2px 4px rgba(255, 213, 0, 0.2);
     }
 
     .animate-bounce {
@@ -204,22 +206,10 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
     }
 
     @media (max-width: 640px) {
-      .xp-bar-container {
-        padding: 1rem;
-      }
-
-      .level-badge {
-        width: 60px;
-        height: 60px;
-      }
-
-      .level-number {
-        font-size: 1.5rem;
-      }
-
-      .xp-count {
-        font-size: 1rem;
-      }
+      .xp-bar-container { padding: 1rem; }
+      .level-badge { width: 60px; height: 60px; }
+      .level-number { font-size: 1.5rem; }
+      .xp-count { font-size: 1rem; }
     }
   `],
   animations: [

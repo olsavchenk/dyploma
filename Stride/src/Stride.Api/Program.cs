@@ -49,11 +49,13 @@ try
     }
 
     // Add CORS
+    var corsOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                     ?? ["http://localhost:4200", "https://localhost:4200"];
     builder.Services.AddCors(options =>
     {
         options.AddDefaultPolicy(policy =>
         {
-            policy.WithOrigins("http://localhost:4200", "https://localhost:4200")
+            policy.WithOrigins(corsOrigins)
                   .AllowAnyMethod()
                   .AllowAnyHeader()
                   .AllowCredentials();

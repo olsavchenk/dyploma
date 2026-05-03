@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Minio;
 using Minio.DataModel.Args;
@@ -6,18 +7,17 @@ using Stride.Services.Interfaces;
 
 namespace Stride.Services.Implementations;
 
-/// <summary>
-/// MinIO storage service implementation
-/// </summary>
 public class MinIOStorageService : IStorageService
 {
     private readonly IMinioClient _minioClient;
     private readonly MinIOOptions _options;
+    private readonly ILogger<MinIOStorageService> _logger;
 
-    public MinIOStorageService(IMinioClient minioClient, IOptions<MinIOOptions> options)
+    public MinIOStorageService(IMinioClient minioClient, IOptions<MinIOOptions> options, ILogger<MinIOStorageService> logger)
     {
         _minioClient = minioClient ?? throw new ArgumentNullException(nameof(minioClient));
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task<string> UploadAsync(string bucketName, string objectName, Stream data, string contentType, CancellationToken cancellationToken = default)
@@ -75,8 +75,9 @@ public class MinIOStorageService : IStorageService
             await _minioClient.RemoveObjectAsync(removeObjectArgs, cancellationToken);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to delete object {ObjectName} from bucket {BucketName}", objectName, bucketName);
             return false;
         }
     }
@@ -126,8 +127,9 @@ public class MinIOStorageService : IStorageService
             await _minioClient.StatObjectAsync(statObjectArgs, cancellationToken);
             return true;
         }
-        catch
+        catch (Exception ex)
         {
+            _logger.LogWarning(ex, "Failed to check existence of object {ObjectName} in bucket {BucketName}", objectName, bucketName);
             return false;
         }
     }

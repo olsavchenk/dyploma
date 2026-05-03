@@ -6,7 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { finalize } from 'rxjs';
+import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { LearningService, StudentClass, StudentClassSubject } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
 
@@ -89,7 +89,7 @@ export class LearnBrowseComponent implements OnInit {
   private setupSearch(): void {
     this.searchControl.valueChanges
       .pipe(debounceTime(300), distinctUntilChanged())
-      .subscribe((term) => this.filterClasses(term || ''));
+      .subscribe((term: string | null) => this.filterClasses(term || ''));
   }
 
   private filterClasses(searchTerm: string): void {

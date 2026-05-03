@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AuthService } from '@app/core';
+import { AuthShellComponent } from '../shared/auth-shell.component';
 
 @Component({
   selector: 'app-forgot-password',
@@ -23,6 +24,7 @@ import { AuthService } from '@app/core';
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    AuthShellComponent,
   ],
   templateUrl: './forgot-password.component.html',
   styleUrl: './forgot-password.component.scss',

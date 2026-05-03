@@ -137,7 +137,7 @@
                         stroke="var(--blue-600)"
                         stroke-width="3"
                         stroke-linecap="round"
-                        stroke-dasharray="{{ getMasteryDash(subject.progressPercentage) }} 125.66"
+                        [attr.stroke-dasharray]="getMasteryDash(subject.progressPercentage) + ' 125.66'"
                         transform="rotate(-90 24 24)"
                       />
                     </svg>

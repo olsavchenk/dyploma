@@ -212,12 +212,13 @@ export class ProfileComponent implements OnInit {
   }
 
   protected accuracyPercent(): number {
-    const s = this.stats();
-    if (!s) return 0;
     const profile = this.profile();
-    if (profile?.studentStats?.totalTasksAttempted && profile.studentStats.totalTasksAttempted > 0) {
-      return 0; // accuracy is not in StudentStats directly; fallback
-    }
-    return 0;
+    if (!profile?.studentStats) return 0;
+    const attempted = profile.studentStats.totalTasksAttempted;
+    if (attempted <= 0) return 0;
+    const xp = profile.studentStats.totalXp;
+    const baseXpPerTask = 10;
+    const estimatedCorrect = Math.min(attempted, Math.round(xp / baseXpPerTask));
+    return Math.round((estimatedCorrect / attempted) * 100);
   }
 }

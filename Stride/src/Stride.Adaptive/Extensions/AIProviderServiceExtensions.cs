@@ -54,12 +54,14 @@ public static class AIProviderServiceExtensions
         {
             client.DefaultRequestHeaders.Add("User-Agent", "Stride-Adaptive-Engine/1.0");
         });
+        services.AddHttpClient<AnthropicProvider>(client =>
+        {
+            client.DefaultRequestHeaders.Add("User-Agent", "Stride-Adaptive-Engine/1.0");
+        });
 
         // Register individual providers
         services.AddScoped<GeminiProvider>();
-        // Future providers:
-        // services.AddScoped<GPTProvider>();
-        // services.AddScoped<ClaudeProvider>();
+        services.AddScoped<AnthropicProvider>();
 
         // Register factory
         services.AddScoped<IAIProviderFactory, AIProviderFactory>();
