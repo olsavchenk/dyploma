@@ -175,35 +175,41 @@ public class GlobalExceptionMiddleware
     private async Task HandleExceptionAsync(HttpContext context, Exception exception)
     {
         context.Response.ContentType = "application/problem+json";
+        var includeDetails = _environment.IsDevelopment();
 
         var problemDetails = exception switch
         {
-            ValidationException validationException => CreateValidationProblemDetails(context, validationException),
+            ValidationException validationException => CreateValidationProblemDetails(context, validationException, includeDetails),
             UnauthorizedAccessException => CreateProblemDetails(
                 context,
                 HttpStatusCode.Unauthorized,
                 "Unauthorized",
-                "Authentication is required to access this resource."),
+                "Authentication is required to access this resource.",
+                includeDetails),
             KeyNotFoundException => CreateProblemDetails(
                 context,
                 HttpStatusCode.NotFound,
                 "Not Found",
-                "The requested resource was not found."),
+                "The requested resource was not found.",
+                includeDetails),
             ArgumentException argumentException => CreateProblemDetails(
                 context,
                 HttpStatusCode.BadRequest,
                 "Bad Request",
-                argumentException.Message),
+                argumentException.Message,
+                includeDetails),
             InvalidOperationException invalidOperationException => CreateProblemDetails(
                 context,
                 HttpStatusCode.BadRequest,
                 "Invalid Operation",
-                invalidOperationException.Message),
+                invalidOperationException.Message,
+                includeDetails),
             _ => CreateProblemDetails(
                 context,
                 HttpStatusCode.InternalServerError,
                 "Internal Server Error",
-                "An unexpected error occurred.")
+                includeDetails ? exception.Message : "An unexpected error occurred.",
+                includeDetails)
         };
 
         context.Response.StatusCode = problemDetails.Status ?? (int)HttpStatusCode.InternalServerError;
@@ -211,17 +217,19 @@ public class GlobalExceptionMiddleware
         var options = new JsonSerializerOptions
         {
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-            WriteIndented = _environment.IsDevelopment()
+            WriteIndented = includeDetails,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
         };
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(problemDetails, options));
     }
 
-    private ProblemDetailsResponse CreateProblemDetails(
+    private static ProblemDetailsResponse CreateProblemDetails(
         HttpContext context,
         HttpStatusCode statusCode,
         string title,
-        string detail)
+        string detail,
+        bool includeDetails)
     {
         return new ProblemDetailsResponse
         {
@@ -230,19 +238,20 @@ public class GlobalExceptionMiddleware
             Status = (int)statusCode,
             Detail = detail,
             Instance = context.Request.Path,
-            TraceId = context.TraceIdentifier
+            TraceId = includeDetails ? context.TraceIdentifier : null
         };
     }
 
-    private ProblemDetailsResponse CreateValidationProblemDetails(
+    private static ProblemDetailsResponse CreateValidationProblemDetails(
         HttpContext context,
-        ValidationException validationException)
+        ValidationException validationException,
+        bool includeDetails)
     {
         var errors = validationException.Errors
             .GroupBy(e => e.PropertyName)
             .ToDictionary(
                 g => g.Key,
-                g => g.Select(e => e.ErrorMessage).ToArray());
+                g => g.Select(e => SanitizeValidationMessage(e.ErrorMessage, includeDetails)).ToArray());
 
         return new ValidationProblemDetailsResponse
         {
@@ -251,9 +260,29 @@ public class GlobalExceptionMiddleware
             Status = (int)HttpStatusCode.BadRequest,
             Detail = "One or more validation errors occurred.",
             Instance = context.Request.Path,
-            TraceId = context.TraceIdentifier,
+            TraceId = includeDetails ? context.TraceIdentifier : null,
             Errors = errors
         };
+    }
+
+    /// <summary>
+    /// Strips internal parser tokens (e.g. BytePositionInLine, LineNumber, Path) leaked by
+    /// System.Text.Json deserialization errors when not in Development.
+    /// </summary>
+    private static string SanitizeValidationMessage(string message, bool includeDetails)
+    {
+        if (includeDetails || string.IsNullOrEmpty(message))
+        {
+            return message;
+        }
+
+        var leakingMarkers = new[] { "BytePositionInLine", "LineNumber", "Path:", "Path '$" };
+        if (leakingMarkers.Any(m => message.Contains(m, StringComparison.OrdinalIgnoreCase)))
+        {
+            return "Invalid value.";
+        }
+
+        return message;
     }
 }
 
@@ -264,7 +293,7 @@ public class ProblemDetailsResponse
     public int? Status { get; set; }
     public string Detail { get; set; } = string.Empty;
     public string Instance { get; set; } = string.Empty;
-    public string TraceId { get; set; } = string.Empty;
+    public string? TraceId { get; set; }
 }
 
 public class ValidationProblemDetailsResponse : ProblemDetailsResponse

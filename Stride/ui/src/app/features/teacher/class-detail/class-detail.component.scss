@@ -1,4 +1,43 @@
 // ── Class Detail Page ──────────────────────────────────────────
+// CR-7 / M-20 / M-22 additions appended at the bottom of this block:
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.subject-chip {
+  font-size: 0.8rem;
+  background: var(--blue-50, #eaf2ff);
+  color: var(--blue-700, #1e40af);
+}
+.subject-chip--empty {
+  background: transparent;
+  color: var(--color-ink-soft);
+  font-style: italic;
+}
+.header-description {
+  margin: 0.5rem 0 0;
+  color: var(--color-ink-soft);
+  font-size: 0.9rem;
+}
+.header-menu {
+  margin-left: auto;
+}
+.btn-regen {
+  margin-left: 0.5rem;
+}
+.bulk-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+.actions-cell {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: flex-end;
+}
+
 .detail-page {
   padding: 2rem;
   max-width: 1100px;

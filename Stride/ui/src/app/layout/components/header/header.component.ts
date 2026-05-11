@@ -8,6 +8,7 @@ import { MatBadgeModule } from '@angular/material/badge';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDividerModule } from '@angular/material/divider';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '../../../core/services/auth.service';
 import { LoggingService } from '../../../core/services/logging.service';
 import { TranslationService } from '../../../core/services/translation.service';
@@ -25,6 +26,7 @@ import { UserStats } from '../../models';
     MatMenuModule,
     MatTooltipModule,
     MatDividerModule,
+    TranslateModule,
   ],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
@@ -93,7 +95,7 @@ export class HeaderComponent implements OnInit {
 
   protected getAvatarUrl(): string {
     const user = this.user();
-    return user?.avatarUrl || 'assets/images/default-avatar.png';
+    return user?.avatarUrl || 'assets/images/default-avatar.svg';
   }
 
   protected getUserDisplayName(): string {

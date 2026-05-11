@@ -17,13 +17,15 @@
     "no": "No",
     "error": "Error",
     "retry": "Retry",
+    "tryAgain": "Try again",
     "copy": "Copy",
     "copied": "Copied!",
     "share": "Share",
     "actions": "Actions",
     "required": "Required field",
     "optional": "Optional",
-    "xp": "XP"
+    "xp": "XP",
+    "or": "or"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -33,34 +35,101 @@
     "notFound": "Page not found.",
     "validation": "Please check the entered data."
   },
+  "layout": {
+    "header": {
+      "openMenu": "Open menu",
+      "brandHome": "Stride — home",
+      "streakTooltip": "Streak: {{count}} days",
+      "languageGroup": "Language",
+      "notifications": "Notifications",
+      "userMenu": "User menu",
+      "profile": "Profile",
+      "settings": "Settings",
+      "logout": "Log out"
+    },
+    "sidenav": {
+      "main": "Main navigation",
+      "dashboard": "Dashboard",
+      "learn": "Learn",
+      "leaderboard": "Leaderboard",
+      "achievements": "Achievements",
+      "profile": "Profile",
+      "classes": "Classes",
+      "analytics": "Analytics",
+      "review": "Review",
+      "users": "Users",
+      "content": "Content",
+      "aiReview": "AI Review",
+      "system": "System"
+    }
+  },
   "auth": {
     "login": {
-      "title": "Sign in to Stride",
-      "subtitle": "Continue your learning",
+      "title": "Sign in",
+      "subtitle": "Welcome back",
       "email": "Email",
       "password": "Password",
       "submit": "Sign in",
+      "submitting": "Signing in...",
       "google": "Sign in with Google",
+      "googlePending": "Google sign-in coming soon",
       "forgotPassword": "Forgot password?",
       "noAccount": "Don't have an account?",
       "register": "Register",
-      "error": "Invalid email or password"
+      "showPassword": "Show password",
+      "error": "Invalid email or password",
+      "errorGeneric": "An error occurred. Please try again",
+      "lockoutFallback": "Account temporarily locked due to too many sign-in attempts.",
+      "rateLimited": "Too many attempts. Try again in a minute.",
+      "retryInSeconds": "Try again in {{seconds}} s.",
+      "retryInMinutes": "Try again in {{minutes}} min.",
+      "errors": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Enter a valid email",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 8 characters"
+      }
     },
     "register": {
       "title": "Register",
       "subtitle": "Start learning today",
       "displayName": "Name",
+      "displayNamePlaceholder": "Alex Petrenko",
       "email": "Email",
       "password": "Password",
+      "confirmPassword": "Confirm password",
       "submit": "Register",
+      "submitting": "Registering...",
+      "google": "Register with Google",
+      "googlePending": "Google sign-up coming soon",
       "hasAccount": "Already have an account?",
       "login": "Sign in",
+      "showPassword": "Show password",
+      "passwordStrengthLabel": "Password strength",
       "passwordStrength": {
         "weak": "Weak",
         "medium": "Medium",
         "strong": "Strong"
       },
-      "gdpr": "I agree to the terms of use and privacy policy"
+      "consentText": "I agree to the",
+      "consentPrivacy": "Privacy Policy",
+      "consentAnd": "and",
+      "consentTerms": "Terms of Use",
+      "consentRequired": "You must accept the terms to register",
+      "errorGeneric": "An error occurred during registration. Please try again",
+      "emailTaken": "This email is already registered",
+      "errors": {
+        "displayNameRequired": "Name is required",
+        "displayNameMinLength": "Name must be at least 2 characters",
+        "displayNameMaxLength": "Name must be at most 50 characters",
+        "emailRequired": "Email is required",
+        "emailInvalid": "Enter a valid email",
+        "passwordRequired": "Password is required",
+        "passwordMinLength": "Password must be at least 8 characters",
+        "passwordPattern": "Password must contain upper and lower case letters, and a digit",
+        "confirmPasswordRequired": "Password confirmation is required",
+        "passwordMismatch": "Passwords don't match"
+      }
     },
     "selectRole": {
       "title": "Choose your role",
@@ -75,11 +144,20 @@
       }
     },
     "forgotPassword": {
-      "title": "Reset Password",
-      "subtitle": "Enter your email and we'll send instructions",
+      "title": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send recovery instructions",
       "email": "Email",
-      "submit": "Send",
+      "submit": "Send instructions",
+      "submitting": "Sending...",
+      "successTitle": "Email sent!",
       "success": "Email sent! Check your inbox.",
+      "successNeutral": "If the account exists, an email has been sent",
+      "networkError": "Could not contact the server. Check your connection and try again.",
+      "networkErrorShort": "Network error. Try again.",
+      "errors": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Enter a valid email"
+      },
       "backToLogin": "Back to login"
     },
     "resetPassword": {
@@ -112,6 +190,18 @@
     "noNotifications": "No new notifications"
   },
   "dashboard": {
+    "title": "Dashboard",
+    "loadError": "Failed to load data. Try refreshing the page.",
+    "defaultName": "Student",
+    "greetingMorning": "Good morning",
+    "greetingDay": "Good afternoon",
+    "greetingEvening": "Good evening",
+    "continueLearning": {
+      "title": "Continue learning",
+      "viewAll": "All subjects",
+      "empty": "You haven't started any topic yet. Pick a subject to begin.",
+      "emptyCta": "Browse subjects"
+    },
     "hero": {
       "greetingMorning": "Good morning",
       "greetingDay": "Good afternoon",
@@ -124,14 +214,12 @@
     },
     "streak": {
       "title": "Streak",
+      "current": "Current streak",
+      "best": "Best: {{count}} days",
       "days": "days in a row",
       "freeze": "Freezes",
       "freezeAction": "Freeze",
       "repair": "Repair"
-    },
-    "continueLearning": {
-      "title": "Continue Learning",
-      "empty": "Start your first lesson!"
     },
     "dailyGoal": {
       "title": "Daily Goal",
@@ -139,7 +227,8 @@
     },
     "leaderboardPreview": {
       "title": "Weekly Leaderboard",
-      "viewAll": "View all"
+      "viewAll": "View all",
+      "empty": "No participants yet. Be the first!"
     },
     "recentAchievements": {
       "title": "Recent Achievements",
@@ -158,6 +247,7 @@
       "topics": "topics",
       "start": "Start",
       "empty": "No subjects added yet",
+      "allSubjects": "All subjects",
       "filters": {
         "all": "All grades",
         "primary": "Grades 1-4",
@@ -253,6 +343,7 @@
   "teacher": {
     "dashboard": {
       "title": "Teacher Dashboard",
+      "subtitle": "Overview of your teaching activity",
       "classes": "Classes",
       "students": "Students",
       "pendingReviews": "Pending Reviews",
@@ -272,7 +363,8 @@
       "assignments": "Assignments",
       "analytics": "Analytics",
       "newAssignment": "New Assignment",
-      "lastActive": "Last active"
+      "lastActive": "Last active",
+      "overdueDays": "Overdue {{count}} days ago"
     },
     "createClass": {
       "title": "Create Class",
@@ -338,6 +430,8 @@
     }
   },
   "notifications": {
+    "title": "Notifications",
+    "empty": "No new notifications",
     "achievement": "Achievement unlocked",
     "levelUp": "Level up!",
     "streakReminder": "Don't forget to keep your streak!",

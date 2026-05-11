@@ -8,18 +8,55 @@
       </svg>
     </button>
     <div class="header-info">
-      <h1 class="header-title">{{ classInfo()!.name }}</h1>
+      <div class="header-title-row">
+        <h1 class="header-title">{{ classInfo()!.name }}</h1>
+        <!-- M-20: subject chip next to class name -->
+        <mat-chip class="subject-chip" *ngIf="classInfo()!.subject; else noSubject">
+          {{ classInfo()!.subject }}
+        </mat-chip>
+        <ng-template #noSubject>
+          <mat-chip class="subject-chip subject-chip--empty">Без предмета</mat-chip>
+        </ng-template>
+      </div>
       <span class="header-grade">{{ classInfo()!.gradeLevel }} клас</span>
+      <p class="header-description" *ngIf="classInfo()!.description">{{ classInfo()!.description }}</p>
     </div>
+
     <div class="header-code">
       <span class="code-label">Код класу:</span>
       <span class="code-value">{{ classInfo()!.joinCode }}</span>
-      <button class="btn-copy" (click)="copyJoinCode()" title="Скопіювати код">
+      <button class="btn-copy" (click)="copyJoinCode()" title="Скопіювати код" matTooltip="Скопіювати код">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
         </svg>
       </button>
+      <!-- M-22: regenerate code -->
+      <button mat-button class="btn-regen" (click)="regenerateCode()" matTooltip="Згенерувати новий код">
+        <mat-icon>autorenew</mat-icon>
+        Оновити код
+      </button>
+    </div>
+
+    <!-- CR-7: class-level menu -->
+    <div class="header-menu">
+      <button mat-icon-button [matMenuTriggerFor]="classMenu" matTooltip="Більше дій" aria-label="Більше дій">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #classMenu="matMenu">
+        <button mat-menu-item (click)="editClass()">
+          <mat-icon>edit</mat-icon>
+          <span>Редагувати</span>
+        </button>
+        <button mat-menu-item (click)="archiveClass()">
+          <mat-icon>archive</mat-icon>
+          <span>Архівувати</span>
+        </button>
+        <button mat-menu-item (click)="deleteClass()">
+          <mat-icon color="warn">delete</mat-icon>
+          <span>Видалити</span>
+        </button>
+      </mat-menu>
     </div>
   </div>
 
@@ -31,15 +68,46 @@
   <!-- Tabs -->
   <mat-tab-group [(selectedIndex)]="selectedTab" *ngIf="!loading()" class="detail-tabs">
 
-    <!-- ── Учні ── -->
+    <!-- Учні -->
     <mat-tab label="Учні">
       <div class="tab-pane">
         <div class="tab-toolbar">
           <span class="tab-count">{{ students().length }} учнів</span>
+
+          <!-- M-22: bulk action buttons (visible when something is selected) -->
+          <div class="bulk-actions" *ngIf="hasSelection()">
+            <button mat-stroked-button color="primary" (click)="bulkApprove()">
+              <mat-icon>check_circle</mat-icon>
+              Затвердити обраних
+            </button>
+            <button mat-stroked-button color="warn" (click)="bulkReject()">
+              <mat-icon>cancel</mat-icon>
+              Відхилити обраних
+            </button>
+          </div>
         </div>
 
         <div class="students-table-wrap" *ngIf="students().length > 0">
           <table mat-table [dataSource]="students()" class="students-table">
+            <!-- Bulk select -->
+            <ng-container matColumnDef="select">
+              <th mat-header-cell *matHeaderCellDef>
+                <mat-checkbox
+                  [checked]="allStudentsSelected()"
+                  (change)="toggleSelectAll($event.checked)"
+                  aria-label="Вибрати всіх">
+                </mat-checkbox>
+              </th>
+              <td mat-cell *matCellDef="let s">
+                <mat-checkbox
+                  [checked]="isStudentSelected(s.studentId)"
+                  (change)="toggleStudentSelection(s.studentId, $event.checked)"
+                  (click)="$event.stopPropagation()"
+                  [attr.aria-label]="'Вибрати ' + s.studentName">
+                </mat-checkbox>
+              </td>
+            </ng-container>
+
             <!-- Avatar -->
             <ng-container matColumnDef="avatar">
               <th mat-header-cell *matHeaderCellDef></th>
@@ -62,23 +130,16 @@
               </td>
             </ng-container>
 
-            <!-- Streak -->
-            <ng-container matColumnDef="streak">
-              <th mat-header-cell *matHeaderCellDef>Стрік</th>
-              <td mat-cell *matCellDef="let s">
-                <span class="streak-cell">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="var(--sun-400)" stroke="none">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                  </svg>
-                  {{ s.streakDays ?? 0 }}
-                </span>
-              </td>
-            </ng-container>
-
             <!-- Accuracy -->
             <ng-container matColumnDef="accuracy">
               <th mat-header-cell *matHeaderCellDef>Точність</th>
               <td mat-cell *matCellDef="let s">{{ (s.accuracy ?? 0).toFixed(0) }}%</td>
+            </ng-container>
+
+            <!-- Tasks completed -->
+            <ng-container matColumnDef="tasksCompleted">
+              <th mat-header-cell *matHeaderCellDef>Завдань</th>
+              <td mat-cell *matCellDef="let s">{{ s.tasksCompleted ?? 0 }}</td>
             </ng-container>
 
             <!-- Last active -->
@@ -90,12 +151,13 @@
             <!-- Actions -->
             <ng-container matColumnDef="actions">
               <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let s">
-                <button class="btn-row-action" (click)="viewStudentDetail(s.studentId)" title="Детальніше">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                    <circle cx="12" cy="12" r="3"></circle>
-                  </svg>
+              <td mat-cell *matCellDef="let s" class="actions-cell" (click)="$event.stopPropagation()">
+                <button mat-icon-button (click)="viewStudentDetail(s.studentId)" matTooltip="Детальніше" aria-label="Детальніше">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+                <!-- M-22: remove student -->
+                <button mat-icon-button color="warn" (click)="removeStudent(s, $event)" matTooltip="Видалити учня" aria-label="Видалити учня">
+                  <mat-icon>delete</mat-icon>
                 </button>
               </td>
             </ng-container>
@@ -118,7 +180,7 @@
       </div>
     </mat-tab>
 
-    <!-- ── Завдання ── -->
+    <!-- Завдання -->
     <mat-tab label="Завдання">
       <div class="tab-pane">
         <div class="tab-toolbar">
@@ -160,7 +222,7 @@
       </div>
     </mat-tab>
 
-    <!-- ── Аналітика ── -->
+    <!-- Аналітика -->
     <mat-tab label="Аналітика">
       <div class="tab-pane">
         <div class="analytics-grid" *ngIf="analytics(); else noAnalytics">

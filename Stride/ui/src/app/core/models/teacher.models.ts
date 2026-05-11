@@ -4,6 +4,10 @@ export interface Class {
   name: string;
   joinCode: string;
   gradeLevel: string;
+  subject?: string | null;
+  description?: string | null;
+  isActive?: boolean;
+  isArchived?: boolean;
   createdAt: string;
   studentCount: number;
   assignmentCount: number;
@@ -119,12 +123,28 @@ export interface StudentActivity {
 
 export interface CreateClassRequest {
   name: string;
-  gradeLevel: string;
+  gradeLevel: string | number;
+  subject?: string | null;
+  description?: string | null;
 }
 
 export interface UpdateClassRequest {
   name?: string;
-  gradeLevel?: string;
+  gradeLevel?: string | number;
+  subject?: string | null;
+  description?: string | null;
+}
+
+export interface RecentActivity {
+  attemptId: string;
+  studentId: string;
+  studentName: string;
+  studentAvatar?: string | null;
+  classId: string;
+  className: string;
+  topicName: string;
+  isCorrect: boolean;
+  attemptedAt: string;
 }
 
 export interface JoinClassRequest {

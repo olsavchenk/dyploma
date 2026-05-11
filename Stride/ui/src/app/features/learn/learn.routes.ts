@@ -17,8 +17,13 @@ export const learnRoutes: Routes = [
     path: 'session/:topicId/summary',
     loadComponent: () => import('./task-session/session-summary.component').then((m) => m.SessionSummaryComponent),
   },
+  // /learn/join was a standalone duplicate of the inline join form in
+  // learn-browse and rendered without the standard layout context, which made
+  // the sidenav surface the wrong role-based menu (M-7). The join flow now
+  // lives exclusively inside learn-browse via openJoinDialog().
   {
     path: 'join',
-    loadComponent: () => import('./join-class/join-class.component').then((m) => m.JoinClassComponent),
+    redirectTo: '',
+    pathMatch: 'full',
   },
 ];

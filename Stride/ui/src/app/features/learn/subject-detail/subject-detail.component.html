@@ -75,7 +75,13 @@
       <mat-accordion class="topics-accordion" [multi]="false">
         @for (topic of topics(); track topic.id) {
           <mat-expansion-panel class="topic-panel" hideToggle>
-            <mat-expansion-panel-header class="topic-panel-header">
+            <mat-expansion-panel-header
+              class="topic-panel-header"
+              (click)="onTopicClick(topic); $event.stopPropagation()"
+              role="button"
+              tabindex="0"
+              (keydown.enter)="onTopicClick(topic)"
+              (keydown.space)="onTopicClick(topic); $event.preventDefault()">
               <mat-panel-title class="topic-panel-title">
                 <!-- Mastery color badge -->
                 <span class="mastery-dot" [class]="getMasteryClass(topic.masteryLevel ?? 0)"></span>

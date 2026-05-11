@@ -1,8 +1,8 @@
 <div class="dashboard">
   <!-- Header -->
   <div class="dashboard-header">
-    <h1 class="dashboard-title">Панель вчителя</h1>
-    <p class="dashboard-subtitle">Огляд вашої навчальної діяльності</p>
+    <h1 class="dashboard-title">{{ 'teacher.dashboard.title' | translate }}</h1>
+    <p class="dashboard-subtitle">{{ 'teacher.dashboard.subtitle' | translate }}</p>
   </div>
 
   <!-- KPI Cards -->
@@ -37,7 +37,7 @@
       </div>
     </div>
 
-    <!-- На перевірці -->
+    <!-- M-18: Очікують перевірки -->
     <div class="kpi-card">
       <div class="kpi-icon kpi-icon--orange">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -50,7 +50,7 @@
       </div>
       <div class="kpi-body">
         <span class="kpi-value">{{ stats()?.pendingReviews ?? 0 }}</span>
-        <span class="kpi-label">На перевірці</span>
+        <span class="kpi-label">Очікують перевірки</span>
       </div>
     </div>
 
@@ -82,15 +82,49 @@
     </div>
   </ng-template>
 
-  <!-- Recent Activity -->
+  <!-- M-27: Recent classes — clickable links to class detail -->
   <div class="section">
     <h2 class="section-title">Останні класи</h2>
 
-    <div class="activity-list" *ngIf="recentActivity().length > 0; else noActivity">
-      <div class="activity-item" *ngFor="let item of recentActivity()">
+    <div class="activity-list" *ngIf="recentClasses().length > 0; else noClasses">
+      <a class="activity-item activity-item--link"
+         *ngFor="let cls of recentClasses()"
+         [routerLink]="['/teacher/classes', cls.id]">
         <div class="activity-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+          </svg>
+        </div>
+        <div class="activity-body">
+          <span class="activity-text">{{ cls.name }} — {{ cls.studentCount ?? 0 }} учнів</span>
+          <span class="activity-time">{{ cls.subject || cls.gradeLevel + ' клас' }}</span>
+        </div>
+      </a>
+    </div>
+
+    <ng-template #noClasses>
+      <div class="empty-activity">
+        <p>Немає класів</p>
+        <button class="btn-primary" (click)="navigateToClasses()">Переглянути класи</button>
+      </div>
+    </ng-template>
+  </div>
+
+  <!-- M-18: Остання активність -->
+  <div class="section">
+    <h2 class="section-title">Остання активність</h2>
+
+    <div class="activity-list" *ngIf="recentActivity().length > 0; else noActivity">
+      <div class="activity-item" *ngFor="let item of recentActivity()">
+        <div class="activity-icon" [class.activity-icon--green]="item.color === 'green'" [class.activity-icon--orange]="item.color === 'orange'">
+          <svg *ngIf="item.icon === 'check_circle'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+            <polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          <svg *ngIf="item.icon !== 'check_circle'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="15" y1="9" x2="9" y2="15"/>
+            <line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
         </div>
         <div class="activity-body">
@@ -103,7 +137,6 @@
     <ng-template #noActivity>
       <div class="empty-activity">
         <p>Немає нещодавньої активності</p>
-        <button class="btn-primary" (click)="navigateToClasses()">Переглянути класи</button>
       </div>
     </ng-template>
   </div>

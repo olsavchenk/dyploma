@@ -15,13 +15,20 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatExpansionModule } from '@angular/material/expansion';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { SelectionModel } from '@angular/cdk/collections';
+import { TranslateModule } from '@ngx-translate/core';
 import { TaskGenerationService } from '@app/core/services/task-generation.service';
+import { TaskTemplatePreviewService } from '@app/core/services/task-template-preview.service';
 import {
   TaskTemplateListItem,
   TaskTemplateDetail,
   TaskReviewFilters,
 } from '@app/core/models';
+import {
+  EditTaskDialogComponent,
+  EditTaskDialogData,
+} from '../dialogs/edit-task-dialog.component';
 
 @Component({
   selector: 'app-task-review',
@@ -42,6 +49,8 @@ import {
     MatChipsModule,
     MatTooltipModule,
     MatExpansionModule,
+    MatDialogModule,
+    TranslateModule,
   ],
   templateUrl: './task-review.component.html',
   styleUrls: ['./task-review.component.scss'],
@@ -51,6 +60,8 @@ export class TaskReviewComponent implements OnInit {
   private readonly router = inject(Router);
   private readonly taskGenService = inject(TaskGenerationService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(MatDialog);
+  private readonly previewSvc = inject(TaskTemplatePreviewService);
 
   readonly topicId = signal<string>('');
   readonly tasks = signal<TaskTemplateListItem[]>([]);
@@ -266,5 +277,62 @@ export class TaskReviewComponent implements OnInit {
 
   getStatusLabel(status: string): string {
     return this.statusLabels[status] || status;
+  }
+
+  /**
+   * Render a sample preview from a template string with `{{var=range:a-b}}`
+   * placeholders. Falls back gracefully if the string contains no markup.
+   */
+  renderPreview(template: string | null | undefined): string {
+    return this.previewSvc.render(template);
+  }
+
+  /** Whether the question contains template placeholders worth previewing. */
+  hasTemplate(template: string | null | undefined): boolean {
+    return this.previewSvc.hasPlaceholders(template);
+  }
+
+  /**
+   * Open the edit dialog. We need the full detail (answer, explanation),
+   * so fetch it on demand if it isn't already loaded for the expanded row.
+   */
+  edit(task: TaskTemplateListItem, event: Event): void {
+    event.stopPropagation();
+    const cached = this.expandedDetail();
+    if (cached && cached.id === task.id) {
+      this.openEditDialog(cached);
+      return;
+    }
+    this.actionLoading.set(true);
+    this.taskGenService.getTaskDetail(this.topicId(), task.id).subscribe({
+      next: (detail) => {
+        this.actionLoading.set(false);
+        this.openEditDialog(detail);
+      },
+      error: () => {
+        this.actionLoading.set(false);
+        this.snackBar.open('Не вдалося завантажити завдання', 'OK', { duration: 3000 });
+      },
+    });
+  }
+
+  private openEditDialog(detail: TaskTemplateDetail): void {
+    const ref = this.dialog.open<EditTaskDialogComponent, EditTaskDialogData, TaskTemplateDetail>(
+      EditTaskDialogComponent,
+      {
+        data: { topicId: this.topicId(), task: detail },
+        width: '560px',
+        maxWidth: '90vw',
+      },
+    );
+    ref.afterClosed().subscribe((updated) => {
+      if (updated) {
+        this.snackBar.open('Завдання збережено', 'OK', { duration: 2000 });
+        this.loadTasks();
+        if (this.expandedTaskId() === updated.id) {
+          this.expandedDetail.set(updated);
+        }
+      }
+    });
   }
 }

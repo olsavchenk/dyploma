@@ -17,13 +17,15 @@
     "no": "Ні",
     "error": "Помилка",
     "retry": "Повторити",
+    "tryAgain": "Спробувати ще раз",
     "copy": "Копіювати",
     "copied": "Скопійовано!",
     "share": "Поділитися",
     "actions": "Дії",
     "required": "Обов'язкове поле",
     "optional": "Необов'язково",
-    "xp": "ОД"
+    "xp": "ОД",
+    "or": "або"
   },
   "errors": {
     "generic": "Щось пішло не так. Спробуйте ще раз.",
@@ -33,34 +35,101 @@
     "notFound": "Сторінку не знайдено.",
     "validation": "Перевірте правильність введених даних."
   },
+  "layout": {
+    "header": {
+      "openMenu": "Відкрити меню",
+      "brandHome": "Страйд — головна",
+      "streakTooltip": "Серія: {{count}} днів",
+      "languageGroup": "Мова",
+      "notifications": "Сповіщення",
+      "userMenu": "Меню користувача",
+      "profile": "Профіль",
+      "settings": "Налаштування",
+      "logout": "Вийти"
+    },
+    "sidenav": {
+      "main": "Головна навігація",
+      "dashboard": "Головна",
+      "learn": "Навчання",
+      "leaderboard": "Рейтинг",
+      "achievements": "Досягнення",
+      "profile": "Профіль",
+      "classes": "Класи",
+      "analytics": "Аналітика",
+      "review": "Перевірка",
+      "users": "Користувачі",
+      "content": "Контент",
+      "aiReview": "AI-перевірка",
+      "system": "Система"
+    }
+  },
   "auth": {
     "login": {
-      "title": "Вхід до Страйд",
-      "subtitle": "Продовжте своє навчання",
-      "email": "Електронна пошта",
+      "title": "Вхід",
+      "subtitle": "Раді бачити вас знову",
+      "email": "Email",
       "password": "Пароль",
       "submit": "Увійти",
+      "submitting": "Вхід...",
       "google": "Вхід через Google",
+      "googlePending": "Google вхід буде доступний незабаром",
       "forgotPassword": "Забули пароль?",
-      "noAccount": "Немає акаунту?",
+      "noAccount": "Немає облікового запису?",
       "register": "Зареєструватися",
-      "error": "Невірна пошта або пароль"
+      "showPassword": "Показати пароль",
+      "error": "Невірний email або пароль",
+      "errorGeneric": "Виникла помилка. Спробуйте ще раз",
+      "lockoutFallback": "Акаунт тимчасово заблоковано через надмірну кількість спроб входу.",
+      "rateLimited": "Забагато спроб. Спробуйте знову через хвилину.",
+      "retryInSeconds": "Спробуйте знову через {{seconds}} с.",
+      "retryInMinutes": "Спробуйте знову через {{minutes}} хв.",
+      "errors": {
+        "emailRequired": "Email обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMinLength": "Пароль має містити мінімум 8 символів"
+      }
     },
     "register": {
       "title": "Реєстрація",
-      "subtitle": "Почніть навчатися вже сьогодні",
+      "subtitle": "Почніть навчання вже сьогодні",
       "displayName": "Ім'я",
-      "email": "Електронна пошта",
+      "displayNamePlaceholder": "Олексій Петренко",
+      "email": "Email",
       "password": "Пароль",
+      "confirmPassword": "Підтвердження паролю",
       "submit": "Зареєструватися",
-      "hasAccount": "Вже маєте акаунт?",
+      "submitting": "Реєстрація...",
+      "google": "Зареєструватися через Google",
+      "googlePending": "Google реєстрація буде доступна незабаром",
+      "hasAccount": "Вже є обліковий запис?",
       "login": "Увійти",
+      "showPassword": "Показати пароль",
+      "passwordStrengthLabel": "Рівень надійності паролю",
       "passwordStrength": {
         "weak": "Слабкий",
         "medium": "Середній",
         "strong": "Надійний"
       },
-      "gdpr": "Я погоджуюсь з умовами використання та політикою конфіденційності"
+      "consentText": "Я погоджуюсь з",
+      "consentPrivacy": "Політикою конфіденційності",
+      "consentAnd": "та",
+      "consentTerms": "Умовами використання",
+      "consentRequired": "Для реєстрації необхідно прийняти умови",
+      "errorGeneric": "Виникла помилка при реєстрації. Спробуйте ще раз",
+      "emailTaken": "Цей email вже зареєстрований",
+      "errors": {
+        "displayNameRequired": "Ім'я обов'язкове",
+        "displayNameMinLength": "Ім'я має містити мінімум 2 символи",
+        "displayNameMaxLength": "Ім'я має містити максимум 50 символів",
+        "emailRequired": "Email обов'язковий",
+        "emailInvalid": "Введіть коректний email",
+        "passwordRequired": "Пароль обов'язковий",
+        "passwordMinLength": "Пароль має містити мінімум 8 символів",
+        "passwordPattern": "Пароль має містити великі та малі літери, та цифри",
+        "confirmPasswordRequired": "Підтвердження паролю обов'язкове",
+        "passwordMismatch": "Паролі не співпадають"
+      }
     },
     "selectRole": {
       "title": "Оберіть роль",
@@ -75,11 +144,20 @@
       }
     },
     "forgotPassword": {
-      "title": "Відновлення паролю",
-      "subtitle": "Введіть вашу пошту і ми надішлемо інструкції",
-      "email": "Електронна пошта",
-      "submit": "Надіслати",
+      "title": "Забули пароль?",
+      "subtitle": "Введіть ваш email — ми надішлемо інструкції для відновлення",
+      "email": "Email",
+      "submit": "Надіслати інструкції",
+      "submitting": "Надсилання...",
+      "successTitle": "Лист надіслано!",
       "success": "Лист надіслано! Перевірте вашу пошту.",
+      "successNeutral": "Якщо акаунт існує, лист надіслано",
+      "networkError": "Не вдалося звʼязатися з сервером. Перевірте зʼєднання та спробуйте ще раз.",
+      "networkErrorShort": "Помилка мережі. Спробуйте ще раз.",
+      "errors": {
+        "emailRequired": "Email обов'язковий",
+        "emailInvalid": "Введіть коректний email"
+      },
       "backToLogin": "Повернутися до входу"
     },
     "resetPassword": {
@@ -112,6 +190,18 @@
     "noNotifications": "Немає нових сповіщень"
   },
   "dashboard": {
+    "title": "Головна",
+    "loadError": "Не вдалося завантажити дані. Спробуйте оновити сторінку.",
+    "defaultName": "Студент",
+    "greetingMorning": "Доброго ранку",
+    "greetingDay": "Добрий день",
+    "greetingEvening": "Доброго вечора",
+    "continueLearning": {
+      "title": "Продовжити навчання",
+      "viewAll": "Всі предмети",
+      "empty": "Ви ще не починали жодної теми. Оберіть предмет, щоб розпочати.",
+      "emptyCta": "До предметів"
+    },
     "hero": {
       "greetingMorning": "Доброго ранку",
       "greetingDay": "Добрий день",
@@ -124,14 +214,12 @@
     },
     "streak": {
       "title": "Серія",
+      "current": "Поточна серія",
+      "best": "Рекорд: {{count}} днів",
       "days": "днів поспіль",
       "freeze": "Заморожень",
       "freezeAction": "Заморозити",
       "repair": "Відновити"
-    },
-    "continueLearning": {
-      "title": "Продовжити навчання",
-      "empty": "Почніть своє перше заняття!"
     },
     "dailyGoal": {
       "title": "Щоденна ціль",
@@ -139,7 +227,8 @@
     },
     "leaderboardPreview": {
       "title": "Рейтинг тижня",
-      "viewAll": "Дивитися всі"
+      "viewAll": "Дивитися всі",
+      "empty": "Поки що немає учасників. Стань першим!"
     },
     "recentAchievements": {
       "title": "Недавні досягнення",
@@ -158,6 +247,7 @@
       "topics": "тем",
       "start": "Почати",
       "empty": "Предмети ще не додано",
+      "allSubjects": "Усі предмети",
       "filters": {
         "all": "Усі класи",
         "primary": "1-4 клас",
@@ -253,6 +343,7 @@
   "teacher": {
     "dashboard": {
       "title": "Панель вчителя",
+      "subtitle": "Огляд вашої навчальної діяльності",
       "classes": "Класи",
       "students": "Учні",
       "pendingReviews": "На перевірці",
@@ -272,7 +363,8 @@
       "assignments": "Завдання",
       "analytics": "Аналітика",
       "newAssignment": "Нове завдання",
-      "lastActive": "Остання активність"
+      "lastActive": "Остання активність",
+      "overdueDays": "Прострочено {{count}} днів тому"
     },
     "createClass": {
       "title": "Створити клас",
@@ -338,6 +430,8 @@
     }
   },
   "notifications": {
+    "title": "Сповіщення",
+    "empty": "Немає нових сповіщень",
     "achievement": "Досягнення розблоковано",
     "levelUp": "Новий рівень!",
     "streakReminder": "Не забудьте підтримати серію!",

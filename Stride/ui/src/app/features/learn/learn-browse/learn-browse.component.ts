@@ -6,8 +6,9 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
-import { LearningService, StudentClass, StudentClassSubject } from '@app/core';
+import { LearningService, StudentClass, StudentClassSubject, Subject } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
 
 @Component({
@@ -19,6 +20,7 @@ import { LoggingService } from '@app/core/services/logging.service';
     MatInputModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   templateUrl: './learn-browse.component.html',
   styleUrl: './learn-browse.component.scss',
@@ -33,6 +35,10 @@ export class LearnBrowseComponent implements OnInit {
   protected readonly error = signal<string | null>(null);
   protected readonly classes = signal<StudentClass[]>([]);
   protected readonly filteredClasses = signal<StudentClass[]>([]);
+
+  // Catalog of all available subjects (M-26) — independent of class enrolment.
+  protected readonly allSubjects = signal<Subject[]>([]);
+  protected readonly allSubjectsLoading = signal<boolean>(false);
 
   // Join class state
   protected readonly joinDialogOpen = signal<boolean>(false);
@@ -64,7 +70,28 @@ export class LearnBrowseComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadClasses();
+    this.loadAllSubjects();
     this.setupSearch();
+  }
+
+  private loadAllSubjects(): void {
+    this.allSubjectsLoading.set(true);
+    this.learningService
+      .getSubjects()
+      .pipe(finalize(() => this.allSubjectsLoading.set(false)))
+      .subscribe({
+        next: (subjects) => this.allSubjects.set(subjects),
+        error: (err) => {
+          this.logger.error('LearnBrowseComponent', 'Failed to load subjects catalog', {}, err);
+          this.allSubjects.set([]);
+        },
+      });
+  }
+
+  protected onSubjectCardClick(subject: Subject): void {
+    if (subject.id) {
+      this.router.navigate(['/learn/subjects', subject.id]);
+    }
   }
 
   private loadClasses(): void {

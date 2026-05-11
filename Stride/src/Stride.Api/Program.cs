@@ -1,3 +1,5 @@
+using System.Threading.RateLimiting;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Serilog;
@@ -84,6 +86,35 @@ try
     // Add HTTP context accessor for correlation IDs
     builder.Services.AddHttpContextAccessor();
 
+    // Rate limiting (CR-4): per-IP fixed window on auth endpoints + global per-IP cap
+    builder.Services.AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+        options.OnRejected = async (ctx, token) =>
+        {
+            ctx.HttpContext.Response.Headers["Retry-After"] = "60";
+            ctx.HttpContext.Response.ContentType = "application/json";
+            await ctx.HttpContext.Response.WriteAsync(
+                "{\"message\":\"Забагато спроб. Спробуйте знову через хвилину.\"}",
+                token);
+        };
+
+        // Per-IP partition for /auth/login (10 attempts / minute)
+        options.AddPolicy("auth-login", httpContext =>
+        {
+            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            return RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: ip,
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 10,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                });
+        });
+    });
+
     var app = builder.Build();
 
     // Configure the HTTP request pipeline
@@ -136,6 +167,8 @@ try
     app.UseAuthentication();
     app.UseAuthorization();
 
+    app.UseRateLimiter();
+
     app.MapControllers();
 
     // Map SignalR hubs
@@ -187,6 +220,29 @@ try
                 var classSeeder = new ClassSeeder(dbContext);
                 await classSeeder.SeedAsync();
                 Log.Information("Database seeded with test class (join code: TEST01)");
+
+                // Seed default admin user (Development / Staging only — never in Production).
+                // Bug fix: M-30 — Admin user not seeded.
+                if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+                {
+                    var adminSeeder = new AdminUserSeeder(dbContext);
+                    var created = await adminSeeder.SeedAsync();
+                    if (created)
+                    {
+                        Log.Warning(
+                            "Default admin user created. Email: {Email} | Password: {Password} | CHANGE THIS IN PRODUCTION.",
+                            AdminUserSeeder.DefaultAdminEmail,
+                            AdminUserSeeder.DefaultAdminPassword);
+                    }
+                    else
+                    {
+                        Log.Information("Admin user already exists; skipping admin seed.");
+                    }
+                }
+                else
+                {
+                    Log.Information("Skipping admin seed (Production environment).");
+                }
 
                 // Seed task templates
                 var templateRepository = scope.ServiceProvider.GetRequiredService<Stride.DataAccess.Repositories.ITaskTemplateRepository>();

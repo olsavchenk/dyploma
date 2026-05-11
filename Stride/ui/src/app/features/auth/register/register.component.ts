@@ -18,8 +18,10 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { TranslateModule } from '@ngx-translate/core';
 import { AuthService } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
+import { TranslationService } from '@app/core/services/translation.service';
 import { AuthShellComponent } from '../shared/auth-shell.component';
 
 @Component({
@@ -37,6 +39,7 @@ import { AuthShellComponent } from '../shared/auth-shell.component';
     MatProgressSpinnerModule,
     MatDividerModule,
     MatCheckboxModule,
+    TranslateModule,
     AuthShellComponent,
   ],
   templateUrl: './register.component.html',
@@ -47,6 +50,7 @@ export class RegisterComponent {
   private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggingService);
+  private readonly translation = inject(TranslationService);
 
   protected readonly registerForm: FormGroup;
   protected readonly hidePassword = signal(true);
@@ -112,16 +116,34 @@ export class RegisterComponent {
           }
         },
         error: (error: any) => {
-          if (error.error?.message) {
-            this.errorMessage.set(error.error.message);
+          // L-3: Backend returns a stable error code for "email already taken"
+          // (`EMAIL_ALREADY_EXISTS`) so the UI can render a localized message
+          // regardless of which language the API responds in.
+          const code = error.error?.code as string | undefined;
+          const backendMessage = error.error?.message as string | undefined;
+          const isEmailTaken =
+            code === 'EMAIL_ALREADY_EXISTS' ||
+            (typeof backendMessage === 'string' &&
+              backendMessage.toLowerCase().includes('email is already registered'));
+
+          if (isEmailTaken) {
+            this.errorMessage.set(this.translation.instant('auth.register.emailTaken'));
+          } else if (backendMessage) {
+            this.errorMessage.set(backendMessage);
           } else if (error.error?.errors) {
             // Handle validation errors
             const errors = error.error.errors;
             const firstError = Object.values(errors)[0];
             this.errorMessage.set(firstError as string);
           } else {
-            this.errorMessage.set('Виникла помилка при реєстрації. Спробуйте ще раз');
+            this.errorMessage.set(this.translation.instant('auth.register.errorGeneric'));
           }
+          // L-5: do NOT call form.reset() here. Keep displayName, email and the GDPR
+          // checkbox state so the user can fix the offending field instead of
+          // re-typing everything. Only clear password fields for safety.
+          this.registerForm.patchValue({ password: '', confirmPassword: '' });
+          this.registerForm.get('password')?.markAsUntouched();
+          this.registerForm.get('confirmPassword')?.markAsUntouched();
         },
       });
   }
@@ -130,7 +152,7 @@ export class RegisterComponent {
     this.errorMessage.set(null);
     // TODO: Implement Google Sign-In flow
     this.logger.info('RegisterComponent', 'Google registration flow pending implementation', {});
-    this.errorMessage.set('Google реєстрація буде доступна незабаром');
+    this.errorMessage.set(this.translation.instant('auth.register.googlePending'));
   }
 
   protected togglePasswordVisibility(): void {
@@ -144,13 +166,13 @@ export class RegisterComponent {
   protected getDisplayNameError(): string {
     const control = this.registerForm.get('displayName');
     if (control?.hasError('required')) {
-      return "Ім'я обов'язкове";
+      return this.translation.instant('auth.register.errors.displayNameRequired');
     }
     if (control?.hasError('minlength')) {
-      return "Ім'я має містити мінімум 2 символи";
+      return this.translation.instant('auth.register.errors.displayNameMinLength');
     }
     if (control?.hasError('maxlength')) {
-      return "Ім'я має містити максимум 50 символів";
+      return this.translation.instant('auth.register.errors.displayNameMaxLength');
     }
     return '';
   }
@@ -158,10 +180,10 @@ export class RegisterComponent {
   protected getEmailError(): string {
     const control = this.registerForm.get('email');
     if (control?.hasError('required')) {
-      return "Email обов'язковий";
+      return this.translation.instant('auth.register.errors.emailRequired');
     }
     if (control?.hasError('email')) {
-      return 'Введіть коректний email';
+      return this.translation.instant('auth.register.errors.emailInvalid');
     }
     return '';
   }
@@ -169,13 +191,13 @@ export class RegisterComponent {
   protected getPasswordError(): string {
     const control = this.registerForm.get('password');
     if (control?.hasError('required')) {
-      return "Пароль обов'язковий";
+      return this.translation.instant('auth.register.errors.passwordRequired');
     }
     if (control?.hasError('minlength')) {
-      return 'Пароль має містити мінімум 8 символів';
+      return this.translation.instant('auth.register.errors.passwordMinLength');
     }
     if (control?.hasError('pattern')) {
-      return 'Пароль має містити великі та малі літери, та цифри';
+      return this.translation.instant('auth.register.errors.passwordPattern');
     }
     return '';
   }
@@ -183,10 +205,10 @@ export class RegisterComponent {
   protected getConfirmPasswordError(): string {
     const control = this.registerForm.get('confirmPassword');
     if (control?.hasError('required')) {
-      return "Підтвердження паролю обов'язкове";
+      return this.translation.instant('auth.register.errors.confirmPasswordRequired');
     }
     if (this.registerForm.hasError('passwordMismatch')) {
-      return 'Паролі не співпадають';
+      return this.translation.instant('auth.register.errors.passwordMismatch');
     }
     return '';
   }

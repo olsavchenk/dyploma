@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Stride.Services.Interfaces;
 using Stride.Services.Models.Class;
 using System.Security.Claims;
+// CR-7 / H-15 / M-17 / M-18 / M-22: extended class management endpoints
 
 namespace Stride.Api.Controllers;
 
@@ -75,11 +76,187 @@ public class ClassController : ControllerBase
 
             return CreatedAtAction(nameof(GetClassById), new { id = classDto.Id }, classDto);
         }
+        catch (DuplicateClassNameException ex)
+        {
+            _logger.LogWarning("Duplicate class name: {Message}", ex.Message);
+            return Conflict(new { message = ex.Message });
+        }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Failed to create class: {Message}", ex.Message);
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    /// <summary>
+    /// Update a class (name / subject / description / gradeLevel) — CR-7
+    /// </summary>
+    [HttpPut("{id:guid}")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(typeof(ClassDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)]
+    public async Task<IActionResult> UpdateClass(Guid id, [FromBody] UpdateClassRequest request)
+    {
+        try
+        {
+            var teacherId = GetTeacherProfileId();
+            if (teacherId == null)
+            {
+                return BadRequest(new { message = "Teacher profile not found" });
+            }
+
+            var dto = await _classService.UpdateClassAsync(id, teacherId.Value, request);
+            return Ok(dto);
+        }
+        catch (DuplicateClassNameException ex)
+        {
+            return Conflict(new { message = ex.Message });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Soft-delete (archive) a class — CR-7
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> DeleteClass(Guid id)
+    {
+        try
+        {
+            var teacherId = GetTeacherProfileId();
+            if (teacherId == null)
+            {
+                return BadRequest(new { message = "Teacher profile not found" });
+            }
+
+            await _classService.ArchiveClassAsync(id, teacherId.Value);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Archive a class (alternative endpoint) — CR-7
+    /// </summary>
+    [HttpPost("{id:guid}/archive")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> ArchiveClass(Guid id)
+    {
+        try
+        {
+            var teacherId = GetTeacherProfileId();
+            if (teacherId == null)
+            {
+                return BadRequest(new { message = "Teacher profile not found" });
+            }
+
+            await _classService.ArchiveClassAsync(id, teacherId.Value);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Remove a student from the class — M-22
+    /// </summary>
+    [HttpDelete("{id:guid}/students/{studentId:guid}")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RemoveStudent(Guid id, Guid studentId)
+    {
+        try
+        {
+            var teacherId = GetTeacherProfileId();
+            if (teacherId == null)
+            {
+                return BadRequest(new { message = "Teacher profile not found" });
+            }
+
+            await _classService.RemoveStudentAsync(id, studentId, teacherId.Value);
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Regenerate join code for a class — M-22
+    /// </summary>
+    [HttpPost("{id:guid}/regenerate-code")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<IActionResult> RegenerateJoinCode(Guid id)
+    {
+        try
+        {
+            var teacherId = GetTeacherProfileId();
+            if (teacherId == null)
+            {
+                return BadRequest(new { message = "Teacher profile not found" });
+            }
+
+            var newCode = await _classService.RegenerateJoinCodeAsync(id, teacherId.Value);
+            return Ok(new { joinCode = newCode });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Recent activity feed for the teacher (last N submissions across classes) — M-18
+    /// </summary>
+    [HttpGet("recent-activity")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(typeof(List<RecentActivityDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetRecentActivity([FromQuery] int limit = 5)
+    {
+        var teacherId = GetTeacherProfileId();
+        if (teacherId == null)
+        {
+            return BadRequest(new { message = "Teacher profile not found" });
+        }
+
+        var activity = await _classService.GetRecentActivityAsync(teacherId.Value, limit);
+        return Ok(activity);
+    }
+
+    /// <summary>
+    /// Pending review count (in-flight task generation jobs across teacher's classes) — M-18
+    /// </summary>
+    [HttpGet("pending-review-count")]
+    [Authorize(Policy = "TeacherAccess")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetPendingReviewCount()
+    {
+        var teacherId = GetTeacherProfileId();
+        if (teacherId == null)
+        {
+            return BadRequest(new { message = "Teacher profile not found" });
+        }
+
+        var count = await _classService.GetPendingReviewCountAsync(teacherId.Value);
+        return Ok(new { count });
     }
 
     /// <summary>

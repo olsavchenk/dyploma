@@ -15,6 +15,7 @@ import {
   CreateAssignmentRequest,
   UpdateAssignmentRequest,
   ClassQuickStats,
+  RecentActivity,
 } from '../models/teacher.models';
 
 @Injectable({
@@ -143,5 +144,36 @@ export class TeacherService {
    */
   getMyAssignments(): Observable<StudentAssignment[]> {
     return this.http.get<StudentAssignment[]>(`${environment.apiUrl}/assignments`);
+  }
+
+  /**
+   * Archive a class (CR-7)
+   */
+  archiveClass(classId: string): Observable<void> {
+    return this.http.post<void>(`${this.baseUrl}/${classId}/archive`, {});
+  }
+
+  /**
+   * Regenerate join code (M-22)
+   */
+  regenerateJoinCode(classId: string): Observable<{ joinCode: string }> {
+    return this.http.post<{ joinCode: string }>(`${this.baseUrl}/${classId}/regenerate-code`, {});
+  }
+
+  /**
+   * Recent activity feed (M-18)
+   */
+  getRecentActivity(limit = 5): Observable<RecentActivity[]> {
+    return this.http.get<RecentActivity[]>(
+      `${this.baseUrl}/recent-activity`,
+      { params: new HttpParams().set('limit', String(limit)) }
+    );
+  }
+
+  /**
+   * Pending review count (M-18)
+   */
+  getPendingReviewCount(): Observable<{ count: number }> {
+    return this.http.get<{ count: number }>(`${this.baseUrl}/pending-review-count`);
   }
 }

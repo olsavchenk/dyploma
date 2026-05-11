@@ -105,6 +105,41 @@ public class TaskReviewController : ControllerBase
     }
 
     /// <summary>
+    /// Edit an AI-generated task template (question, answer, type, difficulty…).
+    /// </summary>
+    [HttpPut("{templateId}")]
+    [ProducesResponseType(typeof(TaskTemplateDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> UpdateTemplate(
+        Guid topicId,
+        string templateId,
+        [FromBody] UpdateTaskTemplateRequest request)
+    {
+        var teacherId = GetTeacherProfileId();
+        if (teacherId == null) return BadRequest(new { message = "Teacher profile not found" });
+
+        if (request == null || string.IsNullOrWhiteSpace(request.Question)
+            || string.IsNullOrWhiteSpace(request.Answer))
+        {
+            return BadRequest(new { message = "Question and answer are required" });
+        }
+
+        try
+        {
+            var updated = await _taskReviewService.UpdateAsync(templateId, request, teacherId.Value);
+            if (updated.TopicId != topicId)
+                return NotFound(new { message = "Template not found in this topic" });
+
+            return Ok(updated);
+        }
+        catch (InvalidOperationException)
+        {
+            return NotFound(new { message = "Template not found" });
+        }
+    }
+
+    /// <summary>
     /// Bulk approve/reject/delete task templates
     /// </summary>
     [HttpPost("bulk-action")]

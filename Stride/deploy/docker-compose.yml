@@ -1,0 +1,174 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: stride-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-stride}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?required}
+      POSTGRES_DB: ${POSTGRES_DB:-stride}
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stride} -d ${POSTGRES_DB:-stride}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mongodb:
+    image: mongo:7
+    container_name: stride-mongodb
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER:-stride}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:?required}
+      MONGO_INITDB_DATABASE: stride
+    ports:
+      - "127.0.0.1:27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  valkey:
+    image: valkey/valkey:8
+    container_name: stride-valkey
+    restart: unless-stopped
+    command: ["valkey-server", "--requirepass", "${VALKEY_PASSWORD:?required}", "--appendonly", "yes"]
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - valkey-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli -a $$VALKEY_PASSWORD ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    environment:
+      VALKEY_PASSWORD: ${VALKEY_PASSWORD}
+
+  minio:
+    image: minio/minio:latest
+    container_name: stride-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_USER:-stride}
+      MINIO_ROOT_PASSWORD: ${MINIO_PASSWORD:?required}
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: stride-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:?required}
+      MEILI_ENV: production
+    ports:
+      - "127.0.0.1:7700:7700"
+    volumes:
+      - meili-data:/meili_data
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: stride-api:latest
+    container_name: stride-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:5000
+      Development__UseInMemoryDatabase: "false"
+      Development__SkipInfrastructureInitialization: "false"
+      ConnectionStrings__PostgreSQL: Host=postgres;Port=5432;Database=${POSTGRES_DB:-stride};Username=${POSTGRES_USER:-stride};Password=${POSTGRES_PASSWORD}
+      ConnectionStrings__MongoDB: mongodb://${MONGO_USER:-stride}:${MONGO_PASSWORD}@mongodb:27017/stride?authSource=admin
+      MongoDB__ConnectionString: mongodb://${MONGO_USER:-stride}:${MONGO_PASSWORD}@mongodb:27017/stride?authSource=admin
+      MongoDB__DatabaseName: stride
+      Valkey__ConnectionString: valkey:6379,password=${VALKEY_PASSWORD},abortConnect=false
+      MinIO__Endpoint: minio:9000
+      MinIO__AccessKey: ${MINIO_USER:-stride}
+      MinIO__SecretKey: ${MINIO_PASSWORD}
+      MinIO__UseSSL: "false"
+      Meilisearch__Url: http://meilisearch:7700
+      Meilisearch__MasterKey: ${MEILI_MASTER_KEY}
+      JwtSettings__SecretKey: ${JWT_SECRET}
+      JwtSettings__Issuer: Stride
+      JwtSettings__Audience: Stride.Client
+      Cors__AllowedOrigins__0: ${CORS_ALLOWED_ORIGINS}
+      AIProvider__DefaultProvider: ${AI_PROVIDER:-anthropic}
+      AIProvider__Anthropic__ApiKey: ${ANTHROPIC_API_KEY}
+      AIProvider__Anthropic__Model: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
+      AIProvider__Gemini__ApiKey: ${GEMINI_API_KEY}
+    ports:
+      - "127.0.0.1:5000:5000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+      meilisearch:
+        condition: service_started
+
+  adaptive-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.adaptive
+    image: stride-adaptive-api:latest
+    container_name: stride-adaptive-api
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Production}
+      ASPNETCORE_URLS: http://+:5010
+      Development__UseInMemoryDatabase: "false"
+      Development__SkipInfrastructureInitialization: "false"
+      ConnectionStrings__PostgreSQL: Host=postgres;Port=5432;Database=${POSTGRES_DB:-stride};Username=${POSTGRES_USER:-stride};Password=${POSTGRES_PASSWORD}
+      MongoDb__ConnectionString: mongodb://${MONGO_USER:-stride}:${MONGO_PASSWORD}@mongodb:27017/stride?authSource=admin
+      MongoDb__DatabaseName: stride
+      Valkey__ConnectionString: valkey:6379,password=${VALKEY_PASSWORD},abortConnect=false
+      DifficultyEngine__ModelFilePath: MLModels/difficulty_model.zip
+      JwtSettings__SecretKey: ${JWT_SECRET}
+      JwtSettings__Issuer: Stride
+      JwtSettings__Audience: Stride.Client
+      AIProvider__DefaultProvider: ${AI_PROVIDER:-anthropic}
+      AIProvider__Anthropic__ApiKey: ${ANTHROPIC_API_KEY}
+      AIProvider__Anthropic__Model: ${ANTHROPIC_MODEL:-claude-haiku-4-5-20251001}
+      AIProvider__Gemini__ApiKey: ${GEMINI_API_KEY}
+    ports:
+      - "127.0.0.1:5010:5010"
+    volumes:
+      - adaptive-models:/app/MLModels
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mongodb:
+        condition: service_healthy
+      valkey:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  mongo-data:
+  valkey-data:
+  adaptive-models:
+  minio-data:
+  meili-data:

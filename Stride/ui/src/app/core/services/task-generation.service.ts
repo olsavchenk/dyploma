@@ -8,6 +8,7 @@ import {
   TaskTemplateDetail,
   TaskReviewFilters,
   BulkActionRequest,
+  UpdateTaskTemplateRequest,
 } from '../models/task-generation.models';
 
 @Injectable({
@@ -67,6 +68,17 @@ export class TaskGenerationService {
   deleteTask(topicId: string, templateId: string): Observable<void> {
     return this.http.delete<void>(
       `${this.baseUrl}/topics/${topicId}/tasks/${templateId}`
+    );
+  }
+
+  updateTask(
+    topicId: string,
+    templateId: string,
+    request: UpdateTaskTemplateRequest,
+  ): Observable<TaskTemplateDetail> {
+    return this.http.put<TaskTemplateDetail>(
+      `${this.baseUrl}/topics/${topicId}/tasks/${templateId}`,
+      request,
     );
   }
 }

@@ -1,6 +1,6 @@
 export interface AuthResponse {
-  token: string;
-  refreshToken?: string;
+  accessToken: string;
+  expiresAt?: string;
   user: UserInfo;
 }
 
@@ -18,5 +18,7 @@ export interface UserInfo {
 export type UserRole = 'Student' | 'Teacher' | 'Admin';
 
 export interface RefreshTokenResponse {
-  token: string;
+  accessToken: string;
+  expiresAt?: string;
+  user?: UserInfo;
 }

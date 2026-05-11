@@ -333,11 +333,12 @@ const doc = new Document({
         margin: { top: MARGIN_TOP, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT, right: MARGIN_RIGHT }
       }
     },
-    footers: {
-      default: new Footer({
+    headers: {
+      default: new Header({
         children: [new Paragraph({
-          alignment: AlignmentType.CENTER,
-          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: SIZE_SM })]
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 0 },
+          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: SIZE })]
         })]
       })
     },

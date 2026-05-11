@@ -9,6 +9,8 @@ import { MatButtonModule } from '@angular/material/button';
   template: `
     <div class="offline-page">
       <div class="offline-card animate-rise-in">
+        <!-- L-11: large empty-state illustration -->
+        <mat-icon class="offline-illustration" aria-hidden="true">cloud_off</mat-icon>
         <div class="offline-icon-wrap">
           <mat-icon class="offline-icon">wifi_off</mat-icon>
         </div>
@@ -45,6 +47,14 @@ import { MatButtonModule } from '@angular/material/button';
       flex-direction: column;
       align-items: center;
       gap: 16px;
+    }
+    .offline-illustration {
+      font-size: 128px;
+      width: 128px;
+      height: 128px;
+      color: var(--blue-300);
+      opacity: 0.5;
+      margin-bottom: 8px;
     }
     .offline-icon-wrap {
       width: 96px;

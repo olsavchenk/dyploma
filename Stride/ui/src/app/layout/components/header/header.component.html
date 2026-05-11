@@ -4,14 +4,14 @@
     mat-icon-button
     class="menu-toggle"
     (click)="onMenuToggle()"
-    aria-label="Відкрити меню"
+    [attr.aria-label]="'layout.header.openMenu' | translate"
   >
     <mat-icon>menu</mat-icon>
   </button>
 
   <!-- Brand mark -->
-  <a routerLink="/dashboard" class="brand sun-underline" aria-label="Страйд — головна">
-    <span class="brand-text font-display">СТРАЙД</span>
+  <a routerLink="/dashboard" class="brand sun-underline" [attr.aria-label]="'layout.header.brandHome' | translate">
+    <span class="brand-text font-display">{{ 'auth.brand.headline' | translate }}</span>
   </a>
 
   <div class="header-spacer"></div>
@@ -21,7 +21,7 @@
     @if (userStats(); as stats) {
       <div
         class="streak-chip"
-        [matTooltip]="'Серія: ' + stats.currentStreak + ' днів'"
+        [matTooltip]="'layout.header.streakTooltip' | translate:{ count: stats.currentStreak }"
         matTooltipPosition="below"
       >
         <mat-icon class="streak-icon">local_fire_department</mat-icon>
@@ -44,7 +44,7 @@
     }
 
     <!-- Language toggle -->
-    <div class="lang-toggle hidden sm:flex" role="group" aria-label="Мова">
+    <div class="lang-toggle hidden sm:flex" role="group" [attr.aria-label]="'layout.header.languageGroup' | translate">
       <button class="lang-btn font-sans" [class.active]="currentLang() === 'uk'" (click)="setLang('uk')">УК</button>
       <span class="lang-sep">|</span>
       <button class="lang-btn font-sans" [class.active]="currentLang() === 'en'" (click)="setLang('en')">EN</button>
@@ -59,7 +59,7 @@
       [matBadgeHidden]="notificationCount() === 0"
       matBadgeColor="warn"
       matBadgeSize="small"
-      aria-label="Сповіщення"
+      [attr.aria-label]="'layout.header.notifications' | translate"
     >
       <mat-icon>notifications</mat-icon>
     </button>
@@ -69,7 +69,7 @@
       mat-icon-button
       [matMenuTriggerFor]="userMenu"
       class="avatar-btn"
-      aria-label="Меню користувача"
+      [attr.aria-label]="'layout.header.userMenu' | translate"
     >
       <img [src]="getAvatarUrl()" [alt]="getUserDisplayName()" class="avatar-img" />
     </button>
@@ -82,16 +82,16 @@
       <mat-divider></mat-divider>
       <button mat-menu-item (click)="navigateToProfile()">
         <mat-icon>person</mat-icon>
-        <span>Профіль</span>
+        <span>{{ 'layout.header.profile' | translate }}</span>
       </button>
       <button mat-menu-item (click)="navigateToSettings()">
         <mat-icon>settings</mat-icon>
-        <span>Налаштування</span>
+        <span>{{ 'layout.header.settings' | translate }}</span>
       </button>
       <mat-divider></mat-divider>
       <button mat-menu-item (click)="onLogout()">
         <mat-icon>logout</mat-icon>
-        <span>Вийти</span>
+        <span>{{ 'layout.header.logout' | translate }}</span>
       </button>
     </mat-menu>
   }

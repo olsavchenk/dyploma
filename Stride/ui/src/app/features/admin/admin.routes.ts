@@ -1,10 +1,13 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from '@app/core/guards';
+import { authGuard, adminGuard } from '@app/core/guards';
 
 export const adminRoutes: Routes = [
   {
     path: '',
-    canActivate: [adminGuard],
+    // Bug fix H-10: authGuard MUST run before adminGuard so an unauthenticated
+    // user is sent to /auth/login (not /forbidden) and an authenticated
+    // non-admin gets the explicit 403 redirect from adminGuard.
+    canActivate: [authGuard, adminGuard],
     children: [
       {
         path: '',

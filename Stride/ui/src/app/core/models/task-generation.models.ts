@@ -51,6 +51,14 @@ export interface BulkActionRequest {
   templateIds: string[];
 }
 
+export interface UpdateTaskTemplateRequest {
+  question: string;
+  answer: string;
+  explanation?: string | null;
+  taskType: string;
+  difficultyBand: number;
+}
+
 export interface TaskReviewFilters {
   reviewStatus?: string;
   difficultyBand?: number;

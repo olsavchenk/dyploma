@@ -8,7 +8,10 @@ public class ClassDto
     public string Name { get; set; } = string.Empty;
     public string JoinCode { get; set; } = string.Empty;
     public int GradeLevel { get; set; }
+    public string? Subject { get; set; }
+    public string? Description { get; set; }
     public bool IsActive { get; set; }
+    public bool IsArchived { get; set; }
     public int StudentCount { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }

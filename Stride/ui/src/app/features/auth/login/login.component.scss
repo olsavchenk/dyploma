@@ -49,6 +49,20 @@
     font-size: 0.875rem;
     flex: 1;
   }
+
+  &--lockout {
+    background-color: rgba(245, 124, 0, 0.08);
+    border-color: rgba(245, 124, 0, 0.25);
+    color: #b35c00;
+    align-items: flex-start;
+
+    .lockout-hint {
+      font-family: var(--font-sans);
+      font-size: 0.8125rem;
+      margin-top: 0.25rem;
+      opacity: 0.8;
+    }
+  }
 }
 
 .auth-form {

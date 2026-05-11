@@ -7,7 +7,10 @@ public class Class
     public string Name { get; set; } = string.Empty;
     public string JoinCode { get; set; } = string.Empty; // Unique 6-character code
     public int GradeLevel { get; set; }
+    public string? Subject { get; set; }
+    public string? Description { get; set; }
     public bool IsActive { get; set; } = true;
+    public bool IsArchived { get; set; } = false;
     public DateTime CreatedAt { get; set; }
     public DateTime? UpdatedAt { get; set; }
 

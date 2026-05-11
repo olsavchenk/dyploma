@@ -2,11 +2,33 @@
   <!-- Page header -->
   <div class="page-header">
     <div>
-      <h1 class="page-title">Мої Класи</h1>
+      <h1 class="page-title">{{ 'teacher.classes.title' | translate }}</h1>
       <p class="page-subtitle" *ngIf="quickStats()">
         {{ quickStats()!.totalClasses }} класів · {{ quickStats()!.totalStudents }} учнів
       </p>
     </div>
+  </div>
+
+  <!-- M-19: Search + filter toolbar -->
+  <div class="classes-toolbar" *ngIf="!loading()">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-icon matPrefix>search</mat-icon>
+      <input
+        matInput
+        placeholder="Пошук за назвою..."
+        [ngModel]="searchTerm()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+    </mat-form-field>
+
+    <mat-button-toggle-group
+      class="filter-group"
+      [value]="filterMode()"
+      (change)="onFilterChange($event.value)"
+      hideSingleSelectionIndicator>
+      <mat-button-toggle value="active">Активні</mat-button-toggle>
+      <mat-button-toggle value="archived">Архів</mat-button-toggle>
+    </mat-button-toggle-group>
   </div>
 
   <!-- Loading -->
@@ -21,8 +43,8 @@
   </div>
 
   <!-- Classes card list -->
-  <div class="class-list" *ngIf="!loading() && classes().length > 0">
-    <div class="class-card" *ngFor="let cls of classes()">
+  <div class="class-list" *ngIf="!loading() && filteredClasses().length > 0">
+    <div class="class-card" *ngFor="let cls of filteredClasses()">
       <!-- Mastery ring + class info -->
       <div class="card-left">
         <div class="mastery-ring">
@@ -48,8 +70,10 @@
           <h2 class="class-name">{{ cls.name }}</h2>
           <div class="class-meta">
             <span class="meta-chip">{{ cls.gradeLevel }} клас</span>
+            <span class="meta-chip" *ngIf="cls.subject">{{ cls.subject }}</span>
             <span class="meta-chip">{{ cls.studentCount ?? 0 }} учнів</span>
             <span class="meta-chip" *ngIf="cls.assignmentCount">{{ cls.assignmentCount }} завдань</span>
+            <span class="meta-chip meta-chip--archived" *ngIf="cls.isArchived">Архівовано</span>
           </div>
           <div class="join-code-row">
             <span class="join-label">Код:</span>
@@ -60,7 +84,7 @@
 
       <!-- Actions -->
       <div class="card-actions">
-        <button class="btn-icon-action" (click)="shareCode(cls)" matTooltip="Поділитися кодом" title="Поділитися кодом">
+        <button class="btn-icon-action" (click)="shareCode(cls, $event)" matTooltip="Поділитися кодом" title="Поділитися кодом">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="18" cy="5" r="3"></circle>
             <circle cx="6" cy="12" r="3"></circle>
@@ -76,21 +100,47 @@
             <polyline points="12 5 19 12 12 19"></polyline>
           </svg>
         </button>
+
+        <!-- CR-7: three-dot menu (Edit / Archive / Delete) -->
+        <button mat-icon-button [matMenuTriggerFor]="classMenu" (click)="$event.stopPropagation()" matTooltip="Більше дій" aria-label="Більше дій">
+          <mat-icon>more_vert</mat-icon>
+        </button>
+        <mat-menu #classMenu="matMenu">
+          <button mat-menu-item (click)="openEditDialog(cls, $event)">
+            <mat-icon>edit</mat-icon>
+            <span>Редагувати</span>
+          </button>
+          <button mat-menu-item *ngIf="!cls.isArchived" (click)="archiveClass(cls, $event)">
+            <mat-icon>archive</mat-icon>
+            <span>Архівувати</span>
+          </button>
+          <button mat-menu-item (click)="deleteClass(cls, $event)">
+            <mat-icon color="warn">delete</mat-icon>
+            <span>Видалити</span>
+          </button>
+        </mat-menu>
       </div>
     </div>
   </div>
 
   <!-- Empty state -->
-  <div class="empty-state" *ngIf="!loading() && classes().length === 0">
+  <div class="empty-state" *ngIf="!loading() && filteredClasses().length === 0">
     <div class="empty-illustration">
       <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="var(--color-rule)" stroke-width="1.2">
         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
         <polyline points="9 22 9 12 15 12 15 22"></polyline>
       </svg>
     </div>
-    <h2 class="empty-title">Створіть перший клас</h2>
-    <p class="empty-desc">Після створення класу ви зможете запрошувати учнів і призначати завдання.</p>
-    <button class="btn-primary" (click)="openCreateDialog()">
+    <h2 class="empty-title">
+      {{ classes().length === 0 ? 'Створіть перший клас' : 'Нічого не знайдено' }}
+    </h2>
+    <p class="empty-desc" *ngIf="classes().length === 0">
+      Після створення класу ви зможете запрошувати учнів і призначати завдання.
+    </p>
+    <p class="empty-desc" *ngIf="classes().length > 0">
+      Спробуйте змінити пошук або переключити фільтр.
+    </p>
+    <button class="btn-primary" *ngIf="classes().length === 0" (click)="openCreateDialog()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>

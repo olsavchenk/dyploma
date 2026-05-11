@@ -58,7 +58,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             // Retry the original request with the new token
             const retryReq = req.clone({
               setHeaders: {
-                Authorization: `Bearer ${response.token}`,
+                Authorization: `Bearer ${response.accessToken}`,
               },
             });
             return next(retryReq);
@@ -70,6 +70,13 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             return throwError(() => refreshError);
           }),
         );
+      }
+
+      // M-9: 403 Forbidden — token may be valid but stale (revoked role, etc.).
+      // Drop the in-memory token and bounce to /auth/login so the next request
+      // doesn't keep re-sending a token the server has rejected.
+      if (error.status === 403 && !isAuthEndpoint) {
+        authService.clearTokens();
       }
 
       // For other errors, just pass them through

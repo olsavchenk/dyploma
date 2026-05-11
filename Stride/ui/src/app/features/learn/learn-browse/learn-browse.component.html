@@ -3,8 +3,8 @@
   <div class="page-header">
     <div class="header-row">
       <div class="header-text">
-        <h1 class="page-title">Навчання</h1>
-        <p class="page-subtitle">Твої класи та предмети</p>
+        <h1 class="page-title">{{ 'learn.browse.title' | translate }}</h1>
+        <p class="page-subtitle">{{ 'learn.browse.subtitle' | translate }}</p>
       </div>
       @if (!loading() && classes().length > 0) {
         <button class="btn-join" (click)="openJoinDialog()">
@@ -181,6 +181,49 @@
       <div class="empty-icon">🎓</div>
       <h3 class="empty-title">Предмети ще не додано</h3>
       <p class="empty-text">Приєднайся до класу, щоб побачити предмети</p>
+    </div>
+  }
+
+  <!-- All subjects catalog (M-26) — visible to every student so newcomers
+       can browse content even before joining a class. -->
+  @if (!allSubjectsLoading() && allSubjects().length > 0) {
+    <div class="all-subjects-section">
+      <div class="section-header">
+        <h2 class="section-title">Усі предмети</h2>
+        <p class="section-subtitle">Огляд усіх доступних предметів платформи</p>
+      </div>
+
+      <div class="all-subjects-grid">
+        @for (subj of allSubjects(); track subj.id) {
+          <div
+            class="catalog-card"
+            (click)="onSubjectCardClick(subj)"
+            role="button"
+            tabindex="0"
+            (keydown.enter)="onSubjectCardClick(subj)"
+            (keydown.space)="onSubjectCardClick(subj); $event.preventDefault()">
+            <div class="catalog-card-icon">
+              <mat-icon>{{ getSubjectIcon(subj.name) }}</mat-icon>
+            </div>
+            <div class="catalog-card-body">
+              <h3 class="catalog-card-title">{{ subj.name }}</h3>
+              @if (subj.description) {
+                <p class="catalog-card-desc">{{ subj.description }}</p>
+              }
+              @if (subj.topicCount !== undefined && subj.topicCount !== null) {
+                <span class="catalog-card-meta">{{ subj.topicCount }} тем</span>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  @if (allSubjectsLoading()) {
+    <div class="loading-container">
+      <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
+      <p class="loading-text">Завантаження каталогу предметів...</p>
     </div>
   }
 </div>

@@ -43,7 +43,12 @@ public class AuthService : IAuthService
         {
             _logger.LogWarning("{Method} failed: Email already registered for Email={Email}",
                 nameof(RegisterAsync), MaskEmail(request.Email));
-            throw new InvalidOperationException("Email is already registered");
+            // L-3: Use a stable error code marker so the frontend can localize the
+            // message. The InvalidOperationException's Data dictionary carries the
+            // code and the controller propagates it in the response body.
+            var ex = new InvalidOperationException("Email is already registered");
+            ex.Data["code"] = "EMAIL_ALREADY_EXISTS";
+            throw ex;
         }
 
         // Create new user without role (user must select role via /auth/select-role)
@@ -89,14 +94,15 @@ public class AuthService : IAuthService
         _logger.LogDebug("{Method}: User found UserId={UserId}, Role={Role}, FailedAttempts={FailedAttempts}",
             nameof(LoginAsync), user.Id, user.Role, user.FailedLoginAttempts);
 
-        // Check lockout
+        // Check lockout (CR-4 / CR-11)
         if (user.LockoutEndDate.HasValue && user.LockoutEndDate.Value > DateTime.UtcNow)
         {
             var remainingTime = user.LockoutEndDate.Value - DateTime.UtcNow;
             _logger.LogWarning("{Method}: Account locked for UserId={UserId}, RemainingMinutes={RemainingMinutes}",
                 nameof(LoginAsync), user.Id, Math.Ceiling(remainingTime.TotalMinutes));
-            throw new UnauthorizedAccessException(
-                $"Account is locked. Please try again in {Math.Ceiling(remainingTime.TotalMinutes)} minutes");
+            throw new AccountLockedException(
+                $"Account is locked. Please try again in {Math.Ceiling(remainingTime.TotalMinutes)} minutes",
+                remainingTime);
         }
 
         // Verify password
@@ -105,11 +111,29 @@ public class AuthService : IAuthService
             // Increment failed login attempts
             user.FailedLoginAttempts++;
 
+            // CR-4: Per-account exponential backoff before hard lockout.
+            // 1-2 fails: no delay; 3 fails: 5s lock; 4 fails: 15s lock; 5+ fails: 30 min hard lock.
             if (user.FailedLoginAttempts >= MaxFailedLoginAttempts)
             {
                 user.LockoutEndDate = DateTime.UtcNow.Add(LockoutDuration);
                 _logger.LogWarning("{Method}: Account locked due to failed attempts UserId={UserId}, FailedAttempts={FailedAttempts}",
                     nameof(LoginAsync), user.Id, user.FailedLoginAttempts);
+                await _dbContext.SaveChangesAsync();
+                throw new AccountLockedException(
+                    $"Account is locked. Please try again in {Math.Ceiling(LockoutDuration.TotalMinutes)} minutes",
+                    LockoutDuration);
+            }
+            else if (user.FailedLoginAttempts >= 3)
+            {
+                var backoffSeconds = Math.Min(60, (int)Math.Pow(2, user.FailedLoginAttempts - 2) * 5);
+                var backoff = TimeSpan.FromSeconds(backoffSeconds);
+                user.LockoutEndDate = DateTime.UtcNow.Add(backoff);
+                _logger.LogWarning("{Method}: Backoff applied UserId={UserId}, FailedAttempts={FailedAttempts}, BackoffSeconds={BackoffSeconds}",
+                    nameof(LoginAsync), user.Id, user.FailedLoginAttempts, backoffSeconds);
+                await _dbContext.SaveChangesAsync();
+                throw new AccountLockedException(
+                    $"Too many failed attempts. Please try again in {backoffSeconds} seconds",
+                    backoff);
             }
             else
             {

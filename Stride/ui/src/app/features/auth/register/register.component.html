@@ -1,8 +1,8 @@
 <app-auth-shell>
   <div class="form-panel">
     <div class="form-header">
-      <h2 class="form-title font-display">Реєстрація</h2>
-      <p class="form-subtitle font-sans">Почніть навчання вже сьогодні</p>
+      <h2 class="form-title font-display">{{ 'auth.register.title' | translate }}</h2>
+      <p class="form-subtitle font-sans">{{ 'auth.register.subtitle' | translate }}</p>
     </div>
 
     @if (errorMessage()) {
@@ -14,12 +14,12 @@
 
     <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="auth-form">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Ім'я</mat-label>
+        <mat-label>{{ 'auth.register.displayName' | translate }}</mat-label>
         <input
           matInput
           type="text"
           formControlName="displayName"
-          placeholder="Олексій Петренко"
+          [placeholder]="'auth.register.displayNamePlaceholder' | translate"
           autocomplete="name"
           required
         />
@@ -30,7 +30,7 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
+        <mat-label>{{ 'auth.register.email' | translate }}</mat-label>
         <input
           matInput
           type="email"
@@ -46,7 +46,7 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Пароль</mat-label>
+        <mat-label>{{ 'auth.register.password' | translate }}</mat-label>
         <input
           matInput
           [type]="hidePassword() ? 'password' : 'text'"
@@ -61,7 +61,7 @@
           matSuffix
           type="button"
           (click)="togglePasswordVisibility()"
-          [attr.aria-label]="'Показати пароль'"
+          [attr.aria-label]="'auth.register.showPassword' | translate"
         >
           <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
@@ -72,7 +72,7 @@
 
       <!-- Password strength meter -->
       @if (registerForm.get('password')?.value) {
-        <div class="strength-meter" aria-label="Рівень надійності паролю">
+        <div class="strength-meter" [attr.aria-label]="'auth.register.passwordStrengthLabel' | translate">
           <div class="strength-bars">
             <div
               class="strength-bar"
@@ -92,16 +92,16 @@
           </div>
           <span class="strength-label font-sans">
             @switch (getPasswordStrength()) {
-              @case ('weak') { Слабкий }
-              @case ('medium') { Середній }
-              @case ('strong') { Надійний }
+              @case ('weak') { {{ 'auth.register.passwordStrength.weak' | translate }} }
+              @case ('medium') { {{ 'auth.register.passwordStrength.medium' | translate }} }
+              @case ('strong') { {{ 'auth.register.passwordStrength.strong' | translate }} }
             }
           </span>
         </div>
       }
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Підтвердження паролю</mat-label>
+        <mat-label>{{ 'auth.register.confirmPassword' | translate }}</mat-label>
         <input
           matInput
           [type]="hideConfirmPassword() ? 'password' : 'text'"
@@ -116,7 +116,7 @@
           matSuffix
           type="button"
           (click)="toggleConfirmPasswordVisibility()"
-          [attr.aria-label]="'Показати пароль'"
+          [attr.aria-label]="'auth.register.showPassword' | translate"
         >
           <mat-icon>{{ hideConfirmPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
@@ -131,14 +131,14 @@
       <div class="gdpr-consent">
         <mat-checkbox formControlName="gdprConsent" color="primary">
           <span class="consent-text font-sans">
-            Я погоджуюсь з
-            <a href="/privacy-policy" target="_blank" class="auth-link">Політикою конфіденційності</a>
-            та
-            <a href="/terms" target="_blank" class="auth-link">Умовами використання</a>
+            {{ 'auth.register.consentText' | translate }}
+            <a href="/privacy-policy" target="_blank" class="auth-link">{{ 'auth.register.consentPrivacy' | translate }}</a>
+            {{ 'auth.register.consentAnd' | translate }}
+            <a href="/terms" target="_blank" class="auth-link">{{ 'auth.register.consentTerms' | translate }}</a>
           </span>
         </mat-checkbox>
         @if (registerForm.get('gdprConsent')?.invalid && registerForm.get('gdprConsent')?.touched) {
-          <div class="consent-error font-sans">Для реєстрації необхідно прийняти умови</div>
+          <div class="consent-error font-sans">{{ 'auth.register.consentRequired' | translate }}</div>
         }
       </div>
 
@@ -146,20 +146,20 @@
         mat-flat-button
         type="submit"
         class="full-width submit-btn"
-        [disabled]="loading"
+        [disabled]="loading || registerForm.invalid"
       >
         @if (loading) {
           <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-          <span>Реєстрація...</span>
+          <span>{{ 'auth.register.submitting' | translate }}</span>
         } @else {
-          <span>Зареєструватися</span>
+          <span>{{ 'auth.register.submit' | translate }}</span>
         }
       </button>
     </form>
 
     <div class="divider-row">
       <span class="divider-line"></span>
-      <span class="divider-label font-sans">або</span>
+      <span class="divider-label font-sans">{{ 'common.or' | translate }}</span>
       <span class="divider-line"></span>
     </div>
 
@@ -171,12 +171,12 @@
       [disabled]="loading"
     >
       <mat-icon>g_mobiledata</mat-icon>
-      <span>Зареєструватися через Google</span>
+      <span>{{ 'auth.register.google' | translate }}</span>
     </button>
 
     <p class="switch-prompt font-sans">
-      Вже є обліковий запис?
-      <a routerLink="/auth/login" class="auth-link auth-link--bold">Увійти</a>
+      {{ 'auth.register.hasAccount' | translate }}
+      <a routerLink="/auth/login" class="auth-link auth-link--bold">{{ 'auth.register.login' | translate }}</a>
     </p>
   </div>
 </app-auth-shell>

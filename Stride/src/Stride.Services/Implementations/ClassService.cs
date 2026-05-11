@@ -38,6 +38,18 @@ public class ClassService : IClassService
             throw new InvalidOperationException("Teacher profile not found");
         }
 
+        // M-17: Duplicate name check (per teacher, non-archived)
+        var trimmedName = request.Name.Trim();
+        var nameExists = await _dbContext.Classes
+            .AnyAsync(c => c.TeacherId == teacherId
+                       && c.Name == trimmedName
+                       && !c.IsArchived);
+
+        if (nameExists)
+        {
+            throw new DuplicateClassNameException("Клас з такою назвою вже існує");
+        }
+
         // Generate unique join code
         var joinCode = await GenerateUniqueJoinCodeAsync();
 
@@ -45,10 +57,13 @@ public class ClassService : IClassService
         {
             Id = Guid.NewGuid(),
             TeacherId = teacherId,
-            Name = request.Name,
+            Name = trimmedName,
             JoinCode = joinCode,
             GradeLevel = request.GradeLevel,
+            Subject = string.IsNullOrWhiteSpace(request.Subject) ? null : request.Subject.Trim(),
+            Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
             IsActive = true,
+            IsArchived = false,
             CreatedAt = DateTime.UtcNow
         };
 
@@ -69,11 +84,246 @@ public class ClassService : IClassService
             Name = classEntity.Name,
             JoinCode = classEntity.JoinCode,
             GradeLevel = classEntity.GradeLevel,
+            Subject = classEntity.Subject,
+            Description = classEntity.Description,
             IsActive = classEntity.IsActive,
+            IsArchived = classEntity.IsArchived,
             StudentCount = 0,
             CreatedAt = classEntity.CreatedAt,
             UpdatedAt = classEntity.UpdatedAt
         };
+    }
+
+    public async Task<ClassDto> UpdateClassAsync(Guid classId, Guid teacherId, UpdateClassRequest request)
+    {
+        var classEntity = await _dbContext.Classes
+            .Include(c => c.Teacher)
+                .ThenInclude(t => t.User)
+            .Include(c => c.Memberships)
+            .FirstOrDefaultAsync(c => c.Id == classId && c.TeacherId == teacherId);
+
+        if (classEntity == null)
+        {
+            throw new InvalidOperationException("Class not found or you don't have access");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Name))
+        {
+            var trimmedName = request.Name.Trim();
+            if (!string.Equals(trimmedName, classEntity.Name, StringComparison.Ordinal))
+            {
+                var dup = await _dbContext.Classes
+                    .AnyAsync(c => c.TeacherId == teacherId
+                               && c.Id != classId
+                               && c.Name == trimmedName
+                               && !c.IsArchived);
+                if (dup)
+                {
+                    throw new DuplicateClassNameException("Клас з такою назвою вже існує");
+                }
+                classEntity.Name = trimmedName;
+            }
+        }
+
+        if (request.GradeLevel.HasValue)
+        {
+            classEntity.GradeLevel = request.GradeLevel.Value;
+        }
+
+        if (request.Subject != null)
+        {
+            classEntity.Subject = string.IsNullOrWhiteSpace(request.Subject) ? null : request.Subject.Trim();
+        }
+
+        if (request.Description != null)
+        {
+            classEntity.Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim();
+        }
+
+        classEntity.UpdatedAt = DateTime.UtcNow;
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Class {ClassId} updated by teacher {TeacherId}", classId, teacherId);
+
+        return new ClassDto
+        {
+            Id = classEntity.Id,
+            TeacherId = classEntity.TeacherId,
+            TeacherName = classEntity.Teacher.User.DisplayName,
+            Name = classEntity.Name,
+            JoinCode = classEntity.JoinCode,
+            GradeLevel = classEntity.GradeLevel,
+            Subject = classEntity.Subject,
+            Description = classEntity.Description,
+            IsActive = classEntity.IsActive,
+            IsArchived = classEntity.IsArchived,
+            StudentCount = classEntity.Memberships.Count,
+            CreatedAt = classEntity.CreatedAt,
+            UpdatedAt = classEntity.UpdatedAt
+        };
+    }
+
+    public async Task ArchiveClassAsync(Guid classId, Guid teacherId)
+    {
+        var classEntity = await _dbContext.Classes
+            .FirstOrDefaultAsync(c => c.Id == classId && c.TeacherId == teacherId);
+
+        if (classEntity == null)
+        {
+            throw new InvalidOperationException("Class not found or you don't have access");
+        }
+
+        classEntity.IsArchived = true;
+        classEntity.IsActive = false;
+        classEntity.UpdatedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation("Class {ClassId} archived by teacher {TeacherId}", classId, teacherId);
+    }
+
+    public async Task RemoveStudentAsync(Guid classId, Guid studentId, Guid teacherId)
+    {
+        var classEntity = await _dbContext.Classes
+            .FirstOrDefaultAsync(c => c.Id == classId && c.TeacherId == teacherId);
+
+        if (classEntity == null)
+        {
+            throw new InvalidOperationException("Class not found or you don't have access");
+        }
+
+        var membership = await _dbContext.ClassMemberships
+            .FirstOrDefaultAsync(m => m.ClassId == classId && m.StudentId == studentId);
+
+        if (membership == null)
+        {
+            throw new InvalidOperationException("Student is not a member of this class");
+        }
+
+        _dbContext.ClassMemberships.Remove(membership);
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Student {StudentId} removed from class {ClassId} by teacher {TeacherId}",
+            studentId, classId, teacherId);
+    }
+
+    public async Task<string> RegenerateJoinCodeAsync(Guid classId, Guid teacherId)
+    {
+        var classEntity = await _dbContext.Classes
+            .FirstOrDefaultAsync(c => c.Id == classId && c.TeacherId == teacherId && !c.IsArchived);
+
+        if (classEntity == null)
+        {
+            throw new InvalidOperationException("Class not found or you don't have access");
+        }
+
+        var newCode = await GenerateUniqueJoinCodeAsync();
+        classEntity.JoinCode = newCode;
+        classEntity.UpdatedAt = DateTime.UtcNow;
+
+        await _dbContext.SaveChangesAsync();
+
+        _logger.LogInformation(
+            "Join code regenerated for class {ClassId} by teacher {TeacherId}",
+            classId, teacherId);
+
+        return newCode;
+    }
+
+    public async Task<int> GetPendingReviewCountAsync(Guid teacherId)
+    {
+        // Count assignments belonging to the teacher's active classes whose
+        // generation jobs are still in-flight (Pending / Running).
+        var classIds = await _dbContext.Classes
+            .Where(c => c.TeacherId == teacherId && c.IsActive && !c.IsArchived)
+            .Select(c => c.Id)
+            .ToListAsync();
+
+        if (classIds.Count == 0)
+        {
+            return 0;
+        }
+
+        var assignmentIds = await _dbContext.ClassAssignments
+            .Where(a => classIds.Contains(a.ClassId))
+            .Select(a => a.Id)
+            .ToListAsync();
+
+        if (assignmentIds.Count == 0)
+        {
+            return 0;
+        }
+
+        var pendingCount = await _dbContext.TaskGenerationJobs
+            .Where(j => assignmentIds.Contains(j.AssignmentId)
+                     && (j.Status == "Pending" || j.Status == "Running" || j.Status == "InProgress"))
+            .CountAsync();
+
+        return pendingCount;
+    }
+
+    public async Task<List<RecentActivityDto>> GetRecentActivityAsync(Guid teacherId, int limit = 5)
+    {
+        var classes = await _dbContext.Classes
+            .Where(c => c.TeacherId == teacherId && c.IsActive && !c.IsArchived)
+            .Select(c => new { c.Id, c.Name })
+            .ToListAsync();
+
+        if (classes.Count == 0)
+        {
+            return new List<RecentActivityDto>();
+        }
+
+        var classIds = classes.Select(c => c.Id).ToList();
+        var classNameMap = classes.ToDictionary(c => c.Id, c => c.Name);
+
+        var memberships = await _dbContext.ClassMemberships
+            .Where(m => classIds.Contains(m.ClassId))
+            .Select(m => new { m.StudentId, m.ClassId })
+            .ToListAsync();
+
+        if (memberships.Count == 0)
+        {
+            return new List<RecentActivityDto>();
+        }
+
+        var studentIds = memberships.Select(m => m.StudentId).Distinct().ToList();
+        // For each student, take their primary class (first membership)
+        var studentClassMap = memberships
+            .GroupBy(m => m.StudentId)
+            .ToDictionary(g => g.Key, g => g.First().ClassId);
+
+        var attempts = await _dbContext.TaskAttempts
+            .Include(ta => ta.Topic)
+            .Include(ta => ta.Student)
+                .ThenInclude(s => s.User)
+            .Where(ta => studentIds.Contains(ta.StudentId))
+            .OrderByDescending(ta => ta.CreatedAt)
+            .Take(limit)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return attempts.Select(ta =>
+        {
+            var classId = studentClassMap.GetValueOrDefault(ta.StudentId, Guid.Empty);
+            var className = classId != Guid.Empty
+                ? classNameMap.GetValueOrDefault(classId, string.Empty)
+                : string.Empty;
+
+            return new RecentActivityDto
+            {
+                AttemptId = ta.Id,
+                StudentId = ta.StudentId,
+                StudentName = ta.Student.User.DisplayName,
+                StudentAvatar = ta.Student.User.AvatarUrl,
+                ClassId = classId,
+                ClassName = className,
+                TopicName = ta.Topic?.Name ?? string.Empty,
+                IsCorrect = ta.IsCorrect,
+                AttemptedAt = ta.CreatedAt
+            };
+        }).ToList();
     }
 
     public async Task<List<ClassDto>> GetTeacherClassesAsync(Guid teacherId)
@@ -82,7 +332,7 @@ public class ClassService : IClassService
             .Include(c => c.Teacher)
                 .ThenInclude(t => t.User)
             .Include(c => c.Memberships)
-            .Where(c => c.TeacherId == teacherId && c.IsActive)
+            .Where(c => c.TeacherId == teacherId)
             .OrderByDescending(c => c.CreatedAt)
             .AsNoTracking()
             .ToListAsync();
@@ -95,7 +345,10 @@ public class ClassService : IClassService
             Name = c.Name,
             JoinCode = c.JoinCode,
             GradeLevel = c.GradeLevel,
+            Subject = c.Subject,
+            Description = c.Description,
             IsActive = c.IsActive,
+            IsArchived = c.IsArchived,
             StudentCount = c.Memberships.Count,
             CreatedAt = c.CreatedAt,
             UpdatedAt = c.UpdatedAt
@@ -183,7 +436,10 @@ public class ClassService : IClassService
             Name = classEntity.Name,
             JoinCode = classEntity.JoinCode,
             GradeLevel = classEntity.GradeLevel,
+            Subject = classEntity.Subject,
+            Description = classEntity.Description,
             IsActive = classEntity.IsActive,
+            IsArchived = classEntity.IsArchived,
             StudentCount = classEntity.Memberships.Count,
             CreatedAt = classEntity.CreatedAt,
             UpdatedAt = classEntity.UpdatedAt

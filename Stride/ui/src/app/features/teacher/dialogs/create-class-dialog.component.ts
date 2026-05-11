@@ -1,14 +1,21 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MatDialogRef, MatDialogModule } from '@angular/material/dialog';
+import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { TeacherService } from '@app/core/services/teacher.service';
-import { CreateClassRequest } from '@app/core/models';
+import { LearningService } from '@app/core/services/learning.service';
+import { Class, CreateClassRequest, UpdateClassRequest } from '@app/core/models';
+
+interface CreateClassDialogData {
+  mode?: 'create' | 'edit';
+  cls?: Class | null;
+}
 
 @Component({
   selector: 'app-create-class-dialog',
@@ -24,7 +31,7 @@ import { CreateClassRequest } from '@app/core/models';
     MatProgressSpinnerModule,
   ],
   template: `
-    <h2 mat-dialog-title>Створити Новий Клас</h2>
+    <h2 mat-dialog-title>{{ isEdit() ? 'Редагувати Клас' : 'Створити Новий Клас' }}</h2>
     <mat-dialog-content>
       <form [formGroup]="form" class="create-class-form">
         <mat-form-field appearance="outline">
@@ -63,6 +70,27 @@ import { CreateClassRequest } from '@app/core/models';
           </mat-error>
         </mat-form-field>
 
+        <mat-form-field appearance="outline">
+          <mat-label>Предмет</mat-label>
+          <mat-select formControlName="subject">
+            <mat-option [value]="null">— Без предмета —</mat-option>
+            <mat-option *ngFor="let s of subjects()" [value]="s.name">
+              {{ s.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Опис</mat-label>
+          <textarea
+            matInput
+            formControlName="description"
+            rows="3"
+            maxlength="1000"
+            placeholder="Короткий опис класу (необов'язково)"
+          ></textarea>
+        </mat-form-field>
+
         <div class="error-message" *ngIf="errorMessage()">
           {{ errorMessage() }}
         </div>
@@ -74,10 +102,10 @@ import { CreateClassRequest } from '@app/core/models';
         mat-raised-button
         color="primary"
         [disabled]="form.invalid || loading()"
-        (click)="create()"
+        (click)="submit()"
       >
         <mat-spinner diameter="20" *ngIf="loading()"></mat-spinner>
-        <span *ngIf="!loading()">Створити</span>
+        <span *ngIf="!loading()">{{ isEdit() ? 'Зберегти' : 'Створити' }}</span>
       </button>
     </mat-dialog-actions>
   `,
@@ -131,17 +159,37 @@ import { CreateClassRequest } from '@app/core/models';
 export class CreateClassDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly teacherService = inject(TeacherService);
+  private readonly learningService = inject(LearningService);
   private readonly dialogRef = inject(MatDialogRef<CreateClassDialogComponent>);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly data = inject<CreateClassDialogData>(MAT_DIALOG_DATA, { optional: true }) ?? {};
 
   readonly loading = signal<boolean>(false);
   readonly errorMessage = signal<string | null>(null);
+  readonly subjects = signal<Array<{ id: string; name: string }>>([]);
+  readonly isEdit = signal<boolean>(this.data.mode === 'edit' && !!this.data.cls);
 
   readonly form: FormGroup = this.fb.group({
-    name: ['', [Validators.required, Validators.maxLength(100)]],
-    gradeLevel: ['', Validators.required],
+    name: [this.data.cls?.name ?? '', [Validators.required, Validators.maxLength(100)]],
+    gradeLevel: [this.data.cls ? Number(this.data.cls.gradeLevel) : '', Validators.required],
+    subject: [this.data.cls?.subject ?? null],
+    description: [this.data.cls?.description ?? '', [Validators.maxLength(1000)]],
   });
 
-  create(): void {
+  constructor() {
+    this.learningService.getSubjects()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (subjects) => {
+          this.subjects.set(
+            (subjects ?? []).map((s: { id: string; name: string }) => ({ id: s.id, name: s.name }))
+          );
+        },
+        error: () => this.subjects.set([]),
+      });
+  }
+
+  submit(): void {
     if (this.form.invalid) {
       return;
     }
@@ -149,23 +197,54 @@ export class CreateClassDialogComponent {
     this.loading.set(true);
     this.errorMessage.set(null);
 
-    const request: CreateClassRequest = {
-      name: this.form.value.name.trim(),
-      gradeLevel: this.form.value.gradeLevel,
-    };
+    const payloadName = (this.form.value.name ?? '').trim();
+    const payloadSubject = this.form.value.subject ?? null;
+    const payloadDescription = (this.form.value.description ?? '').trim() || null;
 
-    this.teacherService.createClass(request).subscribe({
-      next: (result) => {
-        this.loading.set(false);
-        this.dialogRef.close(result);
-      },
-      error: (error) => {
-        this.loading.set(false);
-        this.errorMessage.set(
-          error.error?.message || 'Не вдалося створити клас. Спробуйте ще раз.'
-        );
-      },
-    });
+    if (this.isEdit() && this.data.cls) {
+      const update: UpdateClassRequest = {
+        name: payloadName,
+        gradeLevel: this.form.value.gradeLevel,
+        subject: payloadSubject,
+        description: payloadDescription,
+      };
+      this.teacherService.updateClass(this.data.cls.id, update)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (result) => {
+            this.loading.set(false);
+            this.dialogRef.close(result);
+          },
+          error: (error) => this.handleError(error),
+        });
+    } else {
+      const request: CreateClassRequest = {
+        name: payloadName,
+        gradeLevel: this.form.value.gradeLevel,
+        subject: payloadSubject,
+        description: payloadDescription,
+      };
+      this.teacherService.createClass(request)
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (result) => {
+            this.loading.set(false);
+            this.dialogRef.close(result);
+          },
+          error: (error) => this.handleError(error),
+        });
+    }
+  }
+
+  private handleError(error: { status?: number; error?: { message?: string } }): void {
+    this.loading.set(false);
+    if (error.status === 409) {
+      this.errorMessage.set(error.error?.message || 'Клас з такою назвою вже існує');
+    } else {
+      this.errorMessage.set(
+        error.error?.message || 'Не вдалося зберегти клас. Спробуйте ще раз.'
+      );
+    }
   }
 
   cancel(): void {

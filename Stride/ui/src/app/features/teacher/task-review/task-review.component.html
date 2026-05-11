@@ -8,7 +8,7 @@
       </svg>
     </button>
     <div>
-      <h1 class="review-title">Перегляд завдань</h1>
+      <h1 class="review-title">{{ 'teacher.taskReview.title' | translate }}</h1>
       <p class="review-subtitle">{{ totalCount() }} завдань знайдено</p>
     </div>
   </div>
@@ -106,7 +106,18 @@
         </label>
 
         <div class="task-question" (click)="toggleExpand(task)">
-          {{ task.question | slice:0:140 }}{{ (task.question?.length ?? 0) > 140 ? '…' : '' }}
+          <ng-container *ngIf="hasTemplate(task.question); else plainQuestion">
+            <div class="task-preview">
+              {{ renderPreview(task.question) | slice:0:140 }}{{ (renderPreview(task.question).length) > 140 ? '…' : '' }}
+            </div>
+            <details class="task-template" (click)="$event.stopPropagation()">
+              <summary>Шаблон</summary>
+              <code class="task-template-code">{{ task.question }}</code>
+            </details>
+          </ng-container>
+          <ng-template #plainQuestion>
+            {{ task.question | slice:0:140 }}{{ (task.question?.length ?? 0) > 140 ? '…' : '' }}
+          </ng-template>
         </div>
 
         <div class="task-chips">
@@ -143,6 +154,15 @@
             </svg>
           </button>
           <button
+            class="action-btn action-btn--edit"
+            title="Редагувати"
+            mat-icon-button
+            [disabled]="actionLoading()"
+            (click)="edit(task, $event)"
+          >
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button
             class="action-btn action-btn--delete"
             title="Видалити"
             [disabled]="actionLoading()"
@@ -165,7 +185,16 @@
         <div class="expand-body" *ngIf="expandedDetail()">
           <div class="expand-section">
             <span class="expand-label">Запитання</span>
-            <p class="expand-text">{{ expandedDetail()!.question }}</p>
+            <p class="expand-text" *ngIf="hasTemplate(expandedDetail()!.question)">
+              {{ renderPreview(expandedDetail()!.question) }}
+            </p>
+            <p class="expand-text" *ngIf="!hasTemplate(expandedDetail()!.question)">
+              {{ expandedDetail()!.question }}
+            </p>
+            <details class="task-template" *ngIf="hasTemplate(expandedDetail()!.question)">
+              <summary>Шаблон (для технічного перегляду)</summary>
+              <code class="task-template-code">{{ expandedDetail()!.question }}</code>
+            </details>
           </div>
           <div class="expand-section" *ngIf="expandedDetail()!.options?.length">
             <span class="expand-label">Варіанти відповідей</span>

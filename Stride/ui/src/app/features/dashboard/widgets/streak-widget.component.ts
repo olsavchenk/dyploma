@@ -22,14 +22,11 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       
       <div class="streak-info">
         <div class="streak-count">{{ currentStreak }}</div>
-        <div class="streak-label">Дні поспіль</div>
-      </div>
-      
-      @if (longestStreak > currentStreak) {
-        <div class="longest-streak">
-          Рекорд: {{ longestStreak }}
+        <div class="streak-label">Поточна серія</div>
+        <div class="streak-record">
+          Рекорд: {{ longestStreak }} {{ daysLabel(longestStreak) }}
         </div>
-      }
+      </div>
     </div>
   `,
   styles: [`
@@ -91,16 +88,12 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       letter-spacing: 0.05em;
     }
 
-    .longest-streak {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.75rem;
-      font-size: 0.75rem;
+    .streak-record {
+      margin-top: 0.35rem;
+      font-size: 0.8125rem;
       color: #92400E;
-      background: rgba(255, 255, 255, 0.5);
-      padding: 0.25rem 0.5rem;
-      border-radius: 6px;
       font-weight: 500;
+      opacity: 0.9;
     }
 
     @media (max-width: 640px) {
@@ -145,5 +138,15 @@ export class StreakWidgetComponent {
 
   get isPulsing(): boolean {
     return this.currentStreak >= 7;
+  }
+
+  /** Ukrainian plural for "day" — 1 день, 2-4 дні, 5+ днів. */
+  daysLabel(count: number): string {
+    const n = Math.abs(count) % 100;
+    const n10 = n % 10;
+    if (n > 10 && n < 20) return 'днів';
+    if (n10 === 1) return 'день';
+    if (n10 >= 2 && n10 <= 4) return 'дні';
+    return 'днів';
   }
 }

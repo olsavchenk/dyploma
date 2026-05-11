@@ -1,4 +1,4 @@
-<nav class="sidenav" aria-label="Головна навігація">
+<nav class="sidenav" [attr.aria-label]="'layout.sidenav.main' | translate">
   @if (isAuthenticated()) {
     <div class="nav-section">
       @for (item of navItems(); track item.route) {
@@ -8,11 +8,11 @@
             [routerLink]="item.route"
             routerLinkActive="active"
             [routerLinkActiveOptions]="{ exact: item.route === '/dashboard' }"
-            [attr.aria-label]="item.label"
+            [attr.aria-label]="item.label | translate"
           >
             <span class="nav-indicator"></span>
             <mat-icon class="nav-icon" aria-hidden="true">{{ item.icon }}</mat-icon>
-            <span class="nav-label font-sans">{{ item.label }}</span>
+            <span class="nav-label font-sans">{{ item.label | translate }}</span>
             @if (item.badge) {
               <span class="nav-badge font-mono">{{ item.badge }}</span>
             }

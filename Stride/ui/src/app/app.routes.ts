@@ -61,6 +61,15 @@ export const routes: Routes = [
       import('./features/offline/offline.component').then((m) => m.OfflineComponent),
   },
 
+  // 403 / Forbidden — shown by roleGuard when an authenticated user lacks the
+  // required role. Public route (no guard) so it always renders.
+  // Bug fix: H-10 — Role guard now redirects here instead of /auth/login.
+  {
+    path: 'forbidden',
+    loadComponent: () =>
+      import('./features/forbidden/forbidden.component').then((m) => m.ForbiddenComponent),
+  },
+
   // Fallback route
   {
     path: '**',

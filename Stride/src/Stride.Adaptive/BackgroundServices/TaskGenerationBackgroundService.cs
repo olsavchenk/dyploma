@@ -99,11 +99,16 @@ public class TaskGenerationBackgroundService : BackgroundService
         {
             var templates = new List<TaskTemplateDocument>();
 
-            foreach (var task in response.Tasks)
+            for (var i = 0; i < response.Tasks.Count; i++)
             {
+                var task = response.Tasks[i];
                 if (task.TemplateContent == null || string.IsNullOrWhiteSpace(task.Question))
                 {
                     failedCount++;
+                    _logger.LogWarning(
+                        "Skipping malformed AI task — JobId: {JobId}, Type: {TaskType}, Band: {Band}, Index: {Index}, Reason: {Reason}",
+                        workItem.JobId, workItem.TaskType, workItem.DifficultyBand, i,
+                        task.TemplateContent == null ? "TemplateContent null" : "Question empty");
                     continue;
                 }
 
@@ -124,6 +129,19 @@ public class TaskGenerationBackgroundService : BackgroundService
                 generatedCount++;
             }
 
+            // The provider may return fewer tasks than requested (LLM under-shot
+            // the count, parser dropped malformed entries, etc.). Account for
+            // every task we asked for so the progress counter reaches 100%.
+            var missing = workItem.Count - response.Tasks.Count;
+            if (missing > 0)
+            {
+                failedCount += missing;
+                _logger.LogWarning(
+                    "AI returned fewer tasks than requested — JobId: {JobId}, Type: {TaskType}, Band: {Band}, Requested: {Requested}, Got: {Got}, Missing: {Missing}",
+                    workItem.JobId, workItem.TaskType, workItem.DifficultyBand,
+                    workItem.Count, response.Tasks.Count, missing);
+            }
+
             if (templates.Count > 0)
             {
                 await mongoDbContext.TaskTemplates.InsertManyAsync(templates, cancellationToken: cancellationToken);
@@ -132,16 +150,18 @@ public class TaskGenerationBackgroundService : BackgroundService
         else
         {
             failedCount = workItem.Count;
-            _logger.LogWarning(
-                "Batch generation failed - JobId: {JobId}, Error: {Error}",
-                workItem.JobId, response.ErrorMessage);
+            _logger.LogError(
+                "AI batch generation FAILED — JobId: {JobId}, Type: {TaskType}, Band: {Band}, Count: {Count}, Provider: {Provider}, Error: {Error}",
+                workItem.JobId, workItem.TaskType, workItem.DifficultyBand,
+                workItem.Count, provider.ProviderName, response.ErrorMessage ?? "unknown");
         }
 
         await UpdateJobProgressAsync(dbContext, workItem.JobId, generatedCount, failedCount, cancellationToken);
 
         _logger.LogInformation(
-            "Batch completed - JobId: {JobId}, Generated: {Generated}, Failed: {Failed}",
-            workItem.JobId, generatedCount, failedCount);
+            "Batch completed — JobId: {JobId}, Type: {TaskType}, Band: {Band}, Requested: {Requested}, Generated: {Generated}, Failed: {Failed}",
+            workItem.JobId, workItem.TaskType, workItem.DifficultyBand,
+            workItem.Count, generatedCount, failedCount);
     }
 
     private static async Task MarkJobInProgressAsync(

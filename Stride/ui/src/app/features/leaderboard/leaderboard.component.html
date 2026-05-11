@@ -64,11 +64,11 @@
   }
 
   <!-- ═══════════════ EMPTY ═══════════════ -->
-  @else if (entries().length === 0) {
-    <div class="lb-empty">
-      <span class="lb-empty__icon">🏆</span>
-      <h3 class="lb-empty__title">Ще немає учасників</h3>
-      <p class="lb-empty__sub">Будьте першим, хто з'явиться у цьому рейтингу!</p>
+  @else if ((entries() ?? []).length === 0) {
+    <div class="lb-empty empty-state">
+      <span class="lb-empty__icon" aria-hidden="true">🏆</span>
+      <h3 class="lb-empty__title">Поки що немає учасників</h3>
+      <p class="lb-empty__sub">Стань першим!</p>
     </div>
   }
 

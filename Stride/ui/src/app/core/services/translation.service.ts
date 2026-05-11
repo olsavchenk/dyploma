@@ -9,11 +9,12 @@ export type SupportedLanguage = 'uk' | 'en';
 
 /**
  * Translation service for managing application localization
- * 
+ *
  * Features:
  * - Language switching with localStorage persistence
  * - Default Ukrainian language
  * - Signal-based reactive language state
+ * - Side-effect: keeps `document.documentElement.lang` in sync
  */
 @Injectable({
   providedIn: 'root',
@@ -34,16 +35,18 @@ export class TranslationService {
   readonly availableLanguages: SupportedLanguage[] = ['uk', 'en'];
 
   /**
-   * Initialize the translation service
-   * Sets up default language and loads saved preference
+   * Initialize the translation service.
+   * Order: ngx-translate v17+ requires both fallback registration and `use(...)`.
+   *  1. Register Ukrainian as the fallback so missing keys gracefully fall back.
+   *  2. Resolve initial language: localStorage > navigator.language > 'uk'.
+   *  3. Activate it (also writes to localStorage and updates <html lang>).
    */
   initialize(): void {
-    // Set default language
-    this.translateService.setDefaultLang('uk');
+    // ngx-translate v17 renamed setDefaultLang -> setFallbackLang
+    this.translateService.setFallbackLang('uk');
 
-    // Load saved language or use default
-    const savedLanguage = this.loadLanguageFromStorage();
-    this.setLanguage(savedLanguage);
+    const initial = this.resolveInitialLanguage();
+    this.setLanguage(initial);
   }
 
   /**
@@ -52,13 +55,18 @@ export class TranslationService {
    */
   setLanguage(language: SupportedLanguage): void {
     if (!this.availableLanguages.includes(language)) {
-      this.logger.warn('TranslationService', 'Unsupported language, falling back to uk', { requestedLanguage: language });
+      this.logger.warn(
+        'TranslationService',
+        'Unsupported language, falling back to uk',
+        { requestedLanguage: language },
+      );
       language = 'uk';
     }
 
     this.translateService.use(language);
     this.currentLanguage.set(language);
     this.saveLanguageToStorage(language);
+    this.applyDocumentLang(language);
   }
 
   /**
@@ -72,10 +80,30 @@ export class TranslationService {
   }
 
   /**
-   * Load language preference from localStorage
-   * @returns Saved language or default 'uk'
+   * Resolve initial language from storage, then browser preference, then default.
    */
-  private loadLanguageFromStorage(): SupportedLanguage {
+  private resolveInitialLanguage(): SupportedLanguage {
+    const stored = this.loadLanguageFromStorage();
+    if (stored) return stored;
+
+    try {
+      const nav = (typeof navigator !== 'undefined' ? navigator.language : '') ?? '';
+      const short = nav.toLowerCase().split('-')[0];
+      if (this.availableLanguages.includes(short as SupportedLanguage)) {
+        return short as SupportedLanguage;
+      }
+    } catch {
+      // ignore — fall through to default
+    }
+
+    return 'uk';
+  }
+
+  /**
+   * Load language preference from localStorage
+   * @returns Saved language or null if none/invalid
+   */
+  private loadLanguageFromStorage(): SupportedLanguage | null {
     try {
       const saved = localStorage.getItem(this.storageKey);
       if (saved && this.availableLanguages.includes(saved as SupportedLanguage)) {
@@ -84,7 +112,7 @@ export class TranslationService {
     } catch (error) {
       this.logger.error('TranslationService', 'Failed to load language from storage', {}, error);
     }
-    return 'uk';
+    return null;
   }
 
   /**
@@ -96,6 +124,20 @@ export class TranslationService {
       localStorage.setItem(this.storageKey, language);
     } catch (error) {
       this.logger.error('TranslationService', 'Failed to save language to storage', { language }, error);
+    }
+  }
+
+  /**
+   * Keep <html lang="..."> in sync with the active language so screen readers,
+   * spell-checkers and the :lang() CSS selector behave correctly.
+   */
+  private applyDocumentLang(language: SupportedLanguage): void {
+    try {
+      if (typeof document !== 'undefined' && document.documentElement) {
+        document.documentElement.lang = language;
+      }
+    } catch (error) {
+      this.logger.error('TranslationService', 'Failed to set document.documentElement.lang', { language }, error);
     }
   }
 }

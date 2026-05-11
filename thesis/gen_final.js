@@ -4,7 +4,7 @@
 const {
   Document, Packer, Paragraph, TextRun,
   AlignmentType, PageBreak, LineRuleType,
-  Footer, PageNumber
+  Header, Footer, PageNumber
 } = require('docx');
 const fs = require('fs');
 
@@ -42,56 +42,59 @@ function emptyPara() {
 }
 
 // ===== Load part children =====
-const part1 = require('./gen_part1.js').children;
+const part1Module = require('./gen_part1.js');
+const part1Pre = part1Module.children.slice(0, part1Module.tocInsertIndex);
+const part1Post = part1Module.children.slice(part1Module.tocInsertIndex);
 const part2 = require('./gen_part2.js').children;
 const part3 = require('./gen_part3.js').children;
 const part4 = require('./gen_part4.js').children;
 const part5 = require('./gen_part5.js').children;
 
-console.log(`Loaded children: p1=${part1.length}, p2=${part2.length}, p3=${part3.length}, p4=${part4.length}, p5=${part5.length}`);
+console.log(`Loaded children: p1Pre=${part1Pre.length}, p1Post=${part1Post.length}, p2=${part2.length}, p3=${part3.length}, p4=${part4.length}, p5=${part5.length}`);
 
 // ===== Build TOC block =====
 const toc = [];
-toc.push(new Paragraph({ children: [new PageBreak()], spacing: { ...LINE } }));
 toc.push(tocHeading());
 toc.push(emptyPara());
-toc.push(tocLine("АНОТАЦІЯ", "3"));
-toc.push(tocLine("ANNOTATION", "4"));
-toc.push(tocLine("ВСТУП", "5"));
-toc.push(tocLine("РОЗДІЛ 1. АНАЛІЗ ПРЕДМЕТНОЇ ОБЛАСТІ", "7"));
-toc.push(tocLine("    1.1 Огляд ринку EdTech-платформ", "7"));
-toc.push(tocLine("    1.2 Концепція адаптивного навчання", "9"));
-toc.push(tocLine("    1.3 Гейміфікація в освіті", "10"));
-toc.push(tocLine("    1.4 Застосування LLM для генерації контенту", "11"));
-toc.push(tocLine("    1.5 Функціональні вимоги до платформи Stride", "12"));
-toc.push(tocLine("    1.6 Нефункціональні вимоги", "13"));
-toc.push(tocLine("    Висновки до розділу 1", "14"));
-toc.push(tocLine("РОЗДІЛ 2. ПРОЄКТУВАННЯ СИСТЕМИ", "15"));
-toc.push(tocLine("    2.1 Загальна архітектура платформи", "15"));
-toc.push(tocLine("    2.2 Модель даних", "16"));
-toc.push(tocLine("    2.3 Алгоритм адаптивного навчання", "18"));
-toc.push(tocLine("    2.4 Пайплайн генерації завдань через ШІ", "19"));
-toc.push(tocLine("    2.5 Система гейміфікації", "20"));
-toc.push(tocLine("    2.6 Архітектура Angular-фронтенду", "21"));
-toc.push(tocLine("    2.7 Безпека та автентифікація", "22"));
-toc.push(tocLine("    Висновки до розділу 2", "22"));
-toc.push(tocLine("РОЗДІЛ 3. РЕАЛІЗАЦІЯ ТА ТЕСТУВАННЯ", "23"));
-toc.push(tocLine("    3.1 Опис інтерфейсу платформи", "23"));
-toc.push(tocLine("    3.2 Інсталяція та налаштування", "25"));
-toc.push(tocLine("    3.3 Керівництво користувача", "26"));
-toc.push(tocLine("    3.4 Тестовий приклад", "27"));
-toc.push(tocLine("    3.5 Аналіз результатів", "28"));
-toc.push(tocLine("    Висновки до розділу 3", "29"));
-toc.push(tocLine("ЗАГАЛЬНІ ВИСНОВКИ", "30"));
-toc.push(tocLine("СПИСОК ВИКОРИСТАНИХ ДЖЕРЕЛ", "32"));
-toc.push(tocLine("ДОДАТКИ", "36"));
+toc.push(tocLine("АНОТАЦІЯ", "2"));
+toc.push(tocLine("ANNOTATION", "3"));
+toc.push(tocLine("ПЕРЕЛІК УМОВНИХ ПОЗНАЧЕНЬ", "5"));
+toc.push(tocLine("ВСТУП", "6"));
+toc.push(tocLine("РОЗДІЛ 1  АНАЛІЗ ПРЕДМЕТНОЇ ОБЛАСТІ", "8"));
+toc.push(tocLine("    1.1 Огляд ринку EdTech-платформ", "8"));
+toc.push(tocLine("    1.2 Концепція адаптивного навчання", "10"));
+toc.push(tocLine("    1.3 Гейміфікація в освіті", "11"));
+toc.push(tocLine("    1.4 Застосування LLM для генерації контенту", "12"));
+toc.push(tocLine("    1.5 Функціональні вимоги до платформи Stride", "13"));
+toc.push(tocLine("    1.6 Нефункціональні вимоги", "14"));
+toc.push(tocLine("    Висновки до розділу 1", "15"));
+toc.push(tocLine("РОЗДІЛ 2  ПРОЄКТУВАННЯ СИСТЕМИ", "16"));
+toc.push(tocLine("    2.1 Загальна архітектура платформи", "16"));
+toc.push(tocLine("    2.2 Модель даних", "17"));
+toc.push(tocLine("    2.3 Алгоритм адаптивного навчання", "19"));
+toc.push(tocLine("    2.4 Пайплайн генерації завдань через ШІ", "20"));
+toc.push(tocLine("    2.5 Система гейміфікації", "21"));
+toc.push(tocLine("    2.6 Архітектура Angular-фронтенду", "22"));
+toc.push(tocLine("    2.7 Безпека та автентифікація", "23"));
+toc.push(tocLine("    Висновки до розділу 2", "23"));
+toc.push(tocLine("РОЗДІЛ 3  РЕАЛІЗАЦІЯ ТА ТЕСТУВАННЯ", "24"));
+toc.push(tocLine("    3.1 Опис інтерфейсу платформи", "24"));
+toc.push(tocLine("    3.2 Інсталяція та налаштування", "26"));
+toc.push(tocLine("    3.3 Керівництво користувача", "27"));
+toc.push(tocLine("    3.4 Тестовий приклад", "28"));
+toc.push(tocLine("    3.5 Аналіз результатів", "29"));
+toc.push(tocLine("    Висновки до розділу 3", "30"));
+toc.push(tocLine("ЗАГАЛЬНІ ВИСНОВКИ", "31"));
+toc.push(tocLine("СПИСОК ВИКОРИСТАНИХ ДЖЕРЕЛ", "33"));
+toc.push(tocLine("ДОДАТКИ", "37"));
+toc.push(new Paragraph({ children: [new PageBreak()], spacing: { ...LINE } }));
 
 // ===== Merge all children =====
-// Order: Part 1 (title + annotation + intro) → TOC → Parts 2-5
-// Note: Part 1 contains the title page already. TOC is inserted before Chapter 1.
+// Order per ДСТУ 3008:2015: Title + Annotations → ЗМІСТ → Перелік → Вступ → Chapters → Conclusions + References + Appendices
 const children = [
-  ...part1,
+  ...part1Pre,
   ...toc,
+  ...part1Post,
   ...part2,
   ...part3,
   ...part4,
@@ -118,14 +121,19 @@ const doc = new Document({
       page: {
         size: { width: PAGE_W, height: PAGE_H },
         margin: { top: MARGIN_TOP, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT, right: MARGIN_RIGHT }
-      }
+      },
+      titlePage: true
     },
-    footers: {
-      default: new Footer({
+    headers: {
+      default: new Header({
         children: [new Paragraph({
-          alignment: AlignmentType.CENTER,
-          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: SIZE_SM })]
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 0 },
+          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: SIZE })]
         })]
+      }),
+      first: new Header({
+        children: [new Paragraph({ children: [] })]
       })
     },
     children

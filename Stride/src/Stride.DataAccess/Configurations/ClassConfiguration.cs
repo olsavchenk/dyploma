@@ -20,6 +20,16 @@ public class ClassConfiguration : IEntityTypeConfiguration<Class>
             .IsRequired()
             .HasMaxLength(6);
 
+        builder.Property(c => c.Subject)
+            .HasMaxLength(100);
+
+        builder.Property(c => c.Description)
+            .HasMaxLength(1000);
+
+        builder.Property(c => c.IsArchived)
+            .IsRequired()
+            .HasDefaultValue(false);
+
         builder.Property(c => c.CreatedAt)
             .IsRequired();
 

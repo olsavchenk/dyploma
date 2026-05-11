@@ -111,6 +111,65 @@ public class TaskReviewService : ITaskReviewService
         _logger.LogInformation("Template {TemplateId} rejected by {ReviewedBy}", templateId, reviewedBy);
     }
 
+    public async Task<TaskTemplateDetailDto> UpdateAsync(
+        string templateId,
+        UpdateTaskTemplateRequest request,
+        Guid reviewedBy,
+        CancellationToken cancellationToken = default)
+    {
+        var template = await _mongoDbContext.TaskTemplates
+            .Find(t => t.Id == templateId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (template == null)
+            throw new InvalidOperationException($"Template {templateId} not found");
+
+        // Patch the embedded BSON content in place so unrelated fields
+        // (options, hints, task_type) survive the edit.
+        var content = template.TemplateContent ?? new BsonDocument();
+
+        if (!string.IsNullOrWhiteSpace(request.Question))
+            content["question"] = request.Question;
+
+        if (!string.IsNullOrWhiteSpace(request.Answer))
+            content["answer"] = request.Answer;
+
+        if (request.Explanation != null)
+            content["explanation"] = request.Explanation;
+
+        if (!string.IsNullOrWhiteSpace(request.TaskType))
+            content["task_type"] = request.TaskType;
+
+        var updateBuilder = Builders<Core.Documents.TaskTemplateDocument>.Update
+            .Set(t => t.TemplateContent, content)
+            .Set(t => t.ReviewedBy, reviewedBy)
+            .Set(t => t.UpdatedAt, DateTime.UtcNow);
+
+        if (!string.IsNullOrWhiteSpace(request.TaskType))
+            updateBuilder = updateBuilder.Set(t => t.TaskType, request.TaskType);
+
+        if (request.DifficultyBand.HasValue)
+        {
+            var clamped = Math.Clamp(request.DifficultyBand.Value, 1, 10);
+            updateBuilder = updateBuilder.Set(t => t.DifficultyBand, clamped);
+        }
+
+        var result = await _mongoDbContext.TaskTemplates
+            .UpdateOneAsync(t => t.Id == templateId, updateBuilder, cancellationToken: cancellationToken);
+
+        if (result.MatchedCount == 0)
+            throw new InvalidOperationException($"Template {templateId} not found");
+
+        _logger.LogInformation(
+            "Template {TemplateId} updated by {ReviewedBy}", templateId, reviewedBy);
+
+        var refreshed = await _mongoDbContext.TaskTemplates
+            .Find(t => t.Id == templateId)
+            .FirstAsync(cancellationToken);
+
+        return MapToDetailDto(refreshed);
+    }
+
     public async Task BulkActionAsync(
         List<string> templateIds,
         string action,

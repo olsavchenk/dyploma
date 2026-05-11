@@ -35,6 +35,17 @@ export class SignalRService {
   private baseReconnectDelayMs = 1000;
   private destroy$ = new Subject<void>();
 
+  constructor() {
+    // Auto-connect at app load if a token is already present (page reload with
+    // a stored JWT). The fresh-login path is still triggered by AuthService.
+    if (this.authService.getToken()) {
+      // Defer one tick to let AuthService finish hydration.
+      queueMicrotask(() => {
+        this.connect().catch(() => { /* logged inside connect() */ });
+      });
+    }
+  }
+
   // Connection state signal
   private readonly connectionStateSignal = signal<ConnectionState>(ConnectionState.Disconnected);
   readonly connectionState = this.connectionStateSignal.asReadonly();
@@ -156,15 +167,21 @@ export class SignalRService {
     this.disconnect();
   }
 
-  private buildConnection(token: string, hubPath: string): HubConnection {
+  private buildConnection(_token: string, hubPath: string): HubConnection {
     const hubUrl = environment.apiUrl.replace('/api/v1', hubPath);
     return new HubConnectionBuilder()
       .withUrl(hubUrl, {
+        // Always re-fetch the latest token from AuthService (not the one passed
+        // in at build time). If a refresh-token cycle issued a new JWT, the next
+        // reconnect attempt will use it without rebuilding the connection.
         accessTokenFactory: () => this.authService.getToken() || '',
       })
       .withAutomaticReconnect({
         nextRetryDelayInMilliseconds: (ctx) => {
-          const delay = Math.min(this.baseReconnectDelayMs * Math.pow(2, ctx.previousRetryCount), 30000);
+          const delay = Math.min(
+            this.baseReconnectDelayMs * Math.pow(2, ctx.previousRetryCount),
+            30000
+          );
           return delay + Math.random() * 1000;
         },
       })

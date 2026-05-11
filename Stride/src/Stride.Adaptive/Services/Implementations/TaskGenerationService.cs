@@ -18,8 +18,10 @@ public class TaskGenerationService : ITaskGenerationService
     private static readonly string[] TaskTypes =
         ["multiple_choice", "fill_blank", "true_false", "matching", "ordering"];
 
-    private const int BatchSize = 30;
-    private const int Multiplier = 3;
+    // Tasks are batched per AI call to keep prompt cost reasonable while
+    // still respecting Gemini token budgets. Each work item asks for at most
+    // this many tasks; if the requested count is smaller we shrink the batch.
+    private const int MaxTasksPerBatch = 10;
 
     public TaskGenerationService(
         StrideDbContext dbContext,
@@ -42,21 +44,37 @@ public class TaskGenerationService : ITaskGenerationService
         int gradeLevel,
         CancellationToken cancellationToken = default)
     {
-        var totalTasks = taskCount * Multiplier;
+        // The teacher asks for exactly N tasks. Generate exactly N — no
+        // "over-provision multiplier", no batch padding. Anything else
+        // confuses the progress UI ("0 / 150 завдань згенеровано").
+        var requestedCount = Math.Max(1, taskCount);
         var jobId = Guid.NewGuid();
 
         // Calculate difficulty bands from min/max
         var minBand = Math.Max(1, (int)Math.Ceiling(minDifficulty / 10.0));
         var maxBand = Math.Min(10, (int)Math.Ceiling(maxDifficulty / 10.0));
+        if (maxBand < minBand) maxBand = minBand;
         var bands = Enumerable.Range(minBand, maxBand - minBand + 1).ToList();
 
-        // Distribute tasks across types and bands
-        var workItems = DistributeTasksAcrossTypesAndBands(
-            totalTasks, bands, jobId, assignmentId, topicId,
+        // Distribute tasks across types and bands while honouring the exact
+        // requested count.
+        var workItems = DistributeTasks(
+            requestedCount, bands, jobId, assignmentId, topicId,
             topicName, subjectName, gradeLevel);
 
-        // Use the actual enqueued count so job completion tracking is accurate
+        // Defensive: total of work-item counts MUST equal requestedCount.
         var actualTotal = workItems.Sum(w => w.Count);
+        if (actualTotal != requestedCount)
+        {
+            _logger.LogWarning(
+                "Work item distribution drift: requested {Requested}, distributed {Actual}. Adjusting last item.",
+                requestedCount, actualTotal);
+            if (workItems.Count > 0)
+            {
+                workItems[^1].Count += requestedCount - actualTotal;
+                actualTotal = requestedCount;
+            }
+        }
 
         var job = new TaskGenerationJob
         {
@@ -79,8 +97,9 @@ public class TaskGenerationService : ITaskGenerationService
         }
 
         _logger.LogInformation(
-            "Task generation started - JobId: {JobId}, AssignmentId: {AssignmentId}, Bands: {Bands}, TotalTasks: {Total}, WorkItems: {WorkItemCount}",
-            jobId, assignmentId, string.Join(",", bands), actualTotal, workItems.Count);
+            "Task generation queued — JobId: {JobId}, AssignmentId: {AssignmentId}, RequestedCount: {Requested}, Bands: [{Bands}], WorkItems: {WorkItemCount} (counts: [{Counts}])",
+            jobId, assignmentId, requestedCount, string.Join(",", bands),
+            workItems.Count, string.Join(",", workItems.Select(w => $"{w.TaskType}/b{w.DifficultyBand}={w.Count}")));
 
         return jobId;
     }
@@ -111,7 +130,13 @@ public class TaskGenerationService : ITaskGenerationService
         };
     }
 
-    private List<TaskGenerationWorkItem> DistributeTasksAcrossTypesAndBands(
+    /// <summary>
+    /// Distribute exactly <paramref name="totalTasks"/> across the available
+    /// difficulty bands and task types using round-robin assignment, then
+    /// chunk each (type, band) bucket into batches of at most
+    /// <see cref="MaxTasksPerBatch"/>.
+    /// </summary>
+    private List<TaskGenerationWorkItem> DistributeTasks(
         int totalTasks,
         List<int> bands,
         Guid jobId,
@@ -121,49 +146,43 @@ public class TaskGenerationService : ITaskGenerationService
         string subjectName,
         int gradeLevel)
     {
-        // Sample ceil(bands/2) representative bands evenly across the difficulty range.
-        // Each selected band gets exactly one API call of BatchSize tasks, which:
-        //  - minimises total Gemini API calls (e.g. 10 bands → 5 calls)
-        //  - maximises tasks per call (full BatchSize) to reduce per-task cost
-        //  - still covers the full difficulty spectrum through even sampling
-        var targetCallCount = Math.Max(1, (int)Math.Ceiling(bands.Count / 2.0));
-        var selectedBands = SampleEvenly(bands, targetCallCount);
-
-        var workItems = new List<TaskGenerationWorkItem>(selectedBands.Count);
-        for (var i = 0; i < selectedBands.Count; i++)
+        // Bucket counts keyed by (taskType, band). Round-robin over both
+        // axes so the resulting set covers the spectrum evenly without
+        // producing a separate API call per task.
+        var buckets = new Dictionary<(string Type, int Band), int>();
+        for (var i = 0; i < totalTasks; i++)
         {
-            workItems.Add(new TaskGenerationWorkItem
+            var type = TaskTypes[i % TaskTypes.Length];
+            var band = bands[i % bands.Count];
+            var key = (type, band);
+            buckets[key] = buckets.GetValueOrDefault(key) + 1;
+        }
+
+        var workItems = new List<TaskGenerationWorkItem>(buckets.Count);
+        foreach (var ((type, band), count) in buckets)
+        {
+            // Chunk large buckets so a single AI call never has to produce
+            // more than MaxTasksPerBatch tasks.
+            var remaining = count;
+            while (remaining > 0)
             {
-                JobId = jobId,
-                AssignmentId = assignmentId,
-                TopicId = topicId,
-                TopicName = topicName,
-                SubjectName = subjectName,
-                GradeLevel = gradeLevel,
-                TaskType = TaskTypes[i % TaskTypes.Length],
-                DifficultyBand = selectedBands[i],
-                Count = BatchSize
-            });
+                var chunk = Math.Min(MaxTasksPerBatch, remaining);
+                workItems.Add(new TaskGenerationWorkItem
+                {
+                    JobId = jobId,
+                    AssignmentId = assignmentId,
+                    TopicId = topicId,
+                    TopicName = topicName,
+                    SubjectName = subjectName,
+                    GradeLevel = gradeLevel,
+                    TaskType = type,
+                    DifficultyBand = band,
+                    Count = chunk
+                });
+                remaining -= chunk;
+            }
         }
 
         return workItems;
-    }
-
-    /// <summary>Returns <paramref name="count"/> evenly-spaced elements sampled from <paramref name="source"/>.</summary>
-    private static List<int> SampleEvenly(List<int> source, int count)
-    {
-        if (source.Count <= count)
-            return [..source];
-
-        if (count == 1)
-            return [source[source.Count / 2]];
-
-        var result = new List<int>(count);
-        for (var i = 0; i < count; i++)
-        {
-            var index = (int)Math.Round((double)i * (source.Count - 1) / (count - 1));
-            result.Add(source[index]);
-        }
-        return result;
     }
 }

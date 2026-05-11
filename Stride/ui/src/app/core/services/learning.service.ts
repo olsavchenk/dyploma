@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, filter, shareReplay, switchMap, take } from 'rxjs';
 import { environment } from '@environments/environment';
 import {
   Subject,
@@ -10,18 +10,31 @@ import {
   LearningPathStep,
   StudentClass,
 } from '../models';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class LearningService {
   private readonly http = inject(HttpClient);
+  private readonly authService = inject(AuthService);
+
+  // Per-key shareReplay caches (deduplicate parallel calls within a route load).
+  // Cleared via clearCaches() on logout.
+  private myClasses$: Observable<StudentClass[]> | null = null;
+  private subjects$: Observable<Subject[]> | null = null;
+  private continueLearning$ = new Map<number, Observable<ContinueLearningTopic[]>>();
 
   /**
    * Get classes the current student is enrolled in, with subjects derived from assignments
    */
   getMyClasses(): Observable<StudentClass[]> {
-    return this.http.get<StudentClass[]>(`${environment.apiUrl}/classes/my`);
+    if (!this.myClasses$) {
+      this.myClasses$ = this.http
+        .get<StudentClass[]>(`${environment.apiUrl}/classes/my`)
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    }
+    return this.myClasses$;
   }
 
   /**
@@ -38,7 +51,12 @@ export class LearningService {
    * Get all subjects with progress
    */
   getSubjects(): Observable<Subject[]> {
-    return this.http.get<Subject[]>(`${environment.apiUrl}/subjects`);
+    if (!this.subjects$) {
+      this.subjects$ = this.http
+        .get<Subject[]>(`${environment.apiUrl}/subjects`)
+        .pipe(shareReplay({ bufferSize: 1, refCount: true }));
+    }
+    return this.subjects$;
   }
 
   /**
@@ -65,14 +83,30 @@ export class LearningService {
   }
 
   /**
-   * Get topics for "Continue Learning" section
+   * Get topics for "Continue Learning" section.
+   *
+   * Gated on auth token readiness to avoid 401 races during app boot.
+   * Cached per `limit` value via shareReplay so multiple dashboard widgets
+   * subscribing in parallel only trigger one HTTP call.
    */
   getContinueLearningTopics(limit: number = 3): Observable<ContinueLearningTopic[]> {
+    const cached = this.continueLearning$.get(limit);
+    if (cached) return cached;
+
     const params = new HttpParams().set('limit', limit.toString());
-    return this.http.get<ContinueLearningTopic[]>(
-      `${environment.apiUrl}/learning/continue`,
-      { params }
+    const req$ = this.authService.tokenReady$.pipe(
+      filter((ready) => ready),
+      take(1),
+      switchMap(() =>
+        this.http.get<ContinueLearningTopic[]>(
+          `${environment.apiUrl}/learning/continue`,
+          { params }
+        )
+      ),
+      shareReplay({ bufferSize: 1, refCount: true })
     );
+    this.continueLearning$.set(limit, req$);
+    return req$;
   }
 
   /**
@@ -106,5 +140,12 @@ export class LearningService {
       path: LearningPath;
       steps: LearningPathStep[];
     }>(`${environment.apiUrl}/learning-paths/${id}`);
+  }
+
+  /** Clear caches (call on logout / when invalidating shared data). */
+  clearCaches(): void {
+    this.myClasses$ = null;
+    this.subjects$ = null;
+    this.continueLearning$.clear();
   }
 }

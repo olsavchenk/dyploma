@@ -1,22 +1,39 @@
 import { CanActivateFn, Router } from '@angular/router';
 import { inject } from '@angular/core';
+import { catchError, map, of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 /**
- * Auth guard to protect routes that require authentication
- * Redirects to login page if user is not authenticated or token is expired
+ * Auth guard to protect routes that require authentication.
+ * Redirects to login page (with returnUrl) if user is not authenticated.
+ *
+ * H-5: After moving the access token to in-memory only, a hard refresh leaves
+ * `getToken()` null until the cold-start refresh resolves. If we have a cached
+ * user we attempt /auth/refresh inline so deep links survive page reload.
  */
 export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  // Check directly from the service method to ensure we get the current token
   const token = authService.getToken();
   if (token && !isTokenExpired(token)) {
     return true;
   }
 
-  // Redirect to login with return URL
+  // Token missing/expired but we still have a cached user => try silent refresh.
+  if (authService.getUser()) {
+    return authService.refreshToken().pipe(
+      map(() => true),
+      catchError(() =>
+        of(
+          router.createUrlTree(['/auth/login'], {
+            queryParams: { returnUrl: state.url },
+          }),
+        ),
+      ),
+    );
+  }
+
   return router.createUrlTree(['/auth/login'], {
     queryParams: { returnUrl: state.url },
   });

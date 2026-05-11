@@ -3,18 +3,22 @@ import {
   DestroyRef,
   effect,
   inject,
+  OnDestroy,
   OnInit,
   signal,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 
 import {
-  LeaderboardService,
   AuthService,
   GamificationService,
   LeaderboardEntry,
+  LeaderboardPeriod,
+  LeaderboardScope,
+  LeaderboardService,
   League,
 } from '@app/core';
 import { SignalRService } from '@app/core/services/signalr.service';
@@ -29,13 +33,14 @@ type FilterMode = 'weekly' | 'allTime' | 'class';
   standalone: true,
   imports: [
     CommonModule,
+    TranslateModule,
     LeaderboardRowComponent,
     LeagueMedallionComponent,
   ],
   templateUrl: './leaderboard.component.html',
   styleUrl: './leaderboard.component.scss',
 })
-export class LeaderboardComponent implements OnInit {
+export class LeaderboardComponent implements OnInit, OnDestroy {
   private readonly leaderboardService  = inject(LeaderboardService);
   private readonly authService         = inject(AuthService);
   private readonly gamificationService = inject(GamificationService);
@@ -90,29 +95,46 @@ export class LeaderboardComponent implements OnInit {
   ngOnInit(): void {
     this.previousFilter = this.activeFilter();
 
+    // Connect to leaderboard SignalR hub on init (separate from the
+    // notifications hub which is connected at login time).
+    this.signalRService.connectLeaderboard().then(() => {
+      this.signalRService.joinLeague(this.activeFilter());
+    });
+
     this.gamificationService.getStats().subscribe({
       next: (stats) => {
         this.userLeague.set(stats.league);
         this.loadLeaderboard();
       },
       error: () => this.loadLeaderboard(),
+      complete: () => {
+        // For non-students gamificationService.getStats() returns EMPTY,
+        // which fires `complete` without `next`. Still load the leaderboard.
+        if (this.entries().length === 0 && !this.loading()) {
+          this.loadLeaderboard();
+        }
+      },
     });
 
     // Real-time: leaderboard updated
     this.signalRService.onLeaderboardUpdated
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        this.loadLeaderboard();
-        this.signalRService.joinLeague(this.activeFilter());
+        this.loadLeaderboard(/*forceRefresh*/ true);
       });
 
     // Real-time: rank changed
     this.signalRService.onRankChanged
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe(() => {
-        this.loadLeaderboard();
-        this.signalRService.joinLeague(this.activeFilter());
+        this.loadLeaderboard(/*forceRefresh*/ true);
       });
+  }
+
+  ngOnDestroy(): void {
+    // Leave the active league group; do NOT disconnect the shared
+    // notification hub — it stays alive for the whole session.
+    this.signalRService.leaveLeague(this.activeFilter());
   }
 
   protected setFilter(filter: FilterMode): void {
@@ -120,23 +142,34 @@ export class LeaderboardComponent implements OnInit {
     this.activeFilter.set(filter);
   }
 
-  protected loadLeaderboard(): void {
+  protected loadLeaderboard(forceRefresh = false): void {
     this.loading.set(true);
     this.error.set(null);
 
-    // Map filter to league for the existing API (allTime/class fall back to current user league)
     const league = this.resolveLeague();
+    const period = this.resolvePeriod();
+    const scope  = this.resolveScope();
 
-    this.leaderboardService
-      .getLeaderboard(league)
+    const query = { league, period, scope };
+    const stream$ = forceRefresh
+      ? this.leaderboardService.refreshLeaderboard(query)
+      : this.leaderboardService.getLeaderboard(query);
+
+    stream$
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (data) => {
-          this.entries.set(data.entries);
-          const me = data.entries.find((e) => e.isCurrentUser) ?? null;
+          const list = data?.entries ?? [];
+          this.entries.set(list);
+          const me =
+            data?.currentUserEntry ??
+            list.find((e) => e?.isCurrentUser) ??
+            null;
           this.currentUserEntry.set(me);
         },
         error: (err) => {
+          this.entries.set([]);
+          this.currentUserEntry.set(null);
           this.logger.error(
             'LeaderboardComponent',
             'Failed to load leaderboard',
@@ -154,7 +187,7 @@ export class LeaderboardComponent implements OnInit {
 
   protected currentTier(): string {
     const entry = this.currentUserEntry();
-    return (entry as any)?.tier ?? 'Bronze';
+    return (entry?.tier ?? entry?.league ?? this.userLeague() ?? 'Bronze') as string;
   }
 
   protected currentRank(): number {
@@ -166,10 +199,22 @@ export class LeaderboardComponent implements OnInit {
   }
 
   protected currentRankChange(): number {
-    return (this.currentUserEntry() as any)?.rankChange ?? 0;
+    return this.currentUserEntry()?.rankChange ?? 0;
   }
 
   private resolveLeague(): League {
     return this.userLeague();
+  }
+
+  private resolvePeriod(): LeaderboardPeriod {
+    switch (this.activeFilter()) {
+      case 'weekly':  return 'week';
+      case 'allTime': return 'all';
+      case 'class':   return 'all';
+    }
+  }
+
+  private resolveScope(): LeaderboardScope {
+    return this.activeFilter() === 'class' ? 'class' : 'global';
   }
 }

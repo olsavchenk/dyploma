@@ -21,7 +21,7 @@ import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { loggingInterceptor } from './core/interceptors/logging.interceptor';
 import { GlobalErrorHandler } from './core/handlers/global-error.handler';
-// import { PwaUpdateService } from './core/services/pwa-update.service';
+import { PwaUpdateService } from './core/services/pwa-update.service';
 import { TranslationService } from './core/services/translation.service';
 import { NotificationService } from './core/services/notification.service';
 
@@ -55,6 +55,15 @@ function initializeNotifications() {
   return () => notificationService.initialize();
 }
 
+/**
+ * Initialize PWA update listener (M-14)
+ * Subscribes to SwUpdate.versionUpdates and shows a refresh snackbar.
+ */
+function initializePwaUpdates() {
+  const pwaUpdateService = inject(PwaUpdateService);
+  return () => pwaUpdateService.initialize();
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -69,7 +78,7 @@ export const appConfig: ApplicationConfig = {
     }),
     importProvidersFrom(
       TranslateModule.forRoot({
-        defaultLanguage: 'uk',
+        fallbackLang: 'uk',
       })
     ),
     ...provideTranslateHttpLoader({ prefix: './assets/i18n/', suffix: '.json' }),
@@ -86,6 +95,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initializeNotifications,
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializePwaUpdates,
       multi: true,
     },
   ],

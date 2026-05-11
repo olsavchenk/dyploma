@@ -1,7 +1,7 @@
 import { Injectable, inject, signal, computed, effect, Injector } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
-import { Observable, tap, catchError, throwError, of } from 'rxjs';
+import { BehaviorSubject, Observable, tap, catchError, throwError, of } from 'rxjs';
 import { environment } from '@environments/environment';
 import {
   LoginRequest,
@@ -18,8 +18,11 @@ import {
 } from '../models/auth-response.models';
 import { LoggingService } from './logging.service';
 
-const TOKEN_KEY = 'stride_access_token';
+// H-5: The access token lives in MEMORY ONLY (no localStorage). The non-sensitive
+// user profile is cached so the layout can render before /auth/refresh resolves on
+// cold start. Refresh token is delivered via HttpOnly cookie set by the API.
 const USER_KEY = 'stride_user';
+const LEGACY_TOKEN_KEY = 'stride_access_token';
 
 @Injectable({
   providedIn: 'root',
@@ -30,8 +33,8 @@ export class AuthService {
   private readonly injector = inject(Injector);
   private readonly logger = inject(LoggingService);
 
-  // Signals for reactive state management
-  private readonly tokenSignal = signal<string | null>(this.getStoredToken());
+  // Signals for reactive state management. Token is in-memory only.
+  private readonly tokenSignal = signal<string | null>(null);
   private readonly userSignal = signal<UserInfo | null>(this.getStoredUser());
   private readonly loadingSignal = signal<boolean>(false);
 
@@ -45,18 +48,33 @@ export class AuthService {
   readonly isTeacher = computed(() => this.userRole() === 'Teacher');
   readonly isAdmin = computed(() => this.userRole() === 'Admin');
 
+  /**
+   * Emits true once an access token has been hydrated via cold-start refresh
+   * or set via login. Other services should gate authenticated HTTP calls on
+   * this to avoid 401/403 races during app boot.
+   */
+  private readonly tokenReadySubject = new BehaviorSubject<boolean>(false);
+  readonly tokenReady$ = this.tokenReadySubject.asObservable();
+
   constructor() {
-    // Effect to sync token changes with localStorage
+    // H-5: scrub legacy token from localStorage left by older builds.
+    if (typeof window !== 'undefined' && window.localStorage) {
+      try {
+        localStorage.removeItem(LEGACY_TOKEN_KEY);
+      } catch {
+        /* ignore quota / privacy errors */
+      }
+    }
+
+    // Effect to keep tokenReady$ in sync with the in-memory token.
     effect(() => {
-      const token = this.tokenSignal();
-      if (token) {
-        localStorage.setItem(TOKEN_KEY, token);
-      } else {
-        localStorage.removeItem(TOKEN_KEY);
+      const ready = !!this.tokenSignal();
+      if (this.tokenReadySubject.value !== ready) {
+        this.tokenReadySubject.next(ready);
       }
     });
 
-    // Effect to sync user changes with localStorage
+    // Effect to sync the (non-sensitive) user profile with localStorage.
     effect(() => {
       const user = this.userSignal();
       if (user) {
@@ -70,6 +88,17 @@ export class AuthService {
     effect(() => {
       this.logger.setCurrentUser(this.userSignal()?.id ?? null);
     });
+
+    // H-5: cold-start session restore. If we previously had a user cached,
+    // try refresh-from-cookie immediately so navigation works without re-login.
+    if (this.userSignal() && typeof window !== 'undefined') {
+      this.refreshToken().subscribe({
+        error: () => {
+          // Cookie missing/expired — drop the cached user.
+          this.userSignal.set(null);
+        },
+      });
+    }
   }
 
   /**
@@ -165,7 +194,8 @@ export class AuthService {
   }
 
   /**
-   * Refresh access token
+   * Refresh access token using the HttpOnly refresh cookie. Used both as the
+   * 401 retry path and on app cold-start to restore session without re-login.
    */
   refreshToken(): Observable<RefreshTokenResponse> {
     return this.http
@@ -176,7 +206,10 @@ export class AuthService {
       )
       .pipe(
         tap((response) => {
-          this.tokenSignal.set(response.token);
+          this.tokenSignal.set(response.accessToken);
+          if (response.user) {
+            this.userSignal.set(response.user);
+          }
         }),
         catchError((error) => {
           // Clear auth data synchronously - don't rely on logout Observable
@@ -236,11 +269,19 @@ export class AuthService {
     return currentRole !== null && roles.includes(currentRole);
   }
 
+  /**
+   * M-9: Drop in-memory token + cached user without round-tripping /auth/logout.
+   * Called by interceptors on 401/403 dead-ends and during cold-start refresh failures.
+   */
+  clearTokens(): void {
+    this.clearAuthData();
+  }
+
   private handleAuthSuccess(response: AuthResponse): void {
-    this.tokenSignal.set(response.token);
+    this.tokenSignal.set(response.accessToken);
     this.userSignal.set(response.user);
     this.loadingSignal.set(false);
-    
+
     // Connect to SignalR after successful auth
     this.connectSignalR();
   }
@@ -253,18 +294,15 @@ export class AuthService {
   private clearAuthData(): void {
     // Disconnect from SignalR before clearing auth data
     this.disconnectSignalR();
-    
+
     this.tokenSignal.set(null);
     this.userSignal.set(null);
     this.loadingSignal.set(false);
-    this.router.navigate(['/auth/login']);
-  }
 
-  private getStoredToken(): string | null {
-    if (typeof window !== 'undefined' && window.localStorage) {
-      return localStorage.getItem(TOKEN_KEY);
+    // Avoid redirect loops if we're already on an auth page.
+    if (!this.router.url.startsWith('/auth')) {
+      this.router.navigate(['/auth/login']);
     }
-    return null;
   }
 
   private getStoredUser(): UserInfo | null {

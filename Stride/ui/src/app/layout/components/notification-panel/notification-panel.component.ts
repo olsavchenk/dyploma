@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDividerModule } from '@angular/material/divider';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface NotificationItem {
   type: string;
@@ -14,13 +15,13 @@ export interface NotificationItem {
 @Component({
   selector: 'app-notification-panel',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDividerModule, TranslateModule],
   template: `
     <div class="notification-backdrop" (click)="close.emit()"></div>
     <aside class="notification-panel animate-slide-up">
       <header class="panel-header">
-        <h3 class="panel-title font-display">Сповіщення</h3>
-        <button mat-icon-button (click)="close.emit()" aria-label="Закрити">
+        <h3 class="panel-title font-display">{{ 'notifications.title' | translate }}</h3>
+        <button mat-icon-button (click)="close.emit()" [attr.aria-label]="'common.close' | translate">
           <mat-icon>close</mat-icon>
         </button>
       </header>
@@ -30,7 +31,7 @@ export interface NotificationItem {
         @if (notifications().length === 0) {
           <div class="empty-state">
             <mat-icon class="empty-icon">notifications_none</mat-icon>
-            <p class="empty-text">Немає нових сповіщень</p>
+            <p class="empty-text">{{ 'notifications.empty' | translate }}</p>
           </div>
         } @else {
           @for (n of notifications(); track n.timestamp) {

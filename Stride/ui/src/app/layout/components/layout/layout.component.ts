@@ -71,7 +71,11 @@ export class LayoutComponent implements OnInit {
     // Re-fetch stats when auth state changes
     effect(() => {
       if (this.isAuthenticated()) {
-        this.loadUserStats();
+        if (this.authService.isStudent()) {
+          this.loadUserStats();
+        } else {
+          this.userStats.set(null);
+        }
         this.subscribeToRealTimeEvents();
       } else {
         this.userStats.set(null);
@@ -84,7 +88,9 @@ export class LayoutComponent implements OnInit {
   ngOnInit(): void {
     this.observeBreakpoints();
     if (this.isAuthenticated()) {
-      this.loadUserStats();
+      if (this.authService.isStudent()) {
+        this.loadUserStats();
+      }
       this.subscribeToRealTimeEvents();
     }
   }
@@ -133,8 +139,10 @@ export class LayoutComponent implements OnInit {
       .subscribe((event: LevelUpEvent) => {
         this.notificationService.showLevelUpCelebration(event);
         this.enqueueNotification('levelUp', `Новий рівень ${event.newLevel}!`, event);
-        // Refresh stats after level up
-        this.loadUserStats();
+        // Refresh stats after level up (students only)
+        if (this.authService.isStudent()) {
+          this.loadUserStats();
+        }
       });
 
     // Streak reminder → toast

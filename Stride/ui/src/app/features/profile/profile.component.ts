@@ -11,6 +11,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { TranslateModule } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { UserService } from '@app/core/services/user.service';
 import { AuthService } from '@app/core/services/auth.service';
@@ -37,6 +38,7 @@ import { ActivityTimelineComponent, ActivityItem } from './activity-timeline.com
     MatSlideToggleModule,
     MatTooltipModule,
     MatDialogModule,
+    TranslateModule,
     AchievementGalleryComponent,
     ActivityTimelineComponent,
   ],
@@ -85,8 +87,9 @@ export class ProfileComponent implements OnInit {
       next: ([profile, stats, achievementsResp]: [UserProfile, GamificationStats, AchievementsResponse]) => {
         this.profile.set(profile);
         this.stats.set(stats);
-        const all = [...achievementsResp.earned, ...achievementsResp.locked];
-        this.achievements.set(all);
+        const earned = achievementsResp?.earned ?? [];
+        const locked = achievementsResp?.locked ?? [];
+        this.achievements.set([...earned, ...locked]);
         this.loading.set(false);
       },
       error: (err) => {

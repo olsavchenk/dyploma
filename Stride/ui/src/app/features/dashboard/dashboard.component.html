@@ -5,7 +5,7 @@
     <div class="error-container">
       <mat-icon>error_outline</mat-icon>
       <p>{{ error() }}</p>
-      <button mat-flat-button (click)="onRefresh()">Спробувати ще раз</button>
+      <button mat-flat-button (click)="onRefresh()">{{ 'common.tryAgain' | translate }}</button>
     </div>
   }
 
@@ -28,7 +28,7 @@
     <!-- Hero row: greeting + rule divider -->
     <div class="hero-row animate-rise-in">
       <h1 class="hero-greeting">
-        {{ greeting }}, {{ user()?.displayName || 'Студент' }}
+        {{ greeting }}, {{ user()?.displayName || ('dashboard.defaultName' | translate) }}
       </h1>
       <p class="hero-date">{{ todayLabel }}</p>
     </div>
@@ -61,20 +61,39 @@
         </div>
       }
 
-      <!-- Continue learning carousel (12 cols) -->
-      @if (continueLearning().length > 0) {
+      <!-- Continue learning carousel (12 cols) — students only -->
+      @if (isStudent()) {
         <div class="col-12">
           <div class="section-header">
-            <h2 class="section-title">Продовжити навчання</h2>
-            <a routerLink="/learn" class="section-link">
-              Всі предмети <mat-icon>arrow_forward</mat-icon>
-            </a>
-          </div>
-          <div class="topics-carousel">
-            @for (topic of continueLearning(); track topic.topicId) {
-              <app-topic-card [topic]="topic" />
+            <h2 class="section-title">{{ 'dashboard.continueLearning.title' | translate }}</h2>
+            @if (continueLearning().length > 0) {
+              <a routerLink="/learn" class="section-link">
+                {{ 'dashboard.continueLearning.viewAll' | translate }} <mat-icon>arrow_forward</mat-icon>
+              </a>
             }
           </div>
+          @if (continueLearning().length > 0) {
+            <div class="topics-carousel">
+              @for (topic of continueLearning(); track topic.topicId) {
+                <app-topic-card [topic]="topic" />
+              }
+            </div>
+          } @else {
+            <div class="continue-empty">
+              <mat-icon class="continue-empty-icon">menu_book</mat-icon>
+              <p class="continue-empty-text">
+                {{ 'dashboard.continueLearning.empty' | translate }}
+              </p>
+              <a
+                mat-flat-button
+                color="primary"
+                [routerLink]="['/learn']"
+                class="continue-empty-cta">
+                <mat-icon>arrow_forward</mat-icon>
+                {{ 'dashboard.continueLearning.emptyCta' | translate }}
+              </a>
+            </div>
+          }
         </div>
       }
 

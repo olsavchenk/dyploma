@@ -5,6 +5,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { TranslateModule } from '@ngx-translate/core';
 import { finalize, forkJoin, catchError, of } from 'rxjs';
 import {
   GamificationService,
@@ -17,6 +18,7 @@ import {
   League,
   LoggingService,
 } from '@app/core';
+import { TranslationService } from '@app/core/services/translation.service';
 import { StreakWidgetComponent } from './widgets/streak-widget.component';
 import { XpBarComponent } from './widgets/xp-bar.component';
 import { TopicCardComponent } from './widgets/topic-card.component';
@@ -34,6 +36,7 @@ import { RecentAchievementsComponent } from './widgets/recent-achievements.compo
     MatButtonModule,
     MatIconModule,
     MatTooltipModule,
+    TranslateModule,
     StreakWidgetComponent,
     XpBarComponent,
     TopicCardComponent,
@@ -51,6 +54,7 @@ export class DashboardComponent implements OnInit {
   private readonly leaderboardService = inject(LeaderboardService);
   private readonly authService = inject(AuthService);
   private readonly logger = inject(LoggingService);
+  private readonly translation = inject(TranslationService);
 
   // State signals
   protected readonly loading = signal<boolean>(true);
@@ -61,18 +65,21 @@ export class DashboardComponent implements OnInit {
 
   // Computed values
   protected readonly user = this.authService.user;
+  protected readonly isStudent = this.authService.isStudent;
   protected readonly hasActivities = signal<boolean>(false);
   protected readonly today = new Date();
 
   protected get greeting(): string {
     const h = new Date().getHours();
-    if (h >= 5 && h < 12) return 'Доброго ранку';
-    if (h < 18) return 'Добрий день';
-    return 'Доброго вечора';
+    let key = 'dashboard.greetingEvening';
+    if (h >= 5 && h < 12) key = 'dashboard.greetingMorning';
+    else if (h < 18) key = 'dashboard.greetingDay';
+    return this.translation.instant(key);
   }
 
   protected get todayLabel(): string {
-    return new Date().toLocaleDateString('uk-UA', {
+    const locale = this.translation.currentLanguage() === 'en' ? 'en-US' : 'uk-UA';
+    return new Date().toLocaleDateString(locale, {
       weekday: 'long', day: 'numeric', month: 'long',
     });
   }
@@ -85,13 +92,18 @@ export class DashboardComponent implements OnInit {
     this.loading.set(true);
     this.error.set(null);
 
+    // Gamification stats are student-only — backend returns 403 for teachers.
+    const stats$ = this.authService.isStudent()
+      ? this.gamificationService.getStats().pipe(
+          catchError((err) => {
+            this.logger.error('DashboardComponent', 'Failed to load gamification stats', {}, err);
+            return of(null);
+          })
+        )
+      : of(null);
+
     forkJoin({
-      stats: this.gamificationService.getStats().pipe(
-        catchError((err) => {
-          this.logger.error('DashboardComponent', 'Failed to load gamification stats', {}, err);
-          return of(null);
-        })
-      ),
+      stats: stats$,
       continueLearning: this.learningService.getContinueLearningTopics(3).pipe(
         catchError((err) => {
           this.logger.error('DashboardComponent', 'Failed to load continue learning topics', {}, err);
@@ -120,7 +132,7 @@ export class DashboardComponent implements OnInit {
         },
         error: (err) => {
           this.logger.error('DashboardComponent', 'Failed to load dashboard data', {}, err);
-          this.error.set('Не вдалося завантажити дані. Спробуйте оновити сторінку.');
+          this.error.set(this.translation.instant('dashboard.loadError'));
         },
       });
   }

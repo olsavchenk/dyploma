@@ -1,9 +1,21 @@
 <app-auth-shell>
   <div class="form-panel">
     <div class="form-header">
-      <h2 class="form-title font-display">Вхід</h2>
-      <p class="form-subtitle font-sans">Раді бачити вас знову</p>
+      <h2 class="form-title font-display">{{ 'auth.login.title' | translate }}</h2>
+      <p class="form-subtitle font-sans">{{ 'auth.login.subtitle' | translate }}</p>
     </div>
+
+    @if (lockoutMessage()) {
+      <div class="error-banner error-banner--lockout" role="alert">
+        <mat-icon>lock_clock</mat-icon>
+        <div>
+          <div>{{ lockoutMessage() }}</div>
+          @if (formatLockoutHint()) {
+            <div class="lockout-hint">{{ formatLockoutHint() }}</div>
+          }
+        </div>
+      </div>
+    }
 
     @if (errorMessage()) {
       <div class="error-banner" role="alert">
@@ -14,7 +26,7 @@
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="auth-form">
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Email</mat-label>
+        <mat-label>{{ 'auth.login.email' | translate }}</mat-label>
         <input
           matInput
           type="email"
@@ -30,7 +42,7 @@
       </mat-form-field>
 
       <mat-form-field appearance="outline" class="full-width">
-        <mat-label>Пароль</mat-label>
+        <mat-label>{{ 'auth.login.password' | translate }}</mat-label>
         <input
           matInput
           [type]="hidePassword() ? 'password' : 'text'"
@@ -45,7 +57,7 @@
           matSuffix
           type="button"
           (click)="togglePasswordVisibility()"
-          [attr.aria-label]="'Показати пароль'"
+          [attr.aria-label]="'auth.login.showPassword' | translate"
         >
           <mat-icon>{{ hidePassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
         </button>
@@ -55,27 +67,27 @@
       </mat-form-field>
 
       <div class="forgot-row">
-        <a routerLink="/auth/forgot-password" class="auth-link">Забули пароль?</a>
+        <a routerLink="/auth/forgot-password" class="auth-link">{{ 'auth.login.forgotPassword' | translate }}</a>
       </div>
 
       <button
         mat-flat-button
         type="submit"
         class="full-width submit-btn"
-        [disabled]="loading"
+        [disabled]="loading || loginForm.invalid"
       >
         @if (loading) {
           <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-          <span>Вхід...</span>
+          <span>{{ 'auth.login.submitting' | translate }}</span>
         } @else {
-          <span>Увійти</span>
+          <span>{{ 'auth.login.submit' | translate }}</span>
         }
       </button>
     </form>
 
     <div class="divider-row">
       <span class="divider-line"></span>
-      <span class="divider-label font-sans">або</span>
+      <span class="divider-label font-sans">{{ 'common.or' | translate }}</span>
       <span class="divider-line"></span>
     </div>
 
@@ -87,12 +99,12 @@
       [disabled]="loading"
     >
       <mat-icon>g_mobiledata</mat-icon>
-      <span>Вхід через Google</span>
+      <span>{{ 'auth.login.google' | translate }}</span>
     </button>
 
     <p class="switch-prompt font-sans">
-      Немає облікового запису?
-      <a routerLink="/auth/register" class="auth-link auth-link--bold">Зареєструватися</a>
+      {{ 'auth.login.noAccount' | translate }}
+      <a routerLink="/auth/register" class="auth-link auth-link--bold">{{ 'auth.login.register' | translate }}</a>
     </p>
   </div>
 </app-auth-shell>

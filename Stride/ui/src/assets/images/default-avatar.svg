@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" role="img" aria-label="Default user avatar">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E6EDF5"/>
+      <stop offset="100%" stop-color="#C8D4E3"/>
+    </linearGradient>
+  </defs>
+  <!-- Circle background -->
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+  <!-- Person silhouette -->
+  <g fill="#7E8A9C">
+    <!-- Head -->
+    <circle cx="100" cy="80" r="34"/>
+    <!-- Shoulders / body -->
+    <path d="M30 178c0-32 31-56 70-56s70 24 70 56v22H30z"/>
+  </g>
+</svg>

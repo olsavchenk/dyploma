@@ -20,6 +20,12 @@ public interface ITaskReviewService
     Task ApproveAsync(string templateId, Guid reviewedBy, CancellationToken cancellationToken = default);
     Task RejectAsync(string templateId, Guid reviewedBy, CancellationToken cancellationToken = default);
 
+    Task<TaskTemplateDetailDto> UpdateAsync(
+        string templateId,
+        UpdateTaskTemplateRequest request,
+        Guid reviewedBy,
+        CancellationToken cancellationToken = default);
+
     Task BulkActionAsync(
         List<string> templateIds,
         string action,

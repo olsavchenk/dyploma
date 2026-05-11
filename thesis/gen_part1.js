@@ -179,7 +179,7 @@ children.push(p(
 children.push(empty());
 
 children.push(p(
-  "Обсяг роботи: основний текст — 22 сторінки, 7 рисунків, 8 таблиць, список джерел — 42 позиції, 7 додатків."
+  "Обсяг роботи: основний текст — 23 сторінки, 7 рисунків, 8 таблиць, список джерел — 42 позиції, 7 додатків."
 ));
 children.push(empty());
 
@@ -221,7 +221,7 @@ children.push(p(
 children.push(empty());
 
 children.push(p(
-  "Thesis scope: main text — 22 pages, 7 figures, 8 tables, reference list — 42 entries, 7 appendices."
+  "Thesis scope: main text — 23 pages, 7 figures, 8 tables, reference list — 42 entries, 7 appendices."
 ));
 children.push(empty());
 
@@ -229,6 +229,52 @@ children.push(p(
   "Keywords: adaptive learning, gamification, artificial intelligence, educational platform, Angular, ASP.NET Core, task generation, PostgreSQL, MongoDB, EdTech, ML.NET, Gemini API.",
   { italic: true }
 ));
+
+children.push(new Paragraph({ children: [new PageBreak()] }));
+
+const tocInsertIndex = children.length;
+
+// ===== ПЕРЕЛІК УМОВНИХ ПОЗНАЧЕНЬ =====
+children.push(heading1("ПЕРЕЛІК УМОВНИХ ПОЗНАЧЕНЬ"));
+children.push(empty());
+
+const abbreviations = [
+  ["ЗВО", "заклад вищої освіти"],
+  ["ШІ", "штучний інтелект"],
+  ["СУБД", "система управління базами даних"],
+  ["API", "Application Programming Interface (програмний інтерфейс застосунку)"],
+  ["CRUD", "Create, Read, Update, Delete (основні операції зі збереженими даними)"],
+  ["CSS", "Cascading Style Sheets (каскадні таблиці стилів)"],
+  ["EdTech", "Educational Technology (освітні технології)"],
+  ["EF Core", "Entity Framework Core (об'єктно-реляційний перетворювач для .NET)"],
+  ["HTML", "HyperText Markup Language (мова розмітки гіпертексту)"],
+  ["HTTP", "HyperText Transfer Protocol (протокол передачі гіпертексту)"],
+  ["IRT", "Item Response Theory (теорія відповіді на завдання)"],
+  ["JWT", "JSON Web Token (токен автентифікації)"],
+  ["LLM", "Large Language Model (велика мовна модель)"],
+  ["ML", "Machine Learning (машинне навчання)"],
+  ["MVP", "Minimum Viable Product (мінімально життєздатний продукт)"],
+  ["ORM", "Object-Relational Mapping (об'єктно-реляційне відображення)"],
+  ["PWA", "Progressive Web Application (прогресивний веб-застосунок)"],
+  ["REST", "Representational State Transfer (архітектурний стиль взаємодії)"],
+  ["SPA", "Single Page Application (односторінковий застосунок)"],
+  ["SQL", "Structured Query Language (мова структурованих запитів)"],
+  ["UI", "User Interface (інтерфейс користувача)"],
+  ["UML", "Unified Modeling Language (уніфікована мова моделювання)"],
+  ["XP", "Experience Points (бали досвіду)"],
+];
+
+for (const [abbr, desc] of abbreviations) {
+  children.push(new Paragraph({
+    alignment: AlignmentType.JUSTIFIED,
+    indent: { firstLine: 0 },
+    spacing: { line: 360, lineRule: LineRuleType.AUTO },
+    children: [
+      new TextRun({ text: abbr, font: FONT, size: SIZE, bold: true }),
+      new TextRun({ text: " — " + desc, font: FONT, size: SIZE }),
+    ]
+  }));
+}
 
 children.push(new Paragraph({ children: [new PageBreak()] }));
 
@@ -382,7 +428,7 @@ children.push(empty());
 children.push(heading2("Структура та обсяг роботи"));
 
 children.push(p(
-  "Кваліфікаційна робота складається із вступу, трьох розділів, загальних висновків, списку використаних джерел та семи додатків. Загальний обсяг основного тексту роботи становить 22 сторінки. Робота містить 7 рисунків, 8 таблиць. Список використаних джерел налічує 42 позиції та займає 4 сторінки. Загальний обсяг роботи з додатками — 45 сторінок."
+  "Кваліфікаційна робота складається із вступу, трьох розділів, загальних висновків, списку використаних джерел та семи додатків. Загальний обсяг основного тексту роботи становить 23 сторінки. Робота містить 7 рисунків, 8 таблиць. Список використаних джерел налічує 42 позиції. Загальний обсяг роботи з додатками — 46 сторінок."
 ));
 children.push(empty());
 
@@ -442,16 +488,19 @@ const doc = new Document({
       page: {
         size: { width: PAGE_W, height: PAGE_H },
         margin: { top: MARGIN_TOP, bottom: MARGIN_BOTTOM, left: MARGIN_LEFT, right: MARGIN_RIGHT }
-      }
+      },
+      titlePage: true
     },
-    footers: {
-      default: new Footer({
+    headers: {
+      default: new Header({
         children: [new Paragraph({
-          alignment: AlignmentType.CENTER,
-          children: [
-            new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: SIZE_SM })
-          ]
+          alignment: AlignmentType.RIGHT,
+          spacing: { after: 0 },
+          children: [new TextRun({ children: [PageNumber.CURRENT], font: FONT, size: SIZE })]
         })]
+      }),
+      first: new Header({
+        children: [new Paragraph({ children: [] })]
       })
     },
     children
@@ -465,4 +514,4 @@ if (require.main === module) {
   }).catch(e => { console.error(e); process.exit(1); });
 }
 
-module.exports = { children };
+module.exports = { children, tocInsertIndex };

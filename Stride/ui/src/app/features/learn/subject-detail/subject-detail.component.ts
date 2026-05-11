@@ -1,11 +1,12 @@
-import { Component, inject, signal, OnInit, computed } from '@angular/core';
+import { Component, inject, signal, OnInit, OnDestroy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MatExpansionModule } from '@angular/material/expansion';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { finalize, forkJoin, catchError, of } from 'rxjs';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Subscription, finalize, forkJoin, catchError, of } from 'rxjs';
 import { LearningService, Subject, Topic } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
 
@@ -22,16 +23,19 @@ import { LoggingService } from '@app/core/services/logging.service';
   templateUrl: './subject-detail.component.html',
   styleUrl: './subject-detail.component.scss',
 })
-export class SubjectDetailComponent implements OnInit {
+export class SubjectDetailComponent implements OnInit, OnDestroy {
   private readonly learningService = inject(LearningService);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggingService);
+  private readonly snackBar = inject(MatSnackBar);
 
   protected readonly loading = signal<boolean>(true);
   protected readonly error = signal<string | null>(null);
   protected readonly subject = signal<Subject | null>(null);
   protected readonly topics = signal<Topic[]>([]);
+
+  private routeSub?: Subscription;
 
   protected readonly breadcrumbs = computed(() => {
     const subj = this.subject();
@@ -42,13 +46,24 @@ export class SubjectDetailComponent implements OnInit {
   });
 
   ngOnInit(): void {
-    const subjectId = this.route.snapshot.paramMap.get('id');
-    if (subjectId) {
-      this.loadSubjectData(subjectId);
-    } else {
-      this.error.set('Не вдалося знайти ідентифікатор предмету');
-      this.loading.set(false);
-    }
+    // Re-fetch on every paramMap change so navigating to a new id resets state.
+    this.routeSub = this.route.paramMap.subscribe((params) => {
+      const subjectId = params.get('id');
+      // Reset state on each id change so stale data never lingers.
+      this.subject.set(null);
+      this.topics.set([]);
+      this.error.set(null);
+      if (subjectId) {
+        this.loadSubjectData(subjectId);
+      } else {
+        this.error.set('Не вдалося знайти ідентифікатор предмету');
+        this.loading.set(false);
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.routeSub?.unsubscribe();
   }
 
   private loadSubjectData(subjectId: string): void {
@@ -74,6 +89,13 @@ export class SubjectDetailComponent implements OnInit {
         next: (data) => {
           if (!data.subject) {
             this.error.set('Предмет не знайдено');
+            this.snackBar.open('Предмет не знайдено', 'OK', {
+              duration: 3000,
+              horizontalPosition: 'center',
+              verticalPosition: 'top',
+            });
+            // Send the user back to the catalog so the URL no longer points at a 404 id.
+            this.router.navigate(['/learn']);
             return;
           }
           this.subject.set(data.subject);

@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using Stride.Services.Interfaces;
 using Stride.Services.Models.Auth;
 using System.Security.Claims;
@@ -41,12 +42,16 @@ public class AuthController : ControllerBase
 
             SetRefreshTokenCookie(response.RefreshToken);
 
-            return CreatedAtAction(nameof(Register), new { id = response.User.Id }, response);
+            return CreatedAtAction(nameof(Register), new { id = response.User.Id }, StripRefreshToken(response));
         }
         catch (InvalidOperationException ex)
         {
             _logger.LogWarning("Registration failed: {Message}", ex.Message);
-            return BadRequest(new { message = ex.Message });
+            // L-3: Surface the stable error code (e.g. EMAIL_ALREADY_EXISTS) so the
+            // frontend can render a localized message instead of showing the raw
+            // English backend string.
+            var code = ex.Data.Contains("code") ? ex.Data["code"] as string : null;
+            return BadRequest(new { message = ex.Message, code });
         }
     }
 
@@ -54,8 +59,11 @@ public class AuthController : ControllerBase
     /// Login with email and password
     /// </summary>
     [HttpPost("login")]
+    [EnableRateLimiting("auth-login")]
     [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status423Locked)]
+    [ProducesResponseType(StatusCodes.Status429TooManyRequests)]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         try
@@ -67,7 +75,17 @@ public class AuthController : ControllerBase
 
             SetRefreshTokenCookie(response.RefreshToken);
 
-            return Ok(response);
+            return Ok(StripRefreshToken(response));
+        }
+        catch (AccountLockedException ex)
+        {
+            _logger.LogWarning("Login locked for {Email}: {Message}", request.Email, ex.Message);
+            Response.Headers["Retry-After"] = ((int)ex.RetryAfter.TotalSeconds).ToString();
+            return StatusCode(StatusCodes.Status423Locked, new
+            {
+                message = ex.Message,
+                retryAfterSeconds = (int)ex.RetryAfter.TotalSeconds
+            });
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -100,7 +118,7 @@ public class AuthController : ControllerBase
 
             SetRefreshTokenCookie(response.RefreshToken);
 
-            return Ok(response);
+            return Ok(StripRefreshToken(response));
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -149,7 +167,7 @@ public class AuthController : ControllerBase
 
             SetRefreshTokenCookie(response.RefreshToken);
 
-            return Ok(response);
+            return Ok(StripRefreshToken(response));
         }
         catch (UnauthorizedAccessException ex)
         {
@@ -184,7 +202,7 @@ public class AuthController : ControllerBase
 
             SetRefreshTokenCookie(response.RefreshToken);
 
-            return Ok(response);
+            return Ok(StripRefreshToken(response));
         }
         catch (InvalidOperationException ex)
         {
@@ -249,6 +267,16 @@ public class AuthController : ControllerBase
         };
 
         Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+    }
+
+    /// <summary>
+    /// H-6: Refresh token MUST NOT appear in the JSON response body. It only lives in the
+    /// HttpOnly cookie set above. We blank it on the DTO before serialization.
+    /// </summary>
+    private static AuthResponse StripRefreshToken(AuthResponse response)
+    {
+        response.RefreshToken = string.Empty;
+        return response;
     }
 
     private string? GetIpAddress()
