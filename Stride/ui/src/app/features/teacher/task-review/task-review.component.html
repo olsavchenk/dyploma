@@ -116,7 +116,7 @@
             </details>
           </ng-container>
           <ng-template #plainQuestion>
-            {{ task.question | slice:0:140 }}{{ (task.question?.length ?? 0) > 140 ? '…' : '' }}
+            {{ task.question | slice:0:140 }}{{ task.question.length > 140 ? '…' : '' }}
           </ng-template>
         </div>
 

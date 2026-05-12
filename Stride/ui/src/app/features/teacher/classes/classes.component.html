@@ -71,7 +71,7 @@
           <div class="class-meta">
             <span class="meta-chip">{{ cls.gradeLevel }} клас</span>
             <span class="meta-chip" *ngIf="cls.subject">{{ cls.subject }}</span>
-            <span class="meta-chip">{{ cls.studentCount ?? 0 }} учнів</span>
+            <span class="meta-chip">{{ cls.studentCount }} учнів</span>
             <span class="meta-chip" *ngIf="cls.assignmentCount">{{ cls.assignmentCount }} завдань</span>
             <span class="meta-chip meta-chip--archived" *ngIf="cls.isArchived">Архівовано</span>
           </div>

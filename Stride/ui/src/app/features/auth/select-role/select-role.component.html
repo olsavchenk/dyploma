@@ -73,11 +73,10 @@
       >
         @if (isSubmitting()) {
           <mat-spinner diameter="20" class="btn-spinner"></mat-spinner>
-          <span>Збереження...</span>
         } @else {
-          <span>Продовжити</span>
-          <mat-icon>arrow_forward</mat-icon>
+          <mat-icon iconPositionEnd>arrow_forward</mat-icon>
         }
+        <span>{{ isSubmitting() ? 'Збереження...' : 'Продовжити' }}</span>
       </button>
     </div>
 

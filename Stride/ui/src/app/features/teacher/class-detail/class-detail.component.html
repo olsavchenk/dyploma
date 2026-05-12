@@ -202,8 +202,8 @@
               <div class="a-meta">
                 <span class="meta-chip">{{ a.taskCount }} завдань</span>
                 <span class="meta-chip" *ngIf="a.dueDate">До {{ formatDate(a.dueDate) }}</span>
-                <span class="meta-chip">{{ (a.completionRate ?? 0).toFixed(0) }}% завершено</span>
-                <span class="meta-chip">Бал: {{ (a.averageScore ?? 0).toFixed(0) }}%</span>
+                <span class="meta-chip">{{ a.completionRate.toFixed(0) }}% завершено</span>
+                <span class="meta-chip">Бал: {{ a.averageScore.toFixed(0) }}%</span>
               </div>
               <app-generation-status *ngIf="a.generationJobId" [jobId]="a.generationJobId" [topicId]="a.topicId"></app-generation-status>
             </div>
@@ -244,7 +244,7 @@
               </div>
               <div class="stats-row">
                 <span class="sr-label">Середня точність</span>
-                <span class="sr-value accent">{{ (analytics()!.averageAccuracy ?? 0).toFixed(1) }}%</span>
+                <span class="sr-value accent">{{ analytics()!.averageAccuracy.toFixed(1) }}%</span>
               </div>
             </div>
           </div>
@@ -258,7 +258,7 @@
                 <img [src]="p.studentAvatar || '/assets/default-avatar.png'" [alt]="p.studentName" class="perf-avatar"/>
                 <div class="perf-info">
                   <span class="perf-name">{{ p.studentName }}</span>
-                  <span class="perf-stats muted">Рівень {{ p.currentLevel }} · {{ (p.accuracy ?? 0).toFixed(0) }}%</span>
+                  <span class="perf-stats muted">Рівень {{ p.currentLevel }} · {{ p.accuracy.toFixed(0) }}%</span>
                 </div>
               </div>
             </div>
@@ -272,7 +272,7 @@
                 <img [src]="p.studentAvatar || '/assets/default-avatar.png'" [alt]="p.studentName" class="perf-avatar"/>
                 <div class="perf-info">
                   <span class="perf-name">{{ p.studentName }}</span>
-                  <span class="perf-stats muted">Рівень {{ p.currentLevel }} · {{ (p.accuracy ?? 0).toFixed(0) }}%</span>
+                  <span class="perf-stats muted">Рівень {{ p.currentLevel }} · {{ p.accuracy.toFixed(0) }}%</span>
                 </div>
               </div>
             </div>

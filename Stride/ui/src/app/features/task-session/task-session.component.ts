@@ -19,7 +19,6 @@ import {
   TrueFalseTaskComponent,
   MatchingTaskComponent,
   OrderingTaskComponent,
-  AnswerFeedbackComponent,
 } from '@app/shared';
 
 import {
@@ -48,7 +47,6 @@ type SessionState = 'loading' | 'task' | 'feedback' | 'error';
     TrueFalseTaskComponent,
     MatchingTaskComponent,
     OrderingTaskComponent,
-    AnswerFeedbackComponent,
   ],
   template: `
     <div class="session-focus">

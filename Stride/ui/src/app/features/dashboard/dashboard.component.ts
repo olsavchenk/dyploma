@@ -24,7 +24,6 @@ import { XpBarComponent } from './widgets/xp-bar.component';
 import { TopicCardComponent } from './widgets/topic-card.component';
 import { LeaderboardPreviewComponent } from './widgets/leaderboard-preview.component';
 import { FirstTaskBonusComponent } from './widgets/first-task-bonus.component';
-import { DailyGoalComponent } from './widgets/daily-goal.component';
 import { RecentAchievementsComponent } from './widgets/recent-achievements.component';
 
 @Component({
@@ -42,7 +41,6 @@ import { RecentAchievementsComponent } from './widgets/recent-achievements.compo
     TopicCardComponent,
     LeaderboardPreviewComponent,
     FirstTaskBonusComponent,
-    DailyGoalComponent,
     RecentAchievementsComponent,
   ],
   templateUrl: './dashboard.component.html',
