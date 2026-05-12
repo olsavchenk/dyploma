@@ -187,45 +187,46 @@ try
     {
         using (var scope = app.Services.CreateScope())
         {
+            // Critical: relational schema must be present for any request to succeed,
+            // so migration failure is fatal.
             try
             {
                 Log.Information("Initializing infrastructure services");
 
-                // Apply database migrations
                 var dbContext = scope.ServiceProvider.GetRequiredService<StrideDbContext>();
                 Log.Information("Applying database migrations...");
                 await dbContext.Database.MigrateAsync();
                 Log.Information("Database migrations applied successfully");
 
-                // MongoDB indexes
                 var mongoContext = scope.ServiceProvider.GetRequiredService<MongoDbContext>();
                 await mongoContext.InitializeIndexesAsync();
                 Log.Information("MongoDB indexes initialized");
-                
-                // Seed initial data
-                var subjectTopicSeeder = new SubjectTopicSeeder(dbContext);
-                await subjectTopicSeeder.SeedAsync();
-                Log.Information("Database seeded with initial subjects and topics");
+            }
+            catch (Exception ex)
+            {
+                Log.Error(ex, "Fatal: schema initialization failed (PostgreSQL migrations or Mongo indexes)");
+                throw;
+            }
 
-                var learningPathSeeder = new LearningPathSeeder(dbContext);
-                await learningPathSeeder.SeedAsync();
-                Log.Information("Database seeded with learning paths");
+            // Non-critical: seed data + external-service bootstrap. Each step is
+            // isolated so a transient failure in one external dependency (Meilisearch
+            // slow to accept HTTP, MinIO mid-warmup, etc.) doesn't take down the whole
+            // API. Logs surface the failure for ops to retry/rebuild manually.
+            var dbContextNonCritical = scope.ServiceProvider.GetRequiredService<StrideDbContext>();
+            await SafeInitAsync("Seed subjects and topics",
+                () => new SubjectTopicSeeder(dbContextNonCritical).SeedAsync());
+            await SafeInitAsync("Seed learning paths",
+                () => new LearningPathSeeder(dbContextNonCritical).SeedAsync());
+            await SafeInitAsync("Seed achievements",
+                () => new AchievementSeeder(dbContextNonCritical).SeedAsync());
+            await SafeInitAsync("Seed test class",
+                () => new ClassSeeder(dbContextNonCritical).SeedAsync());
 
-                // Seed achievements
-                var achievementSeeder = new AchievementSeeder(dbContext);
-                await achievementSeeder.SeedAsync();
-                Log.Information("Database seeded with achievements");
-
-                // Seed test class (teacher@test.com / student@test.com, join code: TEST01)
-                var classSeeder = new ClassSeeder(dbContext);
-                await classSeeder.SeedAsync();
-                Log.Information("Database seeded with test class (join code: TEST01)");
-
-                // Seed default admin user (Development / Staging only — never in Production).
-                // Bug fix: M-30 — Admin user not seeded.
-                if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+            if (app.Environment.IsDevelopment() || app.Environment.IsStaging())
+            {
+                await SafeInitAsync("Seed admin user", async () =>
                 {
-                    var adminSeeder = new AdminUserSeeder(dbContext);
+                    var adminSeeder = new AdminUserSeeder(dbContextNonCritical);
                     var created = await adminSeeder.SeedAsync();
                     if (created)
                     {
@@ -238,28 +239,34 @@ try
                     {
                         Log.Information("Admin user already exists; skipping admin seed.");
                     }
-                }
-                else
-                {
-                    Log.Information("Skipping admin seed (Production environment).");
-                }
+                });
+            }
+            else
+            {
+                Log.Information("Skipping admin seed (Production environment).");
+            }
 
-                // Seed task templates
-                var templateRepository = scope.ServiceProvider.GetRequiredService<Stride.DataAccess.Repositories.ITaskTemplateRepository>();
-                var taskTemplateSeeder = new TaskTemplateSeeder(dbContext, templateRepository);
+            await SafeInitAsync("Seed task templates", async () =>
+            {
+                var templateRepository = scope.ServiceProvider
+                    .GetRequiredService<Stride.DataAccess.Repositories.ITaskTemplateRepository>();
+                var taskTemplateSeeder = new TaskTemplateSeeder(dbContextNonCritical, templateRepository);
                 await taskTemplateSeeder.SeedAsync();
-                Log.Information("MongoDB seeded with task templates");
+            });
 
-                // MinIO buckets
+            await SafeInitAsync("Create MinIO buckets", async () =>
+            {
                 var storageService = scope.ServiceProvider.GetRequiredService<IStorageService>();
                 var minioOptions = scope.ServiceProvider.GetRequiredService<IOptions<MinIOOptions>>().Value;
                 await storageService.EnsureBucketExistsAsync(minioOptions.Buckets.Avatars);
                 await storageService.EnsureBucketExistsAsync(minioOptions.Buckets.Assets);
-                Log.Information("MinIO buckets initialized");
+            });
 
-                // Meilisearch indexes
+            await SafeInitAsync("Create Meilisearch indexes", async () =>
+            {
                 var searchService = scope.ServiceProvider.GetRequiredService<ISearchService>();
-                var meilisearchOptions = scope.ServiceProvider.GetRequiredService<IOptions<MeilisearchOptions>>().Value;
+                var meilisearchOptions = scope.ServiceProvider
+                    .GetRequiredService<IOptions<MeilisearchOptions>>().Value;
                 await searchService.EnsureIndexExistsAsync(
                     meilisearchOptions.Indexes.Subjects,
                     "id",
@@ -268,14 +275,21 @@ try
                     meilisearchOptions.Indexes.Topics,
                     "id",
                     new[] { "name", "description" });
-                Log.Information("Meilisearch indexes initialized");
+            });
 
-                Log.Information("All infrastructure services initialized successfully");
+            Log.Information("Infrastructure initialization complete");
+        }
+
+        async Task SafeInitAsync(string step, Func<Task> action)
+        {
+            try
+            {
+                await action();
+                Log.Information("Init step OK: {Step}", step);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "An error occurred while initializing infrastructure services");
-                throw;
+                Log.Error(ex, "Init step FAILED (non-fatal): {Step}", step);
             }
         }
     }

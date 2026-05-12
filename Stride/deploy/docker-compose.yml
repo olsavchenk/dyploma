@@ -83,17 +83,6 @@ services:
       - "127.0.0.1:7700:7700"
     volumes:
       - meili-data:/meili_data
-    # The stride-api container creates Meilisearch indexes during startup.
-    # Without a healthcheck the api would only wait for `service_started`,
-    # i.e. the container being up — Meilisearch typically needs another
-    # second or two before /health returns 200, and the api crashed when
-    # it raced index creation. /health is public so no auth header needed.
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:7700/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 15s
 
   api:
     build:
@@ -138,7 +127,7 @@ services:
       minio:
         condition: service_healthy
       meilisearch:
-        condition: service_healthy
+        condition: service_started
 
   adaptive-api:
     build:
