@@ -40,7 +40,8 @@ export class SidenavComponent {
         { label: 'layout.sidenav.dashboard', icon: 'dashboard', route: '/dashboard' },
         { label: 'layout.sidenav.classes',   icon: 'class',     route: '/teacher/classes' },
         { label: 'layout.sidenav.analytics', icon: 'bar_chart', route: '/teacher/dashboard' },
-        { label: 'layout.sidenav.review',    icon: 'task_alt',  route: '/teacher/dashboard' },
+        // N-H-1: standalone review index lists topics with pending AI tasks.
+        { label: 'layout.sidenav.review',    icon: 'task_alt',  route: '/teacher/review' },
         { label: 'layout.sidenav.profile',   icon: 'person',    route: '/profile' },
       ];
     }

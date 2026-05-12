@@ -24,6 +24,7 @@ import { GlobalErrorHandler } from './core/handlers/global-error.handler';
 import { PwaUpdateService } from './core/services/pwa-update.service';
 import { TranslationService } from './core/services/translation.service';
 import { NotificationService } from './core/services/notification.service';
+import { AuthService } from './core/services/auth.service';
 
 /**
  * Register custom SVG icons with MatIconRegistry
@@ -64,6 +65,16 @@ function initializePwaUpdates() {
   return () => pwaUpdateService.initialize();
 }
 
+/**
+ * N-CR-1 / N-CR-2: restore the session from the HttpOnly refresh-token cookie
+ * before the router activates the first route. Without this, F5 on any auth
+ * route bounces the user back to /auth/login.
+ */
+function initializeAuth() {
+  const auth = inject(AuthService);
+  return () => auth.bootstrap();
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
@@ -90,6 +101,11 @@ export const appConfig: ApplicationConfig = {
     {
       provide: APP_INITIALIZER,
       useFactory: initializeTranslation,
+      multi: true,
+    },
+    {
+      provide: APP_INITIALIZER,
+      useFactory: initializeAuth,
       multi: true,
     },
     {

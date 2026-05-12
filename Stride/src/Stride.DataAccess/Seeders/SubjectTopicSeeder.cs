@@ -15,6 +15,37 @@ public class SubjectTopicSeeder
 
     public async Task SeedAsync()
     {
+        // N-M-1: prune QA / stub duplicates (e.g. an English "Math" subject left
+        // by earlier test runs or auto-created by ResolveOrCreateTopicAsync, which
+        // sets Description = SubjectName as a stub signature). The canonical seeded
+        // catalog uses Ukrainian names with rich descriptions; anything whose slug
+        // isn't on the canonical list is removed along with its topics so a clean
+        // catalog renders to students.
+        var canonicalSlugs = new[]
+        {
+            "mathematics",
+            "ukrainian-language",
+            "english-language",
+            "natural-sciences",
+            "history-of-ukraine"
+        };
+        var stubSubjects = await _dbContext.Subjects
+            .Include(s => s.Topics)
+            .Where(s => !canonicalSlugs.Contains(s.Slug))
+            .ToListAsync();
+        if (stubSubjects.Count > 0)
+        {
+            foreach (var stub in stubSubjects)
+            {
+                if (stub.Topics.Count > 0)
+                {
+                    _dbContext.Topics.RemoveRange(stub.Topics);
+                }
+            }
+            _dbContext.Subjects.RemoveRange(stubSubjects);
+            await _dbContext.SaveChangesAsync();
+        }
+
         // Check if subjects already exist
         if (await _dbContext.Subjects.AnyAsync())
         {

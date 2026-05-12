@@ -35,18 +35,27 @@ export class TranslationService {
   readonly availableLanguages: SupportedLanguage[] = ['uk', 'en'];
 
   /**
-   * Initialize the translation service.
-   * Order: ngx-translate v17+ requires both fallback registration and `use(...)`.
-   *  1. Register Ukrainian as the fallback so missing keys gracefully fall back.
-   *  2. Resolve initial language: localStorage > navigator.language > 'uk'.
-   *  3. Activate it (also writes to localStorage and updates <html lang>).
+   * Initialize the translation service. CR-9 / N-CR-3: must return a Promise so
+   * APP_INITIALIZER waits for the JSON file to load before bootstrapping the
+   * first route. Otherwise raw i18n keys render on cold start.
    */
-  initialize(): void {
-    // ngx-translate v17 renamed setDefaultLang -> setFallbackLang
+  initialize(): Promise<void> {
     this.translateService.setFallbackLang('uk');
 
     const initial = this.resolveInitialLanguage();
-    this.setLanguage(initial);
+    this.currentLanguage.set(initial);
+    this.saveLanguageToStorage(initial);
+    this.applyDocumentLang(initial);
+
+    return new Promise<void>((resolve) => {
+      this.translateService.use(initial).subscribe({
+        next: () => resolve(),
+        error: (err) => {
+          this.logger.error('TranslationService', 'Failed to load translations', { initial }, err);
+          resolve();
+        },
+      });
+    });
   }
 
   /**
@@ -63,10 +72,13 @@ export class TranslationService {
       language = 'uk';
     }
 
-    this.translateService.use(language);
     this.currentLanguage.set(language);
     this.saveLanguageToStorage(language);
     this.applyDocumentLang(language);
+    this.translateService.use(language).subscribe({
+      error: (err) =>
+        this.logger.error('TranslationService', 'Failed to switch language', { language }, err),
+    });
   }
 
   /**

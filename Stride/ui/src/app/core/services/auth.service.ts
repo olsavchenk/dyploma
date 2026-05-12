@@ -89,16 +89,32 @@ export class AuthService {
       this.logger.setCurrentUser(this.userSignal()?.id ?? null);
     });
 
-    // H-5: cold-start session restore. If we previously had a user cached,
-    // try refresh-from-cookie immediately so navigation works without re-login.
-    if (this.userSignal() && typeof window !== 'undefined') {
+    // H-5: cold-start refresh is now driven by `bootstrap()` from APP_INITIALIZER
+    // so AuthGuard sees the restored token *before* the first route activates
+    // (N-CR-1 / N-CR-2). The constructor no longer fires its own refresh.
+  }
+
+  /**
+   * Called once from APP_INITIALIZER. Tries the refresh-token cookie to restore
+   * the session before the router activates the first route. Always resolves
+   * (never rejects) so a missing/expired cookie doesn't block app bootstrap.
+   *
+   * Fixes N-CR-1 (F5 logs user out) and N-CR-2 (profile hard-reload race).
+   */
+  bootstrap(): Promise<void> {
+    if (typeof window === 'undefined') {
+      return Promise.resolve();
+    }
+    return new Promise<void>((resolve) => {
       this.refreshToken().subscribe({
+        next: () => resolve(),
         error: () => {
-          // Cookie missing/expired — drop the cached user.
+          // No valid refresh cookie — drop cached user and continue unauthenticated.
           this.userSignal.set(null);
+          resolve();
         },
       });
-    }
+    });
   }
 
   /**

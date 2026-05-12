@@ -23,6 +23,12 @@ export const teacherRoutes: Routes = [
         loadComponent: () => import('./task-review/task-review.component').then((m) => m.TaskReviewComponent),
       },
       {
+        // N-H-1: aggregated review index — picks a topic to review AI tasks for.
+        path: 'review',
+        loadComponent: () =>
+          import('./task-review/task-review-index.component').then((m) => m.TaskReviewIndexComponent),
+      },
+      {
         path: 'dashboard',
         loadComponent: () => import('./dashboard/teacher-dashboard.component').then((m) => m.TeacherDashboardComponent),
       },
