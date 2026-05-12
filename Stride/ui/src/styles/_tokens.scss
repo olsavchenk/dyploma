@@ -1,6 +1,6 @@
 // ─── Stride Design Tokens ───────────────────────────────────────────────────
 // Single source of truth for all CSS custom properties.
-// Consumed by Tailwind, Material overrides, and component styles.
+// Consumed by the Material 3 theme, component-scoped SCSS, and utilities.
 
 :root {
   // Brand Blue

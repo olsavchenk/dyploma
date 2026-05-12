@@ -1,0 +1,51 @@
+// ─── Stride Utility Classes ─────────────────────────────────────────────────
+// Replacement for the small Tailwind subset we actually used.
+// Only includes utilities that have real usage in templates; do not expand
+// without confirming there is a real call site.
+
+// ── Display utilities ────────────────────────────────────────────────────────
+.hidden { display: none !important; }
+.block  { display: block !important; }
+.flex   { display: flex !important; }
+.inline-flex { display: inline-flex !important; }
+.grid   { display: grid !important; }
+
+// ── Responsive: small breakpoint (≥ 640px) ──────────────────────────────────
+@media (min-width: 640px) {
+  .sm\:flex   { display: flex !important; }
+  .sm\:block  { display: block !important; }
+  .sm\:hidden { display: none !important; }
+  .sm\:inline-flex { display: inline-flex !important; }
+  .sm\:grid   { display: grid !important; }
+}
+
+// ── Responsive: medium breakpoint (≥ 768px) ──────────────────────────────────
+@media (min-width: 768px) {
+  .md\:flex   { display: flex !important; }
+  .md\:block  { display: block !important; }
+  .md\:hidden { display: none !important; }
+  .md\:inline-flex { display: inline-flex !important; }
+  .md\:grid   { display: grid !important; }
+}
+
+// ── Responsive: large breakpoint (≥ 1024px) ──────────────────────────────────
+@media (min-width: 1024px) {
+  .lg\:flex   { display: flex !important; }
+  .lg\:block  { display: block !important; }
+  .lg\:hidden { display: none !important; }
+  .lg\:inline-flex { display: inline-flex !important; }
+  .lg\:grid   { display: grid !important; }
+}
+
+// ── Accessibility ────────────────────────────────────────────────────────────
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
