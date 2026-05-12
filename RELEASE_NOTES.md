@@ -75,27 +75,69 @@ and `Stride.slnx` Release build are now warning-free.
 | Full stack via Docker                | `docker-compose -f Stride/docker-compose.yml up -d --build`                    |
 | Production deploy                    | `bash Stride/deploy/deploy.sh <server-ip>` (see `Stride/deploy/` for details)  |
 
-## What to verify in staging
+## Production deployment
 
-These need a running stack and a real browser — they were not validated
-in this pass because the local environment does not have Chrome DevTools
-MCP wired up:
+Deployed to `https://192.168.31.30` via `bash Stride/deploy/deploy.sh
+192.168.31.30`. After the deploy, two production-side bugs surfaced and
+were fixed:
 
-1. **Walk every MVP user story** in `USER_STORIES_MVP.md` for each role
-   (Student / Teacher / Admin). Acceptance is zero console errors and
-   zero failed network requests on the golden path.
-2. **Lighthouse** on Dashboard and Learn pages: Performance ≥ 85,
-   Accessibility ≥ 95, Best Practices ≥ 90.
+- **PWA service worker was 404.** `provideServiceWorker` was registered
+  in `app.config.ts` and `ngsw-config.json` existed, but `angular.json`
+  was missing the build-time `serviceWorker` option, so the CLI never
+  emitted `ngsw-worker.js` / `ngsw.json` / `safety-worker.js`. Fix: added
+  `"serviceWorker": "ngsw-config.json"` to both production and staging
+  configurations. All three artifacts now serve at 200.
+- **Stride.Api crash-looped at startup.** The startup init block had a
+  catch-and-rethrow at the bottom, so any failure in seeding or external
+  service init (Meilisearch indexes racing an unready container is the
+  most common cause) killed the whole API. Adaptive.Api stayed healthy
+  because it never touches those services. Fix: split init into critical
+  (PostgreSQL migrations + Mongo indexes — still fatal on failure) and
+  non-critical (seeders, MinIO bucket creation, Meilisearch indexes — run
+  through `SafeInitAsync` which logs and continues). Ops can re-seed
+  manually if a non-critical step ever fails.
+
+## Lighthouse — measured against the live prod URL
+
+`npx lighthouse@12.8.2` driving headless Chrome against the deployed
+build, all four public routes (root, `/auth/login`, `/auth/register` on
+desktop preset; `/auth/login` on mobile preset for the smaller score
+floor). Thresholds from `GOAL_PROMPT.md`: Performance ≥ 85, Accessibility
+≥ 95, Best Practices ≥ 90 — **all met on every route, including mobile.**
+
+| Route             | Form    | Performance | Accessibility | Best Practices | SEO |
+| ----------------- | ------- | ----------- | ------------- | -------------- | --- |
+| `/`               | Desktop | **98**      | **100**       | **96**         | 91  |
+| `/auth/login`     | Desktop | **97**      | **100**       | **96**         | 91  |
+| `/auth/register`  | Desktop | **98**      | **100**       | **96**         | 91  |
+| `/auth/login`     | Mobile  | **87**      | **100**       | **96**         | 91  |
+
+Raw reports at `lighthouse-root.json`, `lighthouse-login.json`,
+`lighthouse-register.json`, `lighthouse-login-mobile.json` (kept under
+the repo root for traceability — git-ignore if desired).
+
+## What's still owner-side (delegated by request)
+
+The user explicitly said "Don't test UI, i'll do that myself", so the
+authenticated-route walk-throughs are intentionally left to the owner.
+Everything below requires a real login, which Lighthouse + headless
+Chrome can't do without credentials:
+
+1. **MVP user-story walk-throughs per role** (Student / Teacher / Admin)
+   per `USER_STORIES_MVP.md`. Acceptance: zero console errors and zero
+   failed network requests on the golden path.
+2. **Lighthouse on authenticated routes** (Dashboard, Learn). Public
+   routes are signed off above; the authenticated routes need a session
+   cookie to load and so were skipped.
 3. **SignalR hubs**: confirm `/hubs/notifications` and `/hubs/leaderboard`
    reconnect cleanly across route navigation and do not duplicate
    subscriptions.
 4. **PWA install + offline shell** on a fresh device (no service worker
-   cached yet) to confirm the install prompt appears and the offline
-   route loads when the network is dropped.
-5. **Auth flows end-to-end**: register → select role → login → refresh
-   token rotation → logout — confirm the HttpOnly refresh cookie is set
-   correctly and that a hard refresh on a protected route restores the
-   session.
+   cached yet) — the artifacts are now served (verified above) so the
+   install prompt should appear; smoke-test it.
+5. **Auth flow end-to-end**: register → select role → login → refresh
+   token rotation → logout. Hard-refresh on a protected route to confirm
+   the HttpOnly cookie restores the session.
 
 ## Known follow-ups
 
@@ -108,11 +150,12 @@ These are deferred — track and resolve when upstream allows.
   still hits the same advisory). `Directory.Build.props` sets
   `NuGetAuditMode=direct` so the build is honest about what we control;
   revisit when MongoDB.Driver bumps its compression deps.
-- **Chrome verification + Lighthouse.** Phase 5 of the original plan
-  required Chrome DevTools MCP for manual story walk-throughs and
-  Lighthouse runs. Those tools were not present in this environment, so
-  the verification steps are listed under _What to verify in staging_
-  above and have not been signed off here.
+- **Chrome MCP unavailable in the session that ran this pass.** Phase 5
+  of the original goal asked for `mcp__Claude_in_Chrome__*` tools; none
+  were exposed. Lighthouse was run instead as concrete evidence for the
+  performance / a11y / best-practices thresholds (scores above). The
+  authenticated user-story walk-throughs are listed under _What's still
+  owner-side_ and were deferred by explicit owner request.
 - **Old `linear-strolling-brook.md` / scattered feature READMEs.**
   Several feature README files still mention Tailwind. These are stale
   but do not affect runtime. Worth a doc sweep next pass.
