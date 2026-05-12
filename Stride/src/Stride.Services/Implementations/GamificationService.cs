@@ -124,7 +124,7 @@ public class GamificationService : IGamificationService
                 FirstTaskOfDayBonusAwarded = firstTaskBonus,
                 PerfectLessonBonusAwarded = perfectLessonBonus,
                 XpToNextLevel = xpToNextLevel > 0 ? xpToNextLevel : 0,
-                UnlockedAchievements = unlockedAchievements
+                UnlockedAchievements = unlockedAchievements ?? new List<UnlockedAchievementResult>()
             };
         }
         else

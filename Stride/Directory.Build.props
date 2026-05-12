@@ -1,0 +1,20 @@
+<Project>
+
+  <PropertyGroup>
+    <!--
+      Restrict NuGet vulnerability audits to direct dependencies only.
+
+      MongoDB.Driver 3.6.0 brings in Snappier and SharpCompress transitively;
+      both have advisories that the upstream driver has not yet pulled in
+      patched versions for. Overriding with explicit versions in our csproj
+      either fails to resolve (Snappier 1.2.1 does not exist on NuGet) or
+      still trips the same advisory (Snappier 1.3.0). The honest fix is to
+      wait for MongoDB.Driver to bump those refs upstream.
+
+      Tracked in RELEASE_NOTES.md under "Known follow-ups" — revisit when
+      MongoDB.Driver releases a version that picks up patched transitives.
+    -->
+    <NuGetAuditMode>direct</NuGetAuditMode>
+  </PropertyGroup>
+
+</Project>
