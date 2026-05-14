@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -153,21 +155,7 @@ public class AuthService : IAuthService
         // Create student profile if user is a student but doesn't have a profile yet
         if (user.Role == "Student" && user.StudentProfile == null)
         {
-            var studentProfile = new StudentProfile
-            {
-                Id = Guid.NewGuid(),
-                UserId = user.Id,
-                TotalXp = 0,
-                CurrentLevel = 1,
-                CurrentStreak = 0,
-                LongestStreak = 0,
-                StreakFreezes = 0,
-                League = "Bronze",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _dbContext.StudentProfiles.Add(studentProfile);
-            user.StudentProfile = studentProfile;
+            user.StudentProfile = await EnsureStudentProfileAsync(user);
         }
 
         await _dbContext.SaveChangesAsync();
@@ -179,10 +167,85 @@ public class AuthService : IAuthService
         return await GenerateAuthResponseAsync(user, ipAddress);
     }
 
+    private async Task<StudentProfile> EnsureStudentProfileAsync(User user)
+    {
+        var existing = await _dbContext.StudentProfiles
+            .FirstOrDefaultAsync(p => p.UserId == user.Id);
+        if (existing != null)
+        {
+            return existing;
+        }
+
+        var studentProfile = new StudentProfile
+        {
+            Id = Guid.NewGuid(),
+            UserId = user.Id,
+            TotalXp = 0,
+            CurrentLevel = 1,
+            CurrentStreak = 0,
+            LongestStreak = 0,
+            StreakFreezes = 0,
+            League = "Bronze",
+            CreatedAt = DateTime.UtcNow
+        };
+
+        _dbContext.StudentProfiles.Add(studentProfile);
+
+        try
+        {
+            await _dbContext.SaveChangesAsync();
+            return studentProfile;
+        }
+        catch (DbUpdateException ex)
+        {
+            _logger.LogWarning(ex, "Concurrent StudentProfile creation for UserId={UserId}; re-fetching", user.Id);
+            _dbContext.Entry(studentProfile).State = EntityState.Detached;
+            var refetched = await _dbContext.StudentProfiles
+                .FirstOrDefaultAsync(p => p.UserId == user.Id);
+            if (refetched == null)
+            {
+                throw;
+            }
+            return refetched;
+        }
+    }
+
     public async Task<AuthResponse> RefreshTokenAsync(string refreshToken, string? ipAddress = null)
     {
         _logger.LogDebug("Starting {Method}, IpAddress={IpAddress}",
             nameof(RefreshTokenAsync), ipAddress);
+
+        // BUG C-06: atomically revoke the presented token. If zero rows are affected
+        // the token was already revoked (or never existed) — treat as theft and revoke
+        // the entire family of tokens for this user.
+        var revokedAtUtc = DateTime.UtcNow;
+        var affected = await _dbContext.RefreshTokens
+            .Where(rt => rt.Token == refreshToken && !rt.IsRevoked && rt.ExpiresAt > revokedAtUtc)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(rt => rt.IsRevoked, true)
+                .SetProperty(rt => rt.RevokedAt, revokedAtUtc)
+                .SetProperty(rt => rt.RevokedByIp, ipAddress));
+
+        if (affected == 0)
+        {
+            // Potential reuse of an already-revoked token — find the owner (if any)
+            // and revoke every active token in the family.
+            var compromised = await _dbContext.RefreshTokens
+                .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
+            if (compromised != null)
+            {
+                _logger.LogWarning(
+                    "{Method}: Refresh token reuse detected for UserId={UserId}; revoking token family",
+                    nameof(RefreshTokenAsync), compromised.UserId);
+                await RevokeAllUserTokensAsync(compromised.UserId, ipAddress);
+            }
+            else
+            {
+                _logger.LogWarning("{Method} failed: Unknown refresh token presented", nameof(RefreshTokenAsync));
+            }
+            throw new UnauthorizedAccessException("Invalid or expired refresh token");
+        }
+
         var token = await _dbContext.RefreshTokens
             .Include(rt => rt.User)
                 .ThenInclude(u => u.StudentProfile)
@@ -190,39 +253,19 @@ public class AuthService : IAuthService
                 .ThenInclude(u => u.TeacherProfile)
             .FirstOrDefaultAsync(rt => rt.Token == refreshToken);
 
-        if (token == null || !token.IsActive)
+        if (token == null || token.User == null || token.User.IsDeleted)
         {
-            _logger.LogWarning("{Method} failed: Invalid or expired refresh token, TokenExists={TokenExists}, IsActive={IsActive}",
-                nameof(RefreshTokenAsync), token != null, token?.IsActive ?? false);
+            _logger.LogWarning("{Method} failed: Refresh token owner missing or deleted", nameof(RefreshTokenAsync));
             throw new UnauthorizedAccessException("Invalid or expired refresh token");
         }
 
         _logger.LogDebug("{Method}: Token validated for UserId={UserId}",
             nameof(RefreshTokenAsync), token.UserId);
 
-        // Revoke old token
-        token.IsRevoked = true;
-        token.RevokedAt = DateTime.UtcNow;
-        token.RevokedByIp = ipAddress;
-
         // Create student profile if user is a student but doesn't have a profile yet
         if (token.User.Role == "Student" && token.User.StudentProfile == null)
         {
-            var studentProfile = new StudentProfile
-            {
-                Id = Guid.NewGuid(),
-                UserId = token.User.Id,
-                TotalXp = 0,
-                CurrentLevel = 1,
-                CurrentStreak = 0,
-                LongestStreak = 0,
-                StreakFreezes = 0,
-                League = "Bronze",
-                CreatedAt = DateTime.UtcNow
-            };
-
-            _dbContext.StudentProfiles.Add(studentProfile);
-            token.User.StudentProfile = studentProfile;
+            token.User.StudentProfile = await EnsureStudentProfileAsync(token.User);
         }
 
         // Generate new tokens
@@ -328,13 +371,36 @@ public class AuthService : IAuthService
 
         User? user = null;
 
-        // Verify token against each user's hashed token
+        if (string.IsNullOrEmpty(request.Token))
+        {
+            _logger.LogWarning("{Method} failed: Empty reset token", nameof(ResetPasswordAsync));
+            throw new UnauthorizedAccessException("Invalid or expired reset token");
+        }
+
+        // Verify token against each user's hashed token. BCrypt.Verify is already
+        // constant-time per hash but the loop itself short-circuits on first match,
+        // which can leak match-row position. Iterate every candidate and use a
+        // FixedTimeEquals on the resulting hash to neutralise that leak.
+        var submittedBytes = Encoding.UTF8.GetBytes(request.Token);
         foreach (var u in users)
         {
-            if (u.PasswordResetToken != null && BCrypt.Net.BCrypt.Verify(request.Token, u.PasswordResetToken))
+            if (u.PasswordResetToken == null)
+            {
+                continue;
+            }
+
+            if (!BCrypt.Net.BCrypt.Verify(request.Token, u.PasswordResetToken))
+            {
+                continue;
+            }
+
+            var storedBytes = Encoding.UTF8.GetBytes(u.PasswordResetToken);
+            var paddedSubmitted = submittedBytes.Length == storedBytes.Length
+                ? submittedBytes
+                : Encoding.UTF8.GetBytes(u.PasswordResetToken);
+            if (CryptographicOperations.FixedTimeEquals(paddedSubmitted, storedBytes))
             {
                 user = u;
-                break;
             }
         }
 

@@ -50,31 +50,56 @@ public class ClassService : IClassService
             throw new DuplicateClassNameException("Клас з такою назвою вже існує");
         }
 
-        // Generate unique join code
-        var joinCode = await GenerateUniqueJoinCodeAsync();
-
-        var classEntity = new Class
+        // Generate unique join code and persist with retry on unique-index violation.
+        // The "IsActive = true" partial unique index can still race when two teachers
+        // commit at the same moment; on duplicate insert we retry up to 5 times before
+        // giving up.
+        Class classEntity = null!;
+        DbUpdateException? lastDup = null;
+        for (var attempt = 0; attempt < 5; attempt++)
         {
-            Id = Guid.NewGuid(),
-            TeacherId = teacherId,
-            Name = trimmedName,
-            JoinCode = joinCode,
-            GradeLevel = request.GradeLevel,
-            Subject = string.IsNullOrWhiteSpace(request.Subject) ? null : request.Subject.Trim(),
-            Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
-            IsActive = true,
-            IsArchived = false,
-            CreatedAt = DateTime.UtcNow
-        };
+            var joinCode = await GenerateUniqueJoinCodeAsync();
+            classEntity = new Class
+            {
+                Id = Guid.NewGuid(),
+                TeacherId = teacherId,
+                Name = trimmedName,
+                JoinCode = joinCode,
+                GradeLevel = request.GradeLevel,
+                Subject = string.IsNullOrWhiteSpace(request.Subject) ? null : request.Subject.Trim(),
+                Description = string.IsNullOrWhiteSpace(request.Description) ? null : request.Description.Trim(),
+                IsActive = true,
+                IsArchived = false,
+                CreatedAt = DateTime.UtcNow
+            };
 
-        _dbContext.Classes.Add(classEntity);
-        await _dbContext.SaveChangesAsync();
+            _dbContext.Classes.Add(classEntity);
+            try
+            {
+                await _dbContext.SaveChangesAsync();
+                lastDup = null;
+                break;
+            }
+            catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+            {
+                _logger.LogWarning(ex,
+                    "Join code collision for teacher {TeacherId}, attempt {Attempt}",
+                    teacherId, attempt + 1);
+                _dbContext.Entry(classEntity).State = EntityState.Detached;
+                lastDup = ex;
+            }
+        }
+
+        if (lastDup != null)
+        {
+            throw new InvalidOperationException("Failed to generate unique join code", lastDup);
+        }
 
         _logger.LogInformation(
             "Class {ClassName} created by teacher {TeacherId} with join code {JoinCode}",
             classEntity.Name,
             teacherId,
-            joinCode);
+            classEntity.JoinCode);
 
         return new ClassDto
         {
@@ -1185,5 +1210,27 @@ public class ClassService : IClassService
         }
 
         return new string(chars);
+    }
+
+    private static bool IsUniqueViolation(DbUpdateException ex)
+    {
+        // Npgsql surfaces unique-index violations as SQLSTATE 23505. Match defensively
+        // to also catch InMemory provider duplicate-key errors in dev/tests.
+        var inner = ex.InnerException;
+        while (inner != null)
+        {
+            var sqlState = inner.GetType().GetProperty("SqlState")?.GetValue(inner) as string;
+            if (sqlState == "23505")
+            {
+                return true;
+            }
+            if (inner.Message.Contains("duplicate", StringComparison.OrdinalIgnoreCase)
+                || inner.Message.Contains("unique", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            inner = inner.InnerException;
+        }
+        return false;
     }
 }

@@ -19,6 +19,7 @@ import { GamificationService } from '@app/core/services/gamification.service';
 import { UserProfile } from '@app/core/models/user.models';
 import { GamificationStats, Achievement, AchievementsResponse } from '@app/core/models/gamification.models';
 import { LoggingService } from '@app/core/services/logging.service';
+import { TranslationService } from '@app/core/services/translation.service';
 import { EditProfileDialogComponent } from './edit-profile-dialog.component';
 import { AchievementGalleryComponent } from './achievement-gallery.component';
 import { AchievementDetailDialogComponent } from './achievement-detail-dialog.component';
@@ -52,6 +53,7 @@ export class ProfileComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggingService);
+  private readonly i18n = inject(TranslationService);
   private readonly platformId = inject(PLATFORM_ID);
 
   protected readonly loading = signal<boolean>(false);
@@ -62,7 +64,7 @@ export class ProfileComponent implements OnInit {
   protected readonly recentActivity = signal<ActivityItem[]>([]);
   protected readonly notificationsEnabled = signal<boolean>(true);
   protected readonly uploadingAvatar = signal<boolean>(false);
-  protected readonly currentLang = signal<'uk' | 'en'>('uk');
+  protected readonly currentLang = this.i18n.currentLanguage;
   protected readonly deferredInstallPrompt = signal<any>(null);
 
   ngOnInit(): void {
@@ -94,7 +96,7 @@ export class ProfileComponent implements OnInit {
       },
       error: (err) => {
         this.logger.error('ProfileComponent', 'Failed to load profile data', {}, err);
-        this.error.set('Не вдалося завантажити профіль');
+        this.error.set(this.i18n.instant('profile.loadError'));
         this.loading.set(false);
       },
     });
@@ -157,7 +159,8 @@ export class ProfileComponent implements OnInit {
   }
 
   protected toggleLanguage(): void {
-    this.currentLang.update((l) => (l === 'uk' ? 'en' : 'uk'));
+    const next = this.currentLang() === 'uk' ? 'en' : 'uk';
+    this.i18n.setLanguage(next);
   }
 
   protected onNotificationToggle(): void {
@@ -182,12 +185,13 @@ export class ProfileComponent implements OnInit {
   }
 
   protected getRoleLabel(role: string): string {
-    const labels: Record<string, string> = {
-      Student: 'Студент',
-      Teacher: 'Вчитель',
-      Admin: 'Адміністратор',
+    const keyMap: Record<string, string> = {
+      Student: 'roles.student',
+      Teacher: 'roles.teacher',
+      Admin: 'roles.admin',
     };
-    return labels[role] ?? role;
+    const key = keyMap[role];
+    return key ? this.i18n.instant(key) : role;
   }
 
   protected getRoleIcon(role: string): string {
@@ -200,7 +204,8 @@ export class ProfileComponent implements OnInit {
   }
 
   protected formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('uk-UA', {
+    const locale = this.currentLang() === 'en' ? 'en-US' : 'uk-UA';
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -208,7 +213,8 @@ export class ProfileComponent implements OnInit {
   }
 
   protected formatMemberSince(dateString: string): string {
-    return new Date(dateString).toLocaleDateString('uk-UA', {
+    const locale = this.currentLang() === 'en' ? 'en-US' : 'uk-UA';
+    return new Date(dateString).toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
     });

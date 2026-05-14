@@ -1,44 +1,45 @@
 import { Component, Input, OnInit, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-xp-bar',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   template: `
     <div class="xp-bar-container">
       <div class="xp-header">
         <div class="level-badge" [@levelBadge]="levelAnimationState">
           <div class="level-number">{{ currentLevel }}</div>
-          <div class="level-label">Рівень</div>
+          <div class="level-label">{{ 'dashboard.xpBar.level' | translate }}</div>
         </div>
-        
+
         <div class="xp-info">
-          <div class="xp-label">Досвід</div>
+          <div class="xp-label">{{ 'dashboard.xpBar.xp' | translate }}</div>
           <div class="xp-count">
             <span class="current-xp" [@xpGain]="xpGainState">{{ currentXp | number:'1.0-0' }}</span>
             <span class="separator"> / </span>
-            <span>{{ xpToNextLevel | number:'1.0-0' }} XP</span>
+            <span>{{ displayXpToNextLevel | number:'1.0-0' }} {{ 'common.xp' | translate }}</span>
           </div>
         </div>
       </div>
-      
+
       <div class="progress-bar-container">
         <div class="progress-bar-bg">
-          <div 
-            class="progress-bar-fill" 
-            [style.width.%]="xpProgress"
+          <div
+            class="progress-bar-fill"
+            [style.width.%]="displayProgress"
             [@progressFill]="progressAnimationState">
             <div class="progress-shine"></div>
           </div>
         </div>
-        <div class="progress-percentage">{{ xpProgress | number:'1.0-0' }}%</div>
+        <div class="progress-percentage">{{ displayProgress | number:'1.0-0' }}%</div>
       </div>
-      
-      @if (xpProgress >= 90) {
+
+      @if (displayProgress >= 90) {
         <div class="level-up-hint animate-bounce">
-          🎉 Майже новий рівень!
+          🎉 {{ 'dashboard.xpBar.almostLevel' | translate }}
         </div>
       }
     </div>
@@ -274,6 +275,25 @@ export class XpBarComponent implements OnInit, OnChanges {
 
   private previousLevel: number = 1;
   private previousXp: number = 0;
+
+  /**
+   * BUG C-02 display-side guard: server can briefly report xpToNextLevel < currentXp
+   * before the level-up promotion runs. We clamp the displayed delta to >= 0 and
+   * surface 100 % progress in that case.
+   */
+  get displayXpToNextLevel(): number {
+    const diff = (this.xpToNextLevel ?? 0) - (this.currentXp ?? 0);
+    return Math.max(0, diff);
+  }
+
+  get displayProgress(): number {
+    const diff = (this.xpToNextLevel ?? 0) - (this.currentXp ?? 0);
+    if (diff <= 0) return 100;
+    const p = Number(this.xpProgress);
+    if (!Number.isFinite(p) || p < 0) return 0;
+    if (p > 100) return 100;
+    return p;
+  }
 
   ngOnInit(): void {
     this.previousLevel = this.currentLevel;

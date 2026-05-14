@@ -21,6 +21,7 @@ import { Class, ClassQuickStats } from '@app/core/models';
 import { CreateClassDialogComponent } from '../dialogs/create-class-dialog.component';
 import { ShareJoinCodeDialogComponent } from '../dialogs/share-join-code-dialog.component';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
+import { PluralUaPipe } from '@app/shared/pipes/plural-ua.pipe';
 
 type ClassFilter = 'active' | 'archived';
 
@@ -42,6 +43,7 @@ type ClassFilter = 'active' | 'archived';
     MatMenuModule,
     MatButtonToggleModule,
     TranslateModule,
+    PluralUaPipe,
   ],
   templateUrl: './classes.component.html',
   styleUrls: ['./classes.component.scss'],
@@ -111,8 +113,14 @@ export class ClassesComponent implements OnInit {
   }
 
   openCreateDialog(): void {
+    // BUG H-10: pass existing names so the dialog can reject duplicates client-side.
+    const existingNames = this.classes()
+      .filter((c) => !c.isArchived)
+      .map((c) => c.name.trim().toLowerCase());
+
     const dialogRef = this.dialog.open(CreateClassDialogComponent, {
       width: '500px',
+      data: { existingNames },
     });
 
     // M-29: explicit unsubscribe via DestroyRef so the dialog instance can be GC'd
@@ -124,6 +132,12 @@ export class ClassesComponent implements OnInit {
         }
       });
   }
+
+  /**
+   * BUG H-10: surface a client-side duplicate-name error before opening the dialog,
+   * but actual prevention happens server-side (agent E) and via the dialog's own
+   * 409 handling. The existingNames passed to the dialog supplement that flow.
+   */
 
   openEditDialog(cls: Class, event?: Event): void {
     event?.stopPropagation();

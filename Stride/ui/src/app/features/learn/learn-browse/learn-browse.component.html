@@ -9,7 +9,7 @@
       @if (!loading() && classes().length > 0) {
         <button class="btn-join" (click)="openJoinDialog()">
           <span class="btn-join-icon">+</span>
-          Приєднатися до класу
+          {{ 'learn.browse.joinClassButton' | translate }}
         </button>
       }
     </div>
@@ -26,15 +26,15 @@
               <path d="M24 12v24M12 24h24" stroke="var(--blue-600)" stroke-width="2.5" stroke-linecap="round"/>
             </svg>
           </div>
-          <h2 class="no-classes-title">Ти ще не приєднався до жодного класу</h2>
-          <p class="no-classes-text">Попроси свого вчителя надати тобі 6-значний код і вступи до класу</p>
+          <h2 class="no-classes-title">{{ 'learn.browse.joinNoneTitle' | translate }}</h2>
+          <p class="no-classes-text">{{ 'learn.browse.joinNoneSubtitle' | translate }}</p>
         </div>
       }
       <div class="join-panel-content">
-        <p class="join-hint">Введи 6-значний код, наданий вчителем</p>
+        <p class="join-hint">{{ 'learn.browse.joinHint' | translate }}</p>
         <div class="join-form-row">
           <mat-form-field appearance="outline" class="join-code-field">
-            <mat-label>Код класу</mat-label>
+            <mat-label>{{ 'learn.browse.codeLabel' | translate }}</mat-label>
             <input
               matInput
               [formControl]="joinCodeControl"
@@ -44,7 +44,7 @@
               (input)="onJoinCodeInput($event)"
             />
             @if (joinCodeControl.hasError('pattern') && joinCodeControl.touched) {
-              <mat-error>Тільки великі літери та цифри (6 символів)</mat-error>
+              <mat-error>{{ 'learn.browse.codeError' | translate }}</mat-error>
             }
           </mat-form-field>
           <button
@@ -54,11 +54,11 @@
             @if (joining()) {
               <mat-progress-spinner diameter="18" mode="indeterminate"></mat-progress-spinner>
             } @else {
-              Приєднатися
+              {{ 'learn.browse.joinCta' | translate }}
             }
           </button>
           @if (classes().length > 0) {
-            <button class="btn-ghost" (click)="closeJoinDialog()">Скасувати</button>
+            <button class="btn-ghost" (click)="closeJoinDialog()">{{ 'common.cancel' | translate }}</button>
           }
         </div>
         @if (joinError()) {
@@ -79,7 +79,7 @@
           class="filter-chip"
           [class.filter-chip--active]="activeGradeFilter() === chip.value"
           (click)="setGradeFilter(chip.value)">
-          {{ chip.label }}
+          {{ chip.labelKey | translate }}
         </button>
       }
     </div>
@@ -89,7 +89,7 @@
   @if (loading()) {
     <div class="loading-container">
       <mat-progress-spinner mode="indeterminate" diameter="40"></mat-progress-spinner>
-      <p class="loading-text">Завантаження класів...</p>
+      <p class="loading-text">{{ 'learn.browse.loadingClasses' | translate }}</p>
     </div>
   }
 
@@ -98,7 +98,7 @@
     <div class="empty-state">
       <div class="empty-icon">⚠️</div>
       <p class="empty-text">{{ error() }}</p>
-      <button class="btn-primary" (click)="onRefresh()">Спробувати знову</button>
+      <button class="btn-primary" (click)="onRefresh()">{{ 'learn.browse.tryAgain' | translate }}</button>
     </div>
   }
 
@@ -111,7 +111,7 @@
             <div class="class-header-dot"></div>
             <div class="class-header-info">
               <h2 class="class-name">{{ cls.name }}</h2>
-              <span class="class-meta">{{ cls.gradeLevel }} клас &bull; {{ cls.teacherName }}</span>
+              <span class="class-meta">{{ cls.gradeLevel }} {{ 'teacher.dashboard.gradeSuffix' | translate }} &bull; {{ cls.teacherName }}</span>
             </div>
           </div>
 
@@ -149,16 +149,16 @@
                   <div class="subject-card-body">
                     <h3 class="subject-card-title">{{ subject.name }}</h3>
                     <p class="subject-card-meta">
-                      {{ subject.assignmentCount }} {{ subject.assignmentCount === 1 ? 'завдання' : 'завдань' }}
+                      {{ subject.assignmentCount }} {{ subject.assignmentCount | pluralUa: ['завдання','завдання','завдань'] }}
                     </p>
                     @if (subject.progressPercentage > 0) {
-                      <span class="mastery-pct">{{ subject.progressPercentage }}% освоєно</span>
+                      <span class="mastery-pct">{{ subject.progressPercentage }}%</span>
                     }
                   </div>
 
                   @if (subject.subjectId) {
                     <button class="btn-start" (click)="onSubjectClick(subject); $event.stopPropagation()">
-                      Почати
+                      {{ 'learn.browse.start' | translate }}
                     </button>
                   }
                 </div>
@@ -167,7 +167,7 @@
           } @else {
             <div class="empty-state">
               <div class="empty-icon">📚</div>
-              <p class="empty-text">Предмети ще не додано</p>
+              <p class="empty-text">{{ 'learn.browse.noSubjects' | translate }}</p>
             </div>
           }
         </div>
@@ -179,8 +179,8 @@
   @if (!loading() && !error() && classes().length === 0 && !showJoinForm) {
     <div class="empty-state">
       <div class="empty-icon">🎓</div>
-      <h3 class="empty-title">Предмети ще не додано</h3>
-      <p class="empty-text">Приєднайся до класу, щоб побачити предмети</p>
+      <h3 class="empty-title">{{ 'learn.browse.noSubjects' | translate }}</h3>
+      <p class="empty-text">{{ 'learn.browse.noClassesTitle' | translate }}</p>
     </div>
   }
 
@@ -189,8 +189,8 @@
   @if (!allSubjectsLoading() && allSubjects().length > 0) {
     <div class="all-subjects-section">
       <div class="section-header">
-        <h2 class="section-title">Усі предмети</h2>
-        <p class="section-subtitle">Огляд усіх доступних предметів платформи</p>
+        <h2 class="section-title">{{ 'learn.browse.allSubjects' | translate }}</h2>
+        <p class="section-subtitle">{{ 'learn.browse.subtitle' | translate }}</p>
       </div>
 
       <div class="all-subjects-grid">
@@ -211,7 +211,7 @@
                 <p class="catalog-card-desc">{{ subj.description }}</p>
               }
               @if (subj.topicCount !== undefined && subj.topicCount !== null) {
-                <span class="catalog-card-meta">{{ subj.topicCount }} тем</span>
+                <span class="catalog-card-meta">{{ subj.topicCount }} {{ 'learn.browse.topics' | translate }}</span>
               }
             </div>
           </div>
@@ -223,7 +223,7 @@
   @if (allSubjectsLoading()) {
     <div class="loading-container">
       <mat-progress-spinner mode="indeterminate" diameter="32"></mat-progress-spinner>
-      <p class="loading-text">Завантаження каталогу предметів...</p>
+      <p class="loading-text">{{ 'common.loading' | translate }}</p>
     </div>
   }
 </div>

@@ -296,8 +296,11 @@ public static class ServiceCollectionExtensions
         services.AddAuthorization(options =>
         {
             options.AddPolicy("StudentAccess", policy => policy.RequireRole("Student"));
-            options.AddPolicy("TeacherAccess", policy => policy.RequireRole("Teacher"));
+            options.AddPolicy("TeacherAccess", policy => policy.RequireRole("Teacher", "Admin"));
             options.AddPolicy("AdminAccess", policy => policy.RequireRole("Admin"));
+            // Aliases referenced by [Authorize(Policy = "Admin"/"Teacher")] callsites
+            options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+            options.AddPolicy("Teacher", policy => policy.RequireRole("Teacher", "Admin"));
         });
 
         return services;

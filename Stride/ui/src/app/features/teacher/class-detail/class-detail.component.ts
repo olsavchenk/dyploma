@@ -15,8 +15,10 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { Clipboard, ClipboardModule } from '@angular/cdk/clipboard';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslateModule } from '@ngx-translate/core';
 import { TeacherService } from '@app/core/services/teacher.service';
 import { LoggingService } from '@app/core/services/logging.service';
+import { TranslationService } from '@app/core/services/translation.service';
 import {
   Class,
   ClassMember,
@@ -27,6 +29,7 @@ import { CreateAssignmentDialogComponent } from '../dialogs/create-assignment-di
 import { CreateClassDialogComponent } from '../dialogs/create-class-dialog.component';
 import { ConfirmDialogComponent } from '../dialogs/confirm-dialog.component';
 import { GenerationStatusComponent } from '../generation-status/generation-status.component';
+import { PluralUaPipe } from '@app/shared/pipes/plural-ua.pipe';
 
 @Component({
   selector: 'app-class-detail',
@@ -46,7 +49,9 @@ import { GenerationStatusComponent } from '../generation-status/generation-statu
     MatMenuModule,
     MatCheckboxModule,
     ClipboardModule,
+    TranslateModule,
     GenerationStatusComponent,
+    PluralUaPipe,
   ],
   templateUrl: './class-detail.component.html',
   styleUrls: ['./class-detail.component.scss'],
@@ -60,6 +65,7 @@ export class ClassDetailComponent implements OnInit {
   private readonly clipboard = inject(Clipboard);
   private readonly logger = inject(LoggingService);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly i18n = inject(TranslationService);
 
   readonly classInfo = signal<Class | null>(null);
   readonly students = signal<ClassMember[]>([]);
@@ -107,7 +113,33 @@ export class ClassDetailComponent implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (students) => {
-          this.students.set(students);
+          // BUG C-04: backend has shipped variations of the student payload
+          // (`student.name`, `student.user.displayName`, `displayName`).
+          // Coalesce them into `studentName` so the row template never renders
+          // an empty cell or `alt="undefined"`.
+          const normalized = (students ?? []).map((s) => {
+            const anyS = s as any;
+            const name =
+              s.studentName ??
+              anyS.displayName ??
+              anyS.name ??
+              anyS.student?.displayName ??
+              anyS.user?.displayName ??
+              anyS.user?.name ??
+              '—';
+            const lastActive =
+              s.lastActive ??
+              anyS.lastActivity ??
+              anyS.lastAttemptAt ??
+              anyS.lastSeenAt ??
+              null;
+            return {
+              ...s,
+              studentName: name,
+              lastActive,
+            } as ClassMember;
+          });
+          this.students.set(normalized);
           this.selectedStudentIds.set(new Set());
           this.loading.set(false);
         },
@@ -366,16 +398,22 @@ export class ClassDetailComponent implements OnInit {
   }
 
   formatDate(date: string | null): string {
-    if (!date) return 'Ніколи';
+    if (!date) return this.i18n.instant('common.never');
     const dateObj = new Date(date);
     const now = new Date();
     const diffMs = now.getTime() - dateObj.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-    if (diffDays === 0) return 'Сьогодні';
-    if (diffDays === 1) return 'Вчора';
-    if (diffDays > 0 && diffDays < 7) return `${diffDays} днів тому`;
-    return dateObj.toLocaleDateString('uk-UA');
+    if (diffDays === 0) return this.i18n.instant('common.today');
+    if (diffDays === 1) return this.i18n.instant('common.yesterday');
+    if (diffDays > 0 && diffDays < 7) {
+      const word = this.i18n.currentLanguage() === 'en'
+        ? (diffDays === 1 ? 'day' : 'days')
+        : this.dayWord(diffDays);
+      return this.i18n.instant('common.daysAgo', { count: diffDays, word });
+    }
+    const locale = this.i18n.currentLanguage() === 'en' ? 'en-US' : 'uk-UA';
+    return dateObj.toLocaleDateString(locale);
   }
 
   /**

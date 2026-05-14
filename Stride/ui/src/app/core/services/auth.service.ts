@@ -18,11 +18,29 @@ import {
 } from '../models/auth-response.models';
 import { LoggingService } from './logging.service';
 
-// H-5: The access token lives in MEMORY ONLY (no localStorage). The non-sensitive
-// user profile is cached so the layout can render before /auth/refresh resolves on
-// cold start. Refresh token is delivered via HttpOnly cookie set by the API.
-const USER_KEY = 'stride_user';
+// C-01 / H-5: The access token lives in MEMORY ONLY (private signal, no localStorage,
+// no sessionStorage). The HttpOnly refresh-token cookie + the cold-start /auth/refresh
+// round-trip restore the session after a page reload. Only a non-credential UI hint
+// payload (id, displayName, role, etc — never tokens) is cached so the layout can
+// render before /auth/refresh resolves on cold start. The cache key is explicitly
+// suffixed `_profile` so future readers don't mistake it for a credential store.
+const USER_PROFILE_KEY = 'stride_user_profile';
+// Legacy keys we proactively scrub on every boot — older builds wrote a JWT here.
 const LEGACY_TOKEN_KEY = 'stride_access_token';
+const LEGACY_USER_KEY = 'stride_user';
+
+/**
+ * Subset of UserInfo we are willing to cache to localStorage.
+ *
+ * Everything stored here MUST be non-credential UI metadata. Never add a token,
+ * refresh token, password hash, OAuth secret, or any opaque server-only field.
+ * If you find yourself wanting to add a field — ask whether the same value
+ * could be supplied by /auth/refresh response instead.
+ */
+type CachedUserProfile = Pick<
+  UserInfo,
+  'id' | 'email' | 'displayName' | 'avatarUrl' | 'role' | 'isEmailVerified' | 'hasCompletedOnboarding' | 'createdAt'
+>;
 
 @Injectable({
   providedIn: 'root',
@@ -57,10 +75,29 @@ export class AuthService {
   readonly tokenReady$ = this.tokenReadySubject.asObservable();
 
   constructor() {
-    // H-5: scrub legacy token from localStorage left by older builds.
+    // C-01 / H-5: scrub legacy keys from localStorage left by older builds.
+    // Some pre-fix builds wrote a raw JWT at LEGACY_TOKEN_KEY and the full user
+    // payload at LEGACY_USER_KEY. We migrate the user payload into the renamed
+    // _profile key (sanitized) and unconditionally delete the token key.
     if (typeof window !== 'undefined' && window.localStorage) {
       try {
         localStorage.removeItem(LEGACY_TOKEN_KEY);
+        const legacyUser = localStorage.getItem(LEGACY_USER_KEY);
+        if (legacyUser && !localStorage.getItem(USER_PROFILE_KEY)) {
+          // One-time migration: copy across whatever the old build wrote, but
+          // pipe it through the sanitizer so any rogue token-shaped fields are
+          // dropped before being re-written under the new key.
+          try {
+            const parsed = JSON.parse(legacyUser) as Partial<UserInfo>;
+            const sanitized = this.sanitizeForCache(parsed);
+            if (sanitized) {
+              localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(sanitized));
+            }
+          } catch {
+            /* malformed legacy payload — just drop it */
+          }
+        }
+        localStorage.removeItem(LEGACY_USER_KEY);
       } catch {
         /* ignore quota / privacy errors */
       }
@@ -74,13 +111,26 @@ export class AuthService {
       }
     });
 
-    // Effect to sync the (non-sensitive) user profile with localStorage.
+    // Effect to sync the (non-credential) user profile cache with localStorage.
+    // NOTE: we deliberately persist only the whitelisted CachedUserProfile subset
+    // so a future UserInfo extension can't accidentally leak sensitive data here.
     effect(() => {
       const user = this.userSignal();
       if (user) {
-        localStorage.setItem(USER_KEY, JSON.stringify(user));
+        const cached = this.sanitizeForCache(user);
+        if (cached) {
+          try {
+            localStorage.setItem(USER_PROFILE_KEY, JSON.stringify(cached));
+          } catch {
+            /* quota / privacy mode — non-fatal, just lose the cache */
+          }
+        }
       } else {
-        localStorage.removeItem(USER_KEY);
+        try {
+          localStorage.removeItem(USER_PROFILE_KEY);
+        } catch {
+          /* ignore */
+        }
       }
     });
 
@@ -257,9 +307,19 @@ export class AuthService {
   }
 
   /**
-   * Get current access token
+   * Get current access token. Lives in memory only — gone on hard reload until
+   * the cold-start /auth/refresh round-trip restores it.
    */
   getToken(): string | null {
+    return this.tokenSignal();
+  }
+
+  /**
+   * Alias for {@link getToken} exposed as a property-style getter for callers
+   * that prefer `authService.accessToken` over the method form. Never setter —
+   * the token is owned by login/refresh paths only.
+   */
+  get accessToken(): string | null {
     return this.tokenSignal();
   }
 
@@ -323,16 +383,45 @@ export class AuthService {
 
   private getStoredUser(): UserInfo | null {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const userJson = localStorage.getItem(USER_KEY);
+      // Prefer the renamed (sanitized) key; fall back to the legacy one so users
+      // mid-migration don't see an empty header flash on first reload.
+      const userJson =
+        localStorage.getItem(USER_PROFILE_KEY) ?? localStorage.getItem(LEGACY_USER_KEY);
       if (userJson) {
         try {
-          return JSON.parse(userJson);
+          const parsed = JSON.parse(userJson) as Partial<UserInfo>;
+          // Run through the sanitizer so any rogue fields (e.g. a token from a
+          // hostile/older build) are dropped before they enter app state.
+          return this.sanitizeForCache(parsed);
         } catch {
           return null;
         }
       }
     }
     return null;
+  }
+
+  /**
+   * Whitelist-based sanitizer for the localStorage user-profile cache.
+   *
+   * Returns only the explicitly named non-credential fields from UserInfo, so
+   * any future addition (e.g. an internal token) is dropped by default. Returns
+   * `null` if the input is missing the bare-minimum `id` field.
+   */
+  private sanitizeForCache(user: Partial<UserInfo> | null | undefined): CachedUserProfile | null {
+    if (!user || typeof user !== 'object' || !user.id) {
+      return null;
+    }
+    return {
+      id: user.id,
+      email: user.email ?? '',
+      displayName: user.displayName ?? '',
+      avatarUrl: user.avatarUrl ?? null,
+      role: (user.role ?? 'Student') as UserInfo['role'],
+      isEmailVerified: !!user.isEmailVerified,
+      hasCompletedOnboarding: !!user.hasCompletedOnboarding,
+      createdAt: user.createdAt ?? '',
+    };
   }
 
   /**

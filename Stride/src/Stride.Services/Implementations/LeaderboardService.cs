@@ -126,12 +126,20 @@ public class LeaderboardService : ILeaderboardService
             }
         }
 
+        // Deterministic tie-break: same WeeklyXp → higher Level → lower UserId wins.
+        var ordered = topPlayers
+            .OrderByDescending(p => p.WeeklyXp)
+            .ThenByDescending(p => p.Level)
+            .ThenBy(p => p.StudentId)
+            .ToList();
+        for (int r = 0; r < ordered.Count; r++) ordered[r].Rank = r + 1;
+
         return new GetLeaderboardResponse
         {
             League = league,
             WeekNumber = weekNumber,
             Year = year,
-            TopPlayers = topPlayers,
+            TopPlayers = ordered,
             CurrentUserEntry = currentUserEntry,
             TotalPlayers = (int)totalPlayers,
             PromotionZoneCount = PromotionCount,

@@ -4,7 +4,7 @@
   @if (loading()) {
     <div class="loading-container">
       <mat-spinner diameter="48"></mat-spinner>
-      <p>Завантаження профілю...</p>
+      <p>{{ 'profile.loading' | translate }}</p>
     </div>
   }
 
@@ -55,7 +55,7 @@
 
           <!-- Level badge -->
           @if (stats(); as st) {
-            <div class="level-badge" [matTooltip]="'Рівень ' + st.currentLevel">
+            <div class="level-badge" [matTooltip]="('profile.level' | translate) + ' ' + st.currentLevel">
               {{ st.currentLevel }}
             </div>
           }
@@ -65,7 +65,7 @@
 
         <p class="hero-member-since">
           <mat-icon>event</mat-icon>
-          З {{ formatMemberSince(userProfile.createdAt) }}
+          {{ 'profile.memberSincePrefix' | translate }} {{ formatMemberSince(userProfile.createdAt) }}
         </p>
 
         <div class="role-chip">
@@ -75,33 +75,35 @@
 
         <button mat-stroked-button class="edit-btn" (click)="openEditDialog()">
           <mat-icon>edit</mat-icon>
-          Редагувати профіль
+          {{ 'profile.edit' | translate }}
         </button>
       </section>
 
       <!-- ── STATS STRIP ─────────────────────────────── -->
+      <!-- BUG C-03: explicit "Total XP" label so it's clear this is the lifetime total
+           and differs from the weekly XP shown on the leaderboard. -->
       @if (stats(); as st) {
         <section class="stats-strip">
           <div class="stat-tile">
             <span class="stat-number">{{ st.totalXp }}</span>
-            <span class="stat-label">Загальний XP</span>
+            <span class="stat-label">{{ 'profile.stats.totalXp' | translate }}</span>
           </div>
           <div class="stat-tile">
             <span class="stat-number">{{ st.currentStreak }}</span>
-            <span class="stat-label">Поточна серія</span>
+            <span class="stat-label">{{ 'profile.stats.currentStreak' | translate }}</span>
           </div>
           <div class="stat-tile">
             <span class="stat-number">{{ st.longestStreak }}</span>
-            <span class="stat-label">Найдовша серія</span>
+            <span class="stat-label">{{ 'profile.stats.longestStreak' | translate }}</span>
           </div>
           @if (userProfile.studentStats; as ss) {
             <div class="stat-tile">
               <span class="stat-number">{{ ss.totalTasksAttempted }}</span>
-              <span class="stat-label">Завдань виконано</span>
+              <span class="stat-label">{{ 'profile.stats.tasksCompleted' | translate }}</span>
             </div>
             <div class="stat-tile">
               <span class="stat-number">{{ ss.achievementsUnlocked }}</span>
-              <span class="stat-label">Досягнень</span>
+              <span class="stat-label">{{ 'profile.stats.achievementsCount' | translate }}</span>
             </div>
           }
         </section>
@@ -112,7 +114,7 @@
         <section class="card-section">
           <h2 class="section-title">
             <mat-icon>military_tech</mat-icon>
-            Досягнення
+            {{ 'profile.achievements.title' | translate }}
           </h2>
           <app-achievement-gallery
             [achievements]="achievements()"
@@ -125,7 +127,7 @@
         <section class="card-section">
           <h2 class="section-title">
             <mat-icon>history</mat-icon>
-            Остання активність
+            {{ 'profile.activity.lastActivityTitle' | translate }}
           </h2>
           <app-activity-timeline [activities]="recentActivity()" />
         </section>
@@ -135,7 +137,7 @@
       <section class="card-section settings-section">
         <h2 class="section-title">
           <mat-icon>settings</mat-icon>
-          Налаштування
+          {{ 'profile.settings.title' | translate }}
         </h2>
 
         <!-- Language toggle -->
@@ -143,8 +145,8 @@
           <div class="setting-info">
             <mat-icon>language</mat-icon>
             <div>
-              <div class="setting-label">Мова інтерфейсу</div>
-              <div class="setting-description">Оберіть мову відображення</div>
+              <div class="setting-label">{{ 'profile.settings.language' | translate }}</div>
+              <div class="setting-description">{{ 'profile.settings.languageDescription' | translate }}</div>
             </div>
           </div>
           <div class="lang-toggle">
@@ -172,8 +174,8 @@
           <div class="setting-info">
             <mat-icon>notifications</mat-icon>
             <div>
-              <div class="setting-label">Сповіщення</div>
-              <div class="setting-description">Отримувати сповіщення про досягнення та нагадування</div>
+              <div class="setting-label">{{ 'profile.settings.notifications' | translate }}</div>
+              <div class="setting-description">{{ 'profile.settings.notificationsDescription' | translate }}</div>
             </div>
           </div>
           <mat-slide-toggle
@@ -190,13 +192,13 @@
             <div class="setting-info">
               <mat-icon>install_mobile</mat-icon>
               <div>
-                <div class="setting-label">Встановити додаток</div>
-                <div class="setting-description">Додати Stride на головний екран</div>
+                <div class="setting-label">{{ 'profile.settings.installApp' | translate }}</div>
+                <div class="setting-description">{{ 'profile.settings.installAppDescription' | translate }}</div>
               </div>
             </div>
             <button mat-stroked-button (click)="installPwa()">
               <mat-icon>download</mat-icon>
-              Встановити
+              {{ 'profile.settings.install' | translate }}
             </button>
           </div>
         }
@@ -208,13 +210,13 @@
           <div class="setting-info">
             <mat-icon>logout</mat-icon>
             <div>
-              <div class="setting-label">Вийти з акаунту</div>
-              <div class="setting-description">Завершити поточну сесію</div>
+              <div class="setting-label">{{ 'profile.settings.logoutFull' | translate }}</div>
+              <div class="setting-description">{{ 'profile.settings.logoutDescription' | translate }}</div>
             </div>
           </div>
           <button mat-stroked-button color="warn" (click)="logout()">
             <mat-icon>logout</mat-icon>
-            Вийти
+            {{ 'profile.settings.logout' | translate }}
           </button>
         </div>
       </section>

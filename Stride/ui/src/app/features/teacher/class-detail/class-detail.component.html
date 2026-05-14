@@ -15,10 +15,10 @@
           {{ classInfo()!.subject }}
         </mat-chip>
         <ng-template #noSubject>
-          <mat-chip class="subject-chip subject-chip--empty">Без предмета</mat-chip>
+          <mat-chip class="subject-chip subject-chip--empty">{{ 'teacher.classDetail.noSubject' | translate }}</mat-chip>
         </ng-template>
       </div>
-      <span class="header-grade">{{ classInfo()!.gradeLevel }} клас</span>
+      <span class="header-grade">{{ classInfo()!.gradeLevel }} {{ 'teacher.dashboard.gradeSuffix' | translate }}</span>
       <p class="header-description" *ngIf="classInfo()!.description">{{ classInfo()!.description }}</p>
     </div>
 
@@ -72,7 +72,7 @@
     <mat-tab label="Учні">
       <div class="tab-pane">
         <div class="tab-toolbar">
-          <span class="tab-count">{{ students().length }} учнів</span>
+          <span class="tab-count">{{ students().length }} {{ students().length | pluralUa: ['учень','учні','учнів'] }}</span>
 
           <!-- M-22: bulk action buttons (visible when something is selected) -->
           <div class="bulk-actions" *ngIf="hasSelection()">
@@ -112,19 +112,19 @@
             <ng-container matColumnDef="avatar">
               <th mat-header-cell *matHeaderCellDef></th>
               <td mat-cell *matCellDef="let s">
-                <img [src]="s.studentAvatar || '/assets/default-avatar.png'" [alt]="s.studentName" class="s-avatar"/>
+                <img [src]="s.studentAvatar || '/assets/default-avatar.png'" [alt]="s.studentName || ('teacher.classDetail.namePlaceholder' | translate)" class="s-avatar"/>
               </td>
             </ng-container>
 
             <!-- Name -->
             <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Ім'я</th>
-              <td mat-cell *matCellDef="let s" class="s-name-cell">{{ s.studentName }}</td>
+              <th mat-header-cell *matHeaderCellDef>{{ 'teacher.classDetail.namePlaceholder' | translate }}</th>
+              <td mat-cell *matCellDef="let s" class="s-name-cell">{{ s.studentName || ('teacher.classDetail.namePlaceholder' | translate) }}</td>
             </ng-container>
 
             <!-- Level -->
             <ng-container matColumnDef="level">
-              <th mat-header-cell *matHeaderCellDef>Рівень</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'dashboard.xpBar.level' | translate }}</th>
               <td mat-cell *matCellDef="let s">
                 <span class="level-badge">{{ s.currentLevel }}</span>
               </td>
@@ -132,19 +132,19 @@
 
             <!-- Accuracy -->
             <ng-container matColumnDef="accuracy">
-              <th mat-header-cell *matHeaderCellDef>Точність</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'profile.stats.accuracy' | translate }}</th>
               <td mat-cell *matCellDef="let s">{{ (s.accuracy ?? 0).toFixed(0) }}%</td>
             </ng-container>
 
             <!-- Tasks completed -->
             <ng-container matColumnDef="tasksCompleted">
-              <th mat-header-cell *matHeaderCellDef>Завдань</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'profile.stats.tasksCompleted' | translate }}</th>
               <td mat-cell *matCellDef="let s">{{ s.tasksCompleted ?? 0 }}</td>
             </ng-container>
 
             <!-- Last active -->
             <ng-container matColumnDef="lastActive">
-              <th mat-header-cell *matHeaderCellDef>Остання активність</th>
+              <th mat-header-cell *matHeaderCellDef>{{ 'teacher.classDetail.lastActive' | translate }}</th>
               <td mat-cell *matCellDef="let s" class="muted">{{ formatDate(s.lastActive) }}</td>
             </ng-container>
 
@@ -184,7 +184,7 @@
     <mat-tab label="Завдання">
       <div class="tab-pane">
         <div class="tab-toolbar">
-          <span class="tab-count">{{ assignments().length }} завдань</span>
+          <span class="tab-count">{{ assignments().length }} {{ assignments().length | pluralUa: ['завдання','завдання','завдань'] }}</span>
           <button class="btn-primary" (click)="openCreateAssignmentDialog()">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -200,7 +200,7 @@
               <div class="a-title">{{ a.title }}</div>
               <div class="a-topic muted">{{ a.topicName }}</div>
               <div class="a-meta">
-                <span class="meta-chip">{{ a.taskCount }} завдань</span>
+                <span class="meta-chip">{{ a.taskCount }} {{ a.taskCount | pluralUa: ['завдання','завдання','завдань'] }}</span>
                 <span class="meta-chip" *ngIf="a.dueDate">До {{ formatDate(a.dueDate) }}</span>
                 <span class="meta-chip">{{ a.completionRate.toFixed(0) }}% завершено</span>
                 <span class="meta-chip">Бал: {{ a.averageScore.toFixed(0) }}%</span>

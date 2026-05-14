@@ -25,7 +25,13 @@
     "required": "Обов'язкове поле",
     "optional": "Необов'язково",
     "xp": "ОД",
-    "or": "або"
+    "or": "або",
+    "never": "Ніколи",
+    "today": "Сьогодні",
+    "yesterday": "Вчора",
+    "daysAgo": "{{count}} {{word}} тому",
+    "saving": "Збереження...",
+    "create": "Створити"
   },
   "errors": {
     "generic": "Щось пішло не так. Спробуйте ще раз.",
@@ -34,6 +40,31 @@
     "forbidden": "У вас немає доступу до цього розділу.",
     "notFound": "Сторінку не знайдено.",
     "validation": "Перевірте правильність введених даних."
+  },
+  "roles": {
+    "student": "Учень",
+    "teacher": "Вчитель",
+    "admin": "Адміністратор"
+  },
+  "appTitle": {
+    "default": "Страйд",
+    "dashboard": "Головна — Страйд",
+    "learn": "Навчання — Страйд",
+    "leaderboard": "Рейтинг — Страйд",
+    "profile": "Профіль — Страйд",
+    "achievements": "Досягнення — Страйд",
+    "teacher": "Вчитель — Страйд",
+    "teacherClasses": "Класи — Страйд",
+    "teacherDashboard": "Панель вчителя — Страйд",
+    "admin": "Адмін — Страйд",
+    "auth": "Вхід — Страйд"
+  },
+  "league": {
+    "Bronze": "Бронза",
+    "Silver": "Срібло",
+    "Gold": "Золото",
+    "Platinum": "Платина",
+    "Diamond": "Діамант"
   },
   "layout": {
     "header": {
@@ -210,7 +241,9 @@
     },
     "xpBar": {
       "level": "Рівень",
-      "xpTo": "до наступного рівня"
+      "xp": "Досвід",
+      "xpTo": "до наступного рівня",
+      "almostLevel": "Майже новий рівень!"
     },
     "streak": {
       "title": "Серія",
@@ -237,6 +270,10 @@
     "firstTaskBonus": {
       "title": "Перше завдання дня",
       "description": "Виконайте перше завдання і отримайте бонус +50 ОД!",
+      "doneTitle": "Перше завдання дня виконано! 🎉",
+      "doneSubtitle": "Ви отримали бонус +50 ОД",
+      "availableTitle": "Перше завдання дня +50 ОД! 🎁",
+      "availableSubtitle": "Виконайте будь-яке завдання, щоб отримати бонус",
       "cta": "Почати навчання"
     }
   },
@@ -248,6 +285,21 @@
       "start": "Почати",
       "empty": "Предмети ще не додано",
       "allSubjects": "Усі предмети",
+      "loadingClasses": "Завантаження класів...",
+      "joinClassButton": "Приєднатися до класу",
+      "joinNoneTitle": "Ти ще не приєднався до жодного класу",
+      "joinNoneSubtitle": "Попроси свого вчителя надати тобі 6-значний код і вступи до класу",
+      "joinHint": "Введи 6-значний код, наданий вчителем",
+      "codeLabel": "Код класу",
+      "codeError": "Тільки великі літери та цифри (6 символів)",
+      "joinCta": "Приєднатися",
+      "joinAlready": "Ти вже є учасником цього класу.",
+      "joinInvalid": "Невірний код або клас більше не активний.",
+      "joinFailed": "Не вдалося приєднатися. Перевір код та спробуй знову.",
+      "joinSuccess": "Ти успішно приєднався до класу \"{{className}}\"!",
+      "noSubjects": "Предмети ще не додано",
+      "noClassesTitle": "Ще не приєднався до жодного класу",
+      "tryAgain": "Спробувати знову",
       "filters": {
         "all": "Усі класи",
         "primary": "1-4 клас",
@@ -293,6 +345,14 @@
   },
   "leaderboard": {
     "title": "Рейтинг",
+    "weeklyXp": "ОД цього тижня",
+    "totalXp": "Всього ОД",
+    "filterAria": "Фільтр рейтингу",
+    "loadingAria": "Завантаження...",
+    "loadError": "Не вдалося завантажити таблицю лідерів. Спробуйте оновити сторінку.",
+    "tryAgain": "Спробувати знову",
+    "emptyTitle": "Поки що немає учасників",
+    "emptySub": "Стань першим!",
     "filters": {
       "weekly": "Тижневий",
       "allTime": "Весь час",
@@ -314,12 +374,18 @@
     "title": "Профіль",
     "editTitle": "Редагувати профіль",
     "memberSince": "Учасник з",
+    "memberSincePrefix": "З",
+    "loading": "Завантаження профілю...",
+    "loadError": "Не вдалося завантажити профіль",
+    "edit": "Редагувати профіль",
+    "level": "Рівень",
     "stats": {
       "totalXp": "Всього ОД",
       "currentStreak": "Поточна серія",
       "longestStreak": "Найдовша серія",
       "tasksCompleted": "Завдань виконано",
-      "accuracy": "Точність"
+      "accuracy": "Точність",
+      "achievementsCount": "Досягнень"
     },
     "achievements": {
       "title": "Досягнення",
@@ -328,15 +394,22 @@
     },
     "activity": {
       "title": "Активність",
+      "lastActivityTitle": "Остання активність",
       "empty": "Ще немає активності"
     },
     "settings": {
       "title": "Налаштування",
-      "language": "Мова",
+      "language": "Мова інтерфейсу",
+      "languageDescription": "Оберіть мову відображення",
       "notifications": "Сповіщення",
+      "notificationsDescription": "Отримувати сповіщення про досягнення та нагадування",
       "installApp": "Встановити додаток",
+      "installAppDescription": "Додати Страйд на головний екран",
+      "install": "Встановити",
       "exportData": "Експорт даних",
       "logout": "Вийти",
+      "logoutFull": "Вийти з акаунту",
+      "logoutDescription": "Завершити поточну сесію",
       "deleteAccount": "Видалити акаунт"
     }
   },
@@ -346,8 +419,15 @@
       "subtitle": "Огляд вашої навчальної діяльності",
       "classes": "Класи",
       "students": "Учні",
-      "pendingReviews": "На перевірці",
-      "weekXp": "ОД за тиждень"
+      "pendingReviews": "Очікують перевірки",
+      "weekXp": "ОД за тиждень",
+      "recentClasses": "Останні класи",
+      "recentActivity": "Остання активність",
+      "noClasses": "Немає класів",
+      "viewClasses": "Переглянути класи",
+      "noActivity": "Немає нещодавньої активності",
+      "joinCodeLabel": "Код",
+      "gradeSuffix": "клас"
     },
     "classes": {
       "title": "Мої класи",
@@ -356,7 +436,12 @@
       "students": "учнів",
       "avgMastery": "Сер. опанування",
       "manage": "Управляти",
-      "shareCode": "Поділитися кодом"
+      "shareCode": "Поділитися кодом",
+      "searchPlaceholder": "Пошук за назвою...",
+      "filterActive": "Активні",
+      "filterArchived": "Архів",
+      "subtitleStats": "{{classes}} {{classWord}} · {{students}} {{studentWord}}",
+      "duplicateName": "Клас з такою назвою вже існує"
     },
     "classDetail": {
       "students": "Учні",
@@ -364,13 +449,19 @@
       "analytics": "Аналітика",
       "newAssignment": "Нове завдання",
       "lastActive": "Остання активність",
-      "overdueDays": "Прострочено {{count}} днів тому"
+      "lastActiveLabel": "Остання активність",
+      "overdueDays": "Прострочено {{count}} днів тому",
+      "noSubject": "Без предмета",
+      "joinCode": "Код класу:",
+      "regenerateCode": "Оновити код",
+      "namePlaceholder": "Ім'я"
     },
     "createClass": {
       "title": "Створити клас",
       "name": "Назва класу",
       "grade": "Клас",
-      "description": "Опис"
+      "description": "Опис",
+      "noSubject": "— Без предмета —"
     },
     "shareCode": {
       "title": "Код запрошення",

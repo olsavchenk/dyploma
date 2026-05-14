@@ -2,6 +2,7 @@ import { HttpInterceptorFn, HttpResponse, HttpErrorResponse } from '@angular/com
 import { inject } from '@angular/core';
 import { tap, catchError, throwError } from 'rxjs';
 import { LoggingService } from '../services/logging.service';
+import { AuthService } from '../services/auth.service';
 
 /**
  * HTTP interceptor for comprehensive request/response logging.
@@ -15,6 +16,7 @@ import { LoggingService } from '../services/logging.service';
  */
 export const loggingInterceptor: HttpInterceptorFn = (req, next) => {
   const logger = inject(LoggingService);
+  const authService = inject(AuthService);
   const startTime = performance.now();
   const requestId = generateRequestId();
 
@@ -79,8 +81,7 @@ export const loggingInterceptor: HttpInterceptorFn = (req, next) => {
         logger.setCorrelationId(errorCorrelationId);
       }
 
-      // Log the error with full context
-      logger.error('HTTP', `✗ ${req.method} ${getUrlPath(req.url)} ${error.status}`, {
+      const errorContext = {
         requestId,
         method: req.method,
         url: req.url,
@@ -92,7 +93,33 @@ export const loggingInterceptor: HttpInterceptorFn = (req, next) => {
         errorMessage: getErrorMessage(error),
         errorDetails: getErrorDetails(error),
         requestBody: sanitizeRequestBody(req.body),
-      }, createHttpError(error));
+      };
+
+      // H-15: anonymous cold-start 401 from /auth/refresh is the EXPECTED state
+      // for first-visit / logged-out users — the app speculatively tries the
+      // HttpOnly refresh cookie on boot and the server correctly rejects when
+      // no cookie is present. Logging that at ERROR level pollutes Sentry/Seq
+      // dashboards with false alarms. Demote to debug; everything else stays
+      // at error.
+      const isAnonymousRefresh401 =
+        error.status === 401 &&
+        req.url.includes('/auth/refresh') &&
+        !authService.getUser();
+
+      if (isAnonymousRefresh401) {
+        logger.debug(
+          'HTTP',
+          `✗ ${req.method} ${getUrlPath(req.url)} 401 (expected: anonymous cold-start refresh)`,
+          errorContext,
+        );
+      } else {
+        logger.error(
+          'HTTP',
+          `✗ ${req.method} ${getUrlPath(req.url)} ${error.status}`,
+          errorContext,
+          createHttpError(error),
+        );
+      }
 
       return throwError(() => error);
     }),

@@ -78,18 +78,42 @@ public class TaskService : ITaskService
     }
 
     public async Task<SubmitTaskResponse> SubmitTaskAsync(
-        Guid studentId, 
-        string taskInstanceId, 
+        Guid studentId,
+        string taskInstanceId,
         SubmitTaskRequest request)
     {
         try
         {
             // Get the task instance to validate the answer
             var taskInstance = await _instanceRepository.GetByIdAsync(taskInstanceId);
-            
+
             if (taskInstance == null)
             {
                 throw new InvalidOperationException($"Task instance {taskInstanceId} not found");
+            }
+
+            // Cross-class submission guard: if this topic is bound to one or more
+            // class assignments, the student must be enrolled in at least one of those
+            // classes. Topics with no class assignment are part of the global pool and
+            // open to all students.
+            var classBoundAssignments = await _context.ClassAssignments
+                .Where(ca => ca.TopicId == taskInstance.TopicId)
+                .Select(ca => ca.ClassId)
+                .Distinct()
+                .ToListAsync();
+
+            if (classBoundAssignments.Count > 0)
+            {
+                var enrolled = await _context.ClassMemberships
+                    .AnyAsync(cm => cm.StudentId == studentId
+                                 && classBoundAssignments.Contains(cm.ClassId));
+                if (!enrolled)
+                {
+                    _logger.LogWarning(
+                        "Student {StudentId} attempted to submit task {TaskInstanceId} for topic {TopicId} without class membership",
+                        studentId, taskInstanceId, taskInstance.TopicId);
+                    throw new UnauthorizedAccessException("Task not available for this student");
+                }
             }
 
             // Evaluate the answer

@@ -1,20 +1,26 @@
-import { Component, signal, OnInit } from '@angular/core';
+import { Component, signal, OnInit, inject, computed } from '@angular/core';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
+import { AuthService } from '@app/core';
 
 /**
  * L-15: One-time prompt for browser Notification permission.
  * Renders a dismissible card when `Notification.permission === 'default'`.
  * The user's choice (or dismissal) is persisted in localStorage so the
  * card never reappears in the same browser.
+ *
+ * H-01: Only shown after the user is authenticated AND has had at least one
+ * meaningful interaction (e.g. submitted their first task). Gating is driven
+ * by the `stride_user_interacted` localStorage flag, set by the task-session
+ * component after first answer submission.
  */
 @Component({
   selector: 'app-notification-permission-card',
   standalone: true,
   imports: [MatIconModule, MatButtonModule, MatCardModule],
   template: `
-    @if (visible()) {
+    @if (shouldRender()) {
       <div class="notif-card-host" role="dialog" aria-label="Дозвіл на сповіщення">
         <mat-card class="notif-card">
           <mat-icon class="notif-icon">notifications_active</mat-icon>
@@ -86,8 +92,15 @@ import { MatCardModule } from '@angular/material/card';
 })
 export class NotificationPermissionCardComponent implements OnInit {
   private static readonly STORAGE_KEY = 'stride.notif.permissionPromptDismissed';
+  private static readonly INTERACTED_KEY = 'stride_user_interacted';
 
+  protected readonly authService = inject(AuthService);
   protected readonly visible = signal(false);
+  protected readonly hasInteracted = signal(false);
+
+  protected readonly shouldRender = computed(
+    () => this.visible() && this.authService.isAuthenticated() && this.hasInteracted()
+  );
 
   ngOnInit(): void {
     if (typeof Notification === 'undefined') {
@@ -100,13 +113,38 @@ export class NotificationPermissionCardComponent implements OnInit {
     if (!dismissed && Notification.permission === 'default') {
       this.visible.set(true);
     }
+    this.refreshInteractedFlag();
+    if (typeof window !== 'undefined') {
+      window.addEventListener('storage', this.onStorage);
+      window.addEventListener('stride:user-interacted', this.onInteractedEvent);
+    }
+  }
+
+  private readonly onStorage = (e: StorageEvent): void => {
+    if (e.key === NotificationPermissionCardComponent.INTERACTED_KEY) {
+      this.refreshInteractedFlag();
+    }
+  };
+
+  private readonly onInteractedEvent = (): void => {
+    this.refreshInteractedFlag();
+  };
+
+  private refreshInteractedFlag(): void {
+    try {
+      this.hasInteracted.set(
+        localStorage.getItem(NotificationPermissionCardComponent.INTERACTED_KEY) === '1'
+      );
+    } catch {
+      this.hasInteracted.set(false);
+    }
   }
 
   protected async request(): Promise<void> {
     try {
       await Notification.requestPermission();
     } catch {
-      // ignore — older Safari throws on missing handler
+      // ignore - older Safari throws on missing handler
     } finally {
       this.persistDismiss();
       this.visible.set(false);
@@ -120,6 +158,6 @@ export class NotificationPermissionCardComponent implements OnInit {
 
   private persistDismiss(): void {
     try { localStorage.setItem(NotificationPermissionCardComponent.STORAGE_KEY, '1'); }
-    catch { /* storage may be blocked — best effort */ }
+    catch { /* storage may be blocked - best effort */ }
   }
 }

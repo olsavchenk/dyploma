@@ -1,6 +1,6 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
 import { MatDialogRef, MatDialogModule, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { TranslateModule } from '@ngx-translate/core';
 import { TeacherService } from '@app/core/services/teacher.service';
 import { LearningService } from '@app/core/services/learning.service';
 import { Class, CreateClassRequest, UpdateClassRequest } from '@app/core/models';
@@ -15,6 +16,18 @@ import { Class, CreateClassRequest, UpdateClassRequest } from '@app/core/models'
 interface CreateClassDialogData {
   mode?: 'create' | 'edit';
   cls?: Class | null;
+  existingNames?: string[];
+}
+
+function duplicateNameValidator(existing: string[], currentName: string | null): ValidatorFn {
+  const lowerSet = new Set((existing ?? []).map((n) => (n ?? '').trim().toLowerCase()));
+  const lowerCurrent = (currentName ?? '').trim().toLowerCase();
+  return (control: AbstractControl): ValidationErrors | null => {
+    const v = (control.value ?? '').toString().trim().toLowerCase();
+    if (!v) return null;
+    if (v === lowerCurrent) return null;
+    return lowerSet.has(v) ? { duplicateName: true } : null;
+  };
 }
 
 @Component({
@@ -29,6 +42,7 @@ interface CreateClassDialogData {
     MatSelectModule,
     MatButtonModule,
     MatProgressSpinnerModule,
+    TranslateModule,
   ],
   template: `
     <h2 mat-dialog-title>{{ isEdit() ? 'Редагувати Клас' : 'Створити Новий Клас' }}</h2>
@@ -47,6 +61,9 @@ interface CreateClassDialogData {
           </mat-error>
           <mat-error *ngIf="form.get('name')?.hasError('maxlength')">
             Максимум 100 символів
+          </mat-error>
+          <mat-error *ngIf="form.get('name')?.hasError('duplicateName')">
+            {{ 'teacher.classes.duplicateName' | translate }}
           </mat-error>
         </mat-form-field>
 
@@ -170,7 +187,14 @@ export class CreateClassDialogComponent {
   readonly isEdit = signal<boolean>(this.data.mode === 'edit' && !!this.data.cls);
 
   readonly form: FormGroup = this.fb.group({
-    name: [this.data.cls?.name ?? '', [Validators.required, Validators.maxLength(100)]],
+    name: [
+      this.data.cls?.name ?? '',
+      [
+        Validators.required,
+        Validators.maxLength(100),
+        duplicateNameValidator(this.data.existingNames ?? [], this.data.cls?.name ?? null),
+      ],
+    ],
     gradeLevel: [this.data.cls ? Number(this.data.cls.gradeLevel) : '', Validators.required],
     subject: [this.data.cls?.subject ?? null],
     description: [this.data.cls?.description ?? '', [Validators.maxLength(1000)]],

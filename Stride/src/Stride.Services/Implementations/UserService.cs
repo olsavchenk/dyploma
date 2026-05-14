@@ -173,20 +173,36 @@ public class UserService : IUserService
 
         ArgumentNullException.ThrowIfNull(file);
 
-        // Validate file size
-        if (file.Length > MaxAvatarSizeBytes)
+        // BUG H-13: enforce hard server-side size cap (5MB) regardless of any
+        // larger value the client framing reports.
+        if (file.Length <= 0 || file.Length > MaxAvatarSizeBytes)
         {
-            _logger.LogWarning("{Method} failed: File too large Size={Size}, MaxSize={MaxSize}",
+            _logger.LogWarning("{Method} failed: File size invalid Size={Size}, MaxSize={MaxSize}",
                 nameof(UploadAvatarAsync), file.Length, MaxAvatarSizeBytes);
-            throw new InvalidOperationException($"Avatar size must not exceed {MaxAvatarSizeBytes / 1024 / 1024}MB");
+            throw new InvalidOperationException($"Avatar size must be between 1 byte and {MaxAvatarSizeBytes / 1024 / 1024}MB");
         }
 
-        // Validate file type
+        // Validate Content-Type header (cheap pre-check; magic-byte verification is authoritative).
         if (!AllowedImageTypes.Contains(file.ContentType.ToLower()))
         {
             _logger.LogWarning("{Method} failed: Invalid content type ContentType={ContentType}",
                 nameof(UploadAvatarAsync), file.ContentType);
             throw new InvalidOperationException("Only image files (JPEG, PNG, WebP) are allowed");
+        }
+
+        // BUG H-13: sanitize the original filename — reject any traversal sequences,
+        // path separators, null bytes, or non-ASCII separator characters.
+        var rawFileName = file.FileName ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(rawFileName)
+            || rawFileName.Contains("..")
+            || rawFileName.Contains('\\')
+            || rawFileName.Contains('/')
+            || rawFileName.Contains('\0')
+            || rawFileName.Any(c => c == '∕' || c == '⧸' || c == '／' || c == '＼'))
+        {
+            _logger.LogWarning("{Method} failed: Unsafe filename FileName={FileName}",
+                nameof(UploadAvatarAsync), rawFileName);
+            throw new InvalidOperationException("Invalid file name");
         }
 
         var user = await _dbContext.Users
@@ -199,6 +215,10 @@ public class UserService : IUserService
             throw new InvalidOperationException("User not found");
         }
 
+        // BUG H-13: read the first 12 bytes and verify the magic-byte signature
+        // matches PNG, JPEG, or WebP. Reject otherwise.
+        var detectedContentType = await DetectAndValidateImageAsync(file, cancellationToken);
+
         // Delete old avatar if exists
         if (!string.IsNullOrEmpty(user.AvatarUrl))
         {
@@ -208,9 +228,15 @@ public class UserService : IUserService
             await _storageService.DeleteAsync(_minioOptions.Buckets.Avatars, oldObjectName, cancellationToken);
         }
 
-        // Generate unique filename
-        var fileExtension = Path.GetExtension(file.FileName);
-        var objectName = $"{userId}_{Guid.NewGuid()}{fileExtension}";
+        // Generate unique filename, derive extension from detected magic-bytes (not user input).
+        var safeExtension = detectedContentType switch
+        {
+            "image/png" => ".png",
+            "image/jpeg" => ".jpg",
+            "image/webp" => ".webp",
+            _ => ".bin"
+        };
+        var objectName = $"{userId}_{Guid.NewGuid()}{safeExtension}";
 
         // Upload to MinIO
         using var stream = file.OpenReadStream();
@@ -218,7 +244,7 @@ public class UserService : IUserService
             _minioOptions.Buckets.Avatars,
             objectName,
             stream,
-            file.ContentType,
+            detectedContentType,
             cancellationToken);
 
         // Generate URL
@@ -414,5 +440,45 @@ public class UserService : IUserService
 
         _logger.LogInformation("{Method} completed: Account deleted and anonymized UserId={UserId}, RevokedTokens={TokenCount}",
             nameof(DeleteUserAccountAsync), userId, refreshTokens.Count);
+    }
+
+    private static async Task<string> DetectAndValidateImageAsync(IFormFile file, CancellationToken cancellationToken)
+    {
+        await using var probe = file.OpenReadStream();
+        var header = new byte[12];
+        var read = 0;
+        while (read < header.Length)
+        {
+            var chunk = await probe.ReadAsync(header.AsMemory(read, header.Length - read), cancellationToken);
+            if (chunk == 0)
+            {
+                break;
+            }
+            read += chunk;
+        }
+
+        if (read < 4)
+        {
+            throw new InvalidOperationException("Avatar file is too small to be a valid image");
+        }
+
+        if (header[0] == 0x89 && header[1] == 0x50 && header[2] == 0x4E && header[3] == 0x47)
+        {
+            return "image/png";
+        }
+
+        if (header[0] == 0xFF && header[1] == 0xD8 && header[2] == 0xFF)
+        {
+            return "image/jpeg";
+        }
+
+        if (read >= 12
+            && header[0] == 0x52 && header[1] == 0x49 && header[2] == 0x46 && header[3] == 0x46
+            && header[8] == 0x57 && header[9] == 0x45 && header[10] == 0x42 && header[11] == 0x50)
+        {
+            return "image/webp";
+        }
+
+        throw new InvalidOperationException("Avatar must be a real PNG, JPEG, or WebP image");
     }
 }

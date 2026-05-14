@@ -168,9 +168,18 @@ public class GamificationService : IGamificationService
             throw new InvalidOperationException("Student profile not found");
         }
 
+        // Defense in depth: if XP got added via a path that skipped level update,
+        // GetStats will heal the stored level instead of showing a negative xpToNext.
+        var canonicalLevel = CalculateLevelFromXp(studentProfile.TotalXp);
+        if (canonicalLevel != studentProfile.CurrentLevel)
+        {
+            studentProfile.CurrentLevel = canonicalLevel;
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+
         var currentLevelXp = GetXpRequiredForLevel(studentProfile.CurrentLevel);
         var nextLevelXp = GetXpRequiredForLevel(studentProfile.CurrentLevel + 1);
-        var xpProgressInLevel = studentProfile.TotalXp - currentLevelXp;
+        var xpProgressInLevel = Math.Max(0, studentProfile.TotalXp - currentLevelXp);
 
         _logger.LogDebug("{Method} completed: StudentId={StudentId}, Level={Level}, TotalXp={TotalXp}, Streak={Streak}",
             nameof(GetStatsAsync), studentId, studentProfile.CurrentLevel, studentProfile.TotalXp, studentProfile.CurrentStreak);
@@ -179,8 +188,8 @@ public class GamificationService : IGamificationService
         {
             TotalXp = studentProfile.TotalXp,
             CurrentLevel = studentProfile.CurrentLevel,
-            XpToNextLevel = nextLevelXp - studentProfile.TotalXp,
-            XpForCurrentLevel = nextLevelXp - currentLevelXp,
+            XpToNextLevel = Math.Max(0, nextLevelXp - studentProfile.TotalXp),
+            XpForCurrentLevel = Math.Max(1, nextLevelXp - currentLevelXp),
             XpProgressInLevel = xpProgressInLevel,
             CurrentStreak = studentProfile.CurrentStreak,
             LongestStreak = studentProfile.LongestStreak,
@@ -188,6 +197,35 @@ public class GamificationService : IGamificationService
             League = studentProfile.League,
             LastActiveDate = studentProfile.LastActiveDate
         };
+    }
+
+    private DateTime GetStudentToday(StudentProfile profile)
+    {
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(
+                string.IsNullOrWhiteSpace(profile.TimeZoneId) ? "Etc/UTC" : profile.TimeZoneId);
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, tz).Date;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return DateTime.UtcNow.Date;
+        }
+    }
+
+    private DateTime? GetStudentLocalDate(StudentProfile profile, DateTime? utc)
+    {
+        if (!utc.HasValue) return null;
+        try
+        {
+            var tz = TimeZoneInfo.FindSystemTimeZoneById(
+                string.IsNullOrWhiteSpace(profile.TimeZoneId) ? "Etc/UTC" : profile.TimeZoneId);
+            return TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc.Value, DateTimeKind.Utc), tz).Date;
+        }
+        catch (TimeZoneNotFoundException)
+        {
+            return utc.Value.Date;
+        }
     }
 
     public async Task<StreakUpdateResult> UpdateStreakAsync(Guid studentId, CancellationToken cancellationToken = default)
@@ -218,8 +256,8 @@ public class GamificationService : IGamificationService
             LastActiveDate = studentProfile.LastActiveDate
         };
 
-        var today = DateTime.UtcNow.Date;
-        var lastActiveDate = studentProfile.LastActiveDate?.Date;
+        var today = GetStudentToday(studentProfile);
+        var lastActiveDate = GetStudentLocalDate(studentProfile, studentProfile.LastActiveDate);
 
         // First activity ever
         if (!lastActiveDate.HasValue)

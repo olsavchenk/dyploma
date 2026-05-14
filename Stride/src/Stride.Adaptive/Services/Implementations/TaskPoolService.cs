@@ -357,8 +357,8 @@ public class TaskPoolService : ITaskPoolService
     }
 
     private async Task<TaskInstanceDocument?> GetFallbackTaskAsync(
-        Guid topicId, 
-        int targetDifficulty, 
+        Guid topicId,
+        int targetDifficulty,
         CancellationToken cancellationToken)
     {
         _logger.LogInformation(
@@ -374,18 +374,28 @@ public class TaskPoolService : ITaskPoolService
             "Querying MongoDB for tasks - TopicId: {TopicId}, MinDifficulty: {MinDifficulty}, MaxDifficulty: {MaxDifficulty}",
             topicId, minDifficulty, maxDifficulty);
 
-        var tasks = await _instanceRepository.GetRandomByTopicAndDifficultyAsync(
-            topicId,
-            minDifficulty,
-            maxDifficulty,
-            1);
+        // Try up to 5 candidates, claiming each in Redis so concurrent fallbacks don't serve the same task.
+        var tasks = (await _instanceRepository.GetRandomByTopicAndDifficultyAsync(
+            topicId, minDifficulty, maxDifficulty, 5)).ToList();
 
-        if (tasks.Any())
+        foreach (var candidate in tasks)
         {
-            var task = tasks.First();
-            _logger.LogInformation(
-                "✅ Fallback SUCCESS - Found TaskId: {TaskId}, Difficulty: {Difficulty}",
-                task.Id, task.Difficulty);
+            if (await TryClaimTaskAsync(candidate.Id))
+            {
+                _logger.LogInformation(
+                    "✅ Fallback SUCCESS - Found TaskId: {TaskId}, Difficulty: {Difficulty}",
+                    candidate.Id, candidate.Difficulty);
+                return candidate;
+            }
+        }
+        if (tasks.Count > 0)
+        {
+            // Every candidate was just claimed by another concurrent caller — return the first anyway
+            // (better to risk a duplicate serve once than to fail the request).
+            var task = tasks[0];
+            _logger.LogWarning(
+                "⚠️ All {Count} fallback candidates were claimed concurrently; serving TaskId {TaskId} without claim.",
+                tasks.Count, task.Id);
             return task;
         }
 
@@ -464,6 +474,17 @@ public class TaskPoolService : ITaskPoolService
         var db = _redis.GetDatabase();
         var counterKey = $"{metaKey}:count";
         return (int)await db.StringIncrementAsync(counterKey);
+    }
+
+    private async Task<bool> TryClaimTaskAsync(string taskId)
+    {
+        var db = _redis.GetDatabase();
+        // Reserve the task for ~30s so a parallel fallback in another worker skips it.
+        return await db.StringSetAsync(
+            key: $"taskpool:claim:{taskId}",
+            value: "1",
+            expiry: TimeSpan.FromSeconds(30),
+            when: When.NotExists);
     }
 
     private class TaskPoolMetadata

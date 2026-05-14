@@ -23,6 +23,7 @@ import {
 } from '@app/core';
 import { SignalRService } from '@app/core/services/signalr.service';
 import { LoggingService } from '@app/core/services/logging.service';
+import { TranslationService } from '@app/core/services/translation.service';
 import { LeaderboardRowComponent } from './leaderboard-row.component';
 import { LeagueMedallionComponent } from './league-medallion.component';
 
@@ -47,6 +48,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
   private readonly signalRService      = inject(SignalRService);
   private readonly logger              = inject(LoggingService);
   private readonly destroyRef          = inject(DestroyRef);
+  private readonly i18n                = inject(TranslationService);
 
   // State signals
   protected readonly entries          = signal<LeaderboardEntry[]>([]);
@@ -62,11 +64,11 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
   // Skeleton rows array (10 items)
   protected readonly skeletonRows = Array.from({ length: 10 }, (_, i) => i);
 
-  // Filter tab definitions
-  protected readonly filters: { value: FilterMode; label: string }[] = [
-    { value: 'weekly',  label: 'Тижневий' },
-    { value: 'allTime', label: 'Весь час' },
-    { value: 'class',   label: 'Клас'     },
+  // Filter tab definitions — labels are i18n keys, resolved in the template.
+  protected readonly filters: { value: FilterMode; labelKey: string }[] = [
+    { value: 'weekly',  labelKey: 'leaderboard.filters.weekly' },
+    { value: 'allTime', labelKey: 'leaderboard.filters.allTime' },
+    { value: 'class',   labelKey: 'leaderboard.filters.class' },
   ];
 
   // Track previous filter for SignalR league switching
@@ -176,7 +178,7 @@ export class LeaderboardComponent implements OnInit, OnDestroy {
             { filter: this.activeFilter() },
             err
           );
-          this.error.set('Не вдалося завантажити таблицю лідерів. Спробуйте оновити сторінку.');
+          this.error.set(this.i18n.instant('leaderboard.loadError'));
         },
       });
   }

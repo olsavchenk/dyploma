@@ -1,8 +1,9 @@
-import { Component, input, output } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { environment } from '@environments/environment';
 import { Achievement } from '@app/core/models';
 
 @Component({
@@ -23,15 +24,17 @@ import { Achievement } from '@app/core/models';
           (keydown.enter)="achievementClick.emit(achievement)">
 
           <div class="icon-wrapper">
-            @if (achievement.iconUrl) {
+            @if (achievement.iconUrl && !isBroken(achievement.id)) {
               <img
-                [src]="achievement.iconUrl"
+                [src]="resolveIconUrl(achievement.iconUrl)"
                 [alt]="achievement.name"
                 class="achievement-icon"
-                [class.grayscale]="achievement.unlockedAt === null" />
+                [class.grayscale]="achievement.unlockedAt === null"
+                loading="lazy"
+                (error)="onImageError(achievement.id, $event)" />
             } @else {
               <div class="icon-placeholder" [class.grayscale]="achievement.unlockedAt === null">
-                <mat-icon>military_tech</mat-icon>
+                <span class="placeholder-letter" aria-hidden="true">{{ initialFor(achievement.name) }}</span>
               </div>
             }
             @if (achievement.unlockedAt === null) {
@@ -132,6 +135,15 @@ import { Achievement } from '@app/core/models';
       height: 32px;
     }
 
+    .placeholder-letter {
+      color: white;
+      font-family: var(--font-display, 'Fraunces', serif);
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: 0.02em;
+    }
+
     .lock-overlay {
       position: absolute;
       inset: 0;
@@ -173,4 +185,48 @@ import { Achievement } from '@app/core/models';
 export class AchievementGalleryComponent {
   achievements = input<Achievement[]>([]);
   achievementClick = output<Achievement>();
+
+  private readonly brokenIds = signal<Set<string>>(new Set());
+
+  protected isBroken(id: string): boolean {
+    return this.brokenIds().has(id);
+  }
+
+  protected onImageError(id: string, event: Event): void {
+    const target = event.target as HTMLImageElement | null;
+    if (target) {
+      target.style.display = 'none';
+    }
+    this.brokenIds.update((s) => {
+      if (s.has(id)) return s;
+      const next = new Set(s);
+      next.add(id);
+      return next;
+    });
+  }
+
+  protected initialFor(name: string): string {
+    const trimmed = (name ?? '').trim();
+    return trimmed.length > 0 ? trimmed.charAt(0).toUpperCase() : '?';
+  }
+
+  /**
+   * H-08: backend may return either a fully-qualified URL, an absolute path
+   * (`/storage/achievements/foo.png`) or just a filename. Normalize all three
+   * shapes to a single resolvable URL against the configured API origin so the
+   * <img> doesn't 404 against the Angular dev server origin.
+   */
+  protected resolveIconUrl(iconUrl: string): string {
+    if (!iconUrl) return iconUrl;
+    const trimmed = iconUrl.trim();
+    if (/^(https?:|data:|blob:)/i.test(trimmed)) {
+      return trimmed;
+    }
+    const apiBase = (environment as { apiUrl?: string }).apiUrl ?? '';
+    const origin = apiBase.replace(/\/api(\/.*)?$/i, '').replace(/\/$/, '');
+    if (trimmed.startsWith('/')) {
+      return `${origin}${trimmed}`;
+    }
+    return `${origin}/storage/achievements/${trimmed}`;
+  }
 }

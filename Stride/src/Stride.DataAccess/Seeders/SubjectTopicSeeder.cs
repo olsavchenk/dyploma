@@ -46,13 +46,37 @@ public class SubjectTopicSeeder
             await _dbContext.SaveChangesAsync();
         }
 
-        // Check if subjects already exist
-        if (await _dbContext.Subjects.AnyAsync())
+        // BUG: live test of /learn showed a leftover English-named "Math" duplicate
+        // and a missing "History of Ukraine" subject. Deactivate the duplicate so it
+        // disappears from the catalogue without breaking FK references from
+        // TaskAttempts / Topics, then top-up the History of Ukraine subject when the
+        // seed has already been applied previously.
+        var now = DateTime.UtcNow;
+
+        var duplicateMathSubjects = await _dbContext.Subjects
+            .Where(s => s.Slug != "mathematics"
+                        && (s.Name == "Math" || s.Name == "Mathematics"))
+            .ToListAsync();
+        foreach (var dup in duplicateMathSubjects)
         {
-            return; // Already seeded
+            dup.IsActive = false;
+        }
+        if (duplicateMathSubjects.Count > 0)
+        {
+            await _dbContext.SaveChangesAsync();
         }
 
-        var now = DateTime.UtcNow;
+        var hasHistory = await _dbContext.Subjects.AnyAsync(s => s.Slug == "history-of-ukraine");
+        if (!hasHistory)
+        {
+            await SeedHistoryOfUkraineAsync(now);
+        }
+
+        // Check if subjects already exist
+        if (await _dbContext.Subjects.AnyAsync(s => s.Slug == "mathematics"))
+        {
+            return; // Canonical seed already present
+        }
 
         // 1. Mathematics
         var mathematics = new Subject
@@ -347,6 +371,84 @@ public class SubjectTopicSeeder
         await _dbContext.Topics.AddRangeAsync(englishTopics);
         await _dbContext.Topics.AddRangeAsync(scienceTopics);
 
+        await _dbContext.SaveChangesAsync();
+
+        // Top-up the History of Ukraine subject if not already seeded by the
+        // backfill above.
+        if (!await _dbContext.Subjects.AnyAsync(s => s.Slug == "history-of-ukraine"))
+        {
+            await SeedHistoryOfUkraineAsync(now);
+        }
+    }
+
+    private async Task SeedHistoryOfUkraineAsync(DateTime now)
+    {
+        var history = new Subject
+        {
+            Id = Guid.NewGuid(),
+            Name = "Історія України",
+            Slug = "history-of-ukraine",
+            Description = "Вивчайте історію України: від Київської Русі до сучасності",
+            IconUrl = "/assets/subjects/history.svg",
+            SortOrder = 5,
+            IsActive = true,
+            CreatedAt = now
+        };
+
+        var historyTopics = new List<Topic>
+        {
+            new Topic
+            {
+                Id = Guid.NewGuid(),
+                SubjectId = history.Id,
+                Name = "Київська Русь",
+                Slug = "kyivan-rus",
+                Description = "Виникнення та розквіт Київської держави",
+                GradeLevel = 7,
+                SortOrder = 1,
+                IsActive = true,
+                CreatedAt = now
+            },
+            new Topic
+            {
+                Id = Guid.NewGuid(),
+                SubjectId = history.Id,
+                Name = "Козацька доба",
+                Slug = "cossack-era",
+                Description = "Запорізька Січ, Хмельниччина, Гетьманщина",
+                GradeLevel = 8,
+                SortOrder = 2,
+                IsActive = true,
+                CreatedAt = now
+            },
+            new Topic
+            {
+                Id = Guid.NewGuid(),
+                SubjectId = history.Id,
+                Name = "Українська революція 1917-1921 рр.",
+                Slug = "ukrainian-revolution",
+                Description = "УНР, Гетьманат, Директорія, ЗУНР",
+                GradeLevel = 10,
+                SortOrder = 3,
+                IsActive = true,
+                CreatedAt = now
+            },
+            new Topic
+            {
+                Id = Guid.NewGuid(),
+                SubjectId = history.Id,
+                Name = "Сучасна Україна",
+                Slug = "modern-ukraine",
+                Description = "Незалежна Україна: 1991 - сьогодення",
+                GradeLevel = 11,
+                SortOrder = 4,
+                IsActive = true,
+                CreatedAt = now
+            }
+        };
+
+        await _dbContext.Subjects.AddAsync(history);
+        await _dbContext.Topics.AddRangeAsync(historyTopics);
         await _dbContext.SaveChangesAsync();
     }
 }

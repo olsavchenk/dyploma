@@ -11,6 +11,7 @@ public class StudentProfile
     public int StreakFreezes { get; set; }
     public DateTime? LastActiveDate { get; set; }
     public string League { get; set; } = "Bronze"; // Bronze, Silver, Gold, Platinum, Diamond
+    public string TimeZoneId { get; set; } = "Etc/UTC";
     public DateTime CreatedAt { get; set; }
 
     // Navigation properties

@@ -36,5 +36,16 @@ public class StrideDbContext : DbContext
 
         // Global query filter for soft-deleted users
         modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+
+        // BUG C-06: cascade soft-delete filter to dependent entities so direct
+        // DbSet queries cannot return rows that belong to a soft-deleted user.
+        modelBuilder.Entity<StudentProfile>().HasQueryFilter(sp => !sp.User.IsDeleted);
+        modelBuilder.Entity<TeacherProfile>().HasQueryFilter(tp => !tp.User.IsDeleted);
+        modelBuilder.Entity<RefreshToken>().HasQueryFilter(rt => !rt.User.IsDeleted);
+
+        // Class soft-state filter: never return archived classes by default. Memberships
+        // follow the parent class so archived-class memberships disappear too.
+        modelBuilder.Entity<Class>().HasQueryFilter(c => !c.IsArchived);
+        modelBuilder.Entity<ClassMembership>().HasQueryFilter(cm => !cm.Class.IsArchived && !cm.Student.User.IsDeleted);
     }
 }

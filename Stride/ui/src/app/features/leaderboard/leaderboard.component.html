@@ -7,7 +7,8 @@
       [rank]="currentRank()" />
 
     <div class="lb-hero__info">
-      <p class="lb-hero__tier">{{ currentTier() }}</p>
+      <!-- BUG H-04: translate league/tier name (Bronze/Silver/...) -->
+      <p class="lb-hero__tier">{{ ('league.' + currentTier()) | translate }}</p>
 
       <div class="lb-hero__rank-row">
         <span class="lb-hero__rank">#{{ currentRank() || '—' }}</span>
@@ -18,15 +19,16 @@
         }
       </div>
 
+      <!-- BUG C-03: explicit "weekly XP" label so it's clear this is not total XP -->
       <p class="lb-hero__xp">
         <span class="lb-hero__xp-value">{{ currentWeeklyXp() | number:'1.0-0' }}</span>
-        <span class="lb-hero__xp-label">&nbsp;XP цього тижня</span>
+        <span class="lb-hero__xp-label">&nbsp;{{ 'leaderboard.weeklyXp' | translate }}</span>
       </p>
     </div>
   </section>
 
   <!-- ═══════════════ FILTER TABS ═══════════════ -->
-  <div class="lb-filters" role="tablist" aria-label="Фільтр рейтингу">
+  <div class="lb-filters" role="tablist" [attr.aria-label]="'leaderboard.filterAria' | translate">
     @for (f of filters; track f.value) {
       <button
         class="lb-filter-btn"
@@ -34,14 +36,14 @@
         [class.lb-filter-btn--active]="activeFilter() === f.value"
         [attr.aria-selected]="activeFilter() === f.value"
         (click)="setFilter(f.value)">
-        {{ f.label }}
+        {{ f.labelKey | translate }}
       </button>
     }
   </div>
 
   <!-- ═══════════════ LOADING SKELETON ═══════════════ -->
   @if (loading()) {
-    <div class="lb-list" aria-busy="true" aria-label="Завантаження...">
+    <div class="lb-list" aria-busy="true" [attr.aria-label]="'leaderboard.loadingAria' | translate">
       @for (i of skeletonRows; track i) {
         <div class="lb-skeleton">
           <div class="lb-skeleton__rank shimmer"></div>
@@ -59,7 +61,7 @@
     <div class="lb-error">
       <span class="lb-error__icon">⚠</span>
       <p class="lb-error__msg">{{ error() }}</p>
-      <button class="lb-retry-btn" (click)="loadLeaderboard()">Спробувати знову</button>
+      <button class="lb-retry-btn" (click)="loadLeaderboard()">{{ 'leaderboard.tryAgain' | translate }}</button>
     </div>
   }
 
@@ -67,8 +69,8 @@
   @else if (entries().length === 0) {
     <div class="lb-empty empty-state">
       <span class="lb-empty__icon" aria-hidden="true">🏆</span>
-      <h3 class="lb-empty__title">Поки що немає учасників</h3>
-      <p class="lb-empty__sub">Стань першим!</p>
+      <h3 class="lb-empty__title">{{ 'leaderboard.emptyTitle' | translate }}</h3>
+      <p class="lb-empty__sub">{{ 'leaderboard.emptySub' | translate }}</p>
     </div>
   }
 

@@ -522,8 +522,6 @@ export class TaskSessionComponent implements OnInit {
   protected readonly completedCount = signal<number>(0);
   protected readonly targetCount = signal<number>(5);
 
-  private readonly SEGMENTS = 5;
-
   protected readonly progressPercentage = computed(() =>
     Math.round((this.completedCount() / this.targetCount()) * 100)
   );
@@ -532,10 +530,15 @@ export class TaskSessionComponent implements OnInit {
     Math.min(this.completedCount() + 1, this.targetCount())
   );
 
-  /** Returns array of 5 segment states: 'done' | 'active' | 'empty' */
+  /**
+   * H-07: segments derived from `targetCount` (the single source of truth for
+   * the counter) so the visual progress bar never disagrees with the
+   * "N / total" header text.
+   */
   protected readonly progressSegments = computed<string[]>(() => {
     const done = this.completedCount();
-    return Array.from({ length: this.SEGMENTS }, (_, i) => {
+    const total = Math.max(1, this.targetCount());
+    return Array.from({ length: total }, (_, i) => {
       if (i < done) return 'done';
       if (i === done && this.state() === 'task') return 'active';
       return 'empty';
@@ -631,6 +634,7 @@ export class TaskSessionComponent implements OnInit {
           this.feedbackData.set(response);
           this.state.set('feedback');
           this.completedCount.update((c) => c + 1);
+          this.markUserInteracted();
           this.loadGamificationStats();
         },
         error: (err) => {
@@ -639,6 +643,19 @@ export class TaskSessionComponent implements OnInit {
           this.logger.error('TaskSessionComponent', 'Error submitting answer', {}, err);
         },
       });
+  }
+
+  private markUserInteracted(): void {
+    try {
+      if (localStorage.getItem('stride_user_interacted') !== '1') {
+        localStorage.setItem('stride_user_interacted', '1');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('stride:user-interacted'));
+        }
+      }
+    } catch {
+      /* storage may be blocked */
+    }
   }
 
   protected skipTask(): void {

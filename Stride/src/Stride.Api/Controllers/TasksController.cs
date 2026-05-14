@@ -86,15 +86,22 @@ public class TasksController : ControllerBase
         try
         {
             var response = await _taskService.SubmitTaskAsync(
-                studentId.Value, 
-                taskInstanceId, 
+                studentId.Value,
+                taskInstanceId,
                 request);
-            
+
             return Ok(response);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            _logger.LogWarning(ex,
+                "Forbidden submit for task {TaskInstanceId} by student {StudentId}",
+                taskInstanceId, studentId.Value);
+            return StatusCode(StatusCodes.Status403Forbidden, new { message = "Task not available" });
         }
         catch (InvalidOperationException ex)
         {
-            _logger.LogWarning(ex, "Error submitting task {TaskInstanceId} for student {StudentId}", 
+            _logger.LogWarning(ex, "Error submitting task {TaskInstanceId} for student {StudentId}",
                 taskInstanceId, studentId.Value);
             return NotFound(new { message = ex.Message });
         }

@@ -7,6 +7,7 @@ import { forkJoin, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { TeacherService } from '@app/core/services/teacher.service';
 import { Class, RecentActivity } from '@app/core/models';
+import { PluralUaPipe } from '@app/shared/pipes/plural-ua.pipe';
 
 interface DashboardStats {
   classes: number;
@@ -27,7 +28,7 @@ interface ActivityItem {
 @Component({
   selector: 'app-teacher-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink, TranslateModule],
+  imports: [CommonModule, RouterLink, TranslateModule, PluralUaPipe],
   templateUrl: './teacher-dashboard.component.html',
   styleUrls: ['./teacher-dashboard.component.scss'],
 })

@@ -4,7 +4,8 @@
     <div>
       <h1 class="page-title">{{ 'teacher.classes.title' | translate }}</h1>
       <p class="page-subtitle" *ngIf="quickStats()">
-        {{ quickStats()!.totalClasses }} класів · {{ quickStats()!.totalStudents }} учнів
+        {{ quickStats()!.totalClasses }} {{ quickStats()!.totalClasses | pluralUa: ['клас','класи','класів'] }}
+        · {{ quickStats()!.totalStudents }} {{ quickStats()!.totalStudents | pluralUa: ['учень','учні','учнів'] }}
       </p>
     </div>
   </div>
@@ -15,7 +16,7 @@
       <mat-icon matPrefix>search</mat-icon>
       <input
         matInput
-        placeholder="Пошук за назвою..."
+        [placeholder]="'teacher.classes.searchPlaceholder' | translate"
         [ngModel]="searchTerm()"
         (ngModelChange)="onSearchChange($event)"
       />
@@ -26,8 +27,8 @@
       [value]="filterMode()"
       (change)="onFilterChange($event.value)"
       hideSingleSelectionIndicator>
-      <mat-button-toggle value="active">Активні</mat-button-toggle>
-      <mat-button-toggle value="archived">Архів</mat-button-toggle>
+      <mat-button-toggle value="active">{{ 'teacher.classes.filterActive' | translate }}</mat-button-toggle>
+      <mat-button-toggle value="archived">{{ 'teacher.classes.filterArchived' | translate }}</mat-button-toggle>
     </mat-button-toggle-group>
   </div>
 
@@ -69,14 +70,14 @@
         <div class="card-info">
           <h2 class="class-name">{{ cls.name }}</h2>
           <div class="class-meta">
-            <span class="meta-chip">{{ cls.gradeLevel }} клас</span>
+            <span class="meta-chip">{{ cls.gradeLevel }} {{ 'teacher.dashboard.gradeSuffix' | translate }}</span>
             <span class="meta-chip" *ngIf="cls.subject">{{ cls.subject }}</span>
-            <span class="meta-chip">{{ cls.studentCount }} учнів</span>
-            <span class="meta-chip" *ngIf="cls.assignmentCount">{{ cls.assignmentCount }} завдань</span>
-            <span class="meta-chip meta-chip--archived" *ngIf="cls.isArchived">Архівовано</span>
+            <span class="meta-chip">{{ cls.studentCount }} {{ cls.studentCount | pluralUa: ['учень','учні','учнів'] }}</span>
+            <span class="meta-chip" *ngIf="cls.assignmentCount">{{ cls.assignmentCount }} {{ cls.assignmentCount | pluralUa: ['завдання','завдання','завдань'] }}</span>
+            <span class="meta-chip meta-chip--archived" *ngIf="cls.isArchived">{{ 'teacher.classes.filterArchived' | translate }}</span>
           </div>
           <div class="join-code-row">
-            <span class="join-label">Код:</span>
+            <span class="join-label">{{ 'teacher.dashboard.joinCodeLabel' | translate }}:</span>
             <span class="join-code">{{ cls.joinCode }}</span>
           </div>
         </div>
@@ -84,7 +85,7 @@
 
       <!-- Actions -->
       <div class="card-actions">
-        <button class="btn-icon-action" (click)="shareCode(cls, $event)" matTooltip="Поділитися кодом" title="Поділитися кодом">
+        <button class="btn-icon-action" (click)="shareCode(cls, $event)" [matTooltip]="'teacher.classes.shareCode' | translate" [title]="'teacher.classes.shareCode' | translate">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <circle cx="18" cy="5" r="3"></circle>
             <circle cx="6" cy="12" r="3"></circle>
@@ -94,7 +95,7 @@
           </svg>
         </button>
         <button class="btn-manage" (click)="viewClass(cls.id)">
-          Управляти
+          {{ 'teacher.classes.manage' | translate }}
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <line x1="5" y1="12" x2="19" y2="12"></line>
             <polyline points="12 5 19 12 12 19"></polyline>
@@ -102,21 +103,21 @@
         </button>
 
         <!-- CR-7: three-dot menu (Edit / Archive / Delete) -->
-        <button mat-icon-button [matMenuTriggerFor]="classMenu" (click)="$event.stopPropagation()" matTooltip="Більше дій" aria-label="Більше дій">
+        <button mat-icon-button [matMenuTriggerFor]="classMenu" (click)="$event.stopPropagation()" [matTooltip]="'common.actions' | translate" [attr.aria-label]="'common.actions' | translate">
           <mat-icon>more_vert</mat-icon>
         </button>
         <mat-menu #classMenu="matMenu">
           <button mat-menu-item (click)="openEditDialog(cls, $event)">
             <mat-icon>edit</mat-icon>
-            <span>Редагувати</span>
+            <span>{{ 'common.edit' | translate }}</span>
           </button>
           <button mat-menu-item *ngIf="!cls.isArchived" (click)="archiveClass(cls, $event)">
             <mat-icon>archive</mat-icon>
-            <span>Архівувати</span>
+            <span>{{ 'teacher.classes.filterArchived' | translate }}</span>
           </button>
           <button mat-menu-item (click)="deleteClass(cls, $event)">
             <mat-icon color="warn">delete</mat-icon>
-            <span>Видалити</span>
+            <span>{{ 'common.delete' | translate }}</span>
           </button>
         </mat-menu>
       </div>
@@ -132,25 +133,19 @@
       </svg>
     </div>
     <h2 class="empty-title">
-      {{ classes().length === 0 ? 'Створіть перший клас' : 'Нічого не знайдено' }}
+      {{ (classes().length === 0 ? 'teacher.classes.empty' : 'common.error') | translate }}
     </h2>
-    <p class="empty-desc" *ngIf="classes().length === 0">
-      Після створення класу ви зможете запрошувати учнів і призначати завдання.
-    </p>
-    <p class="empty-desc" *ngIf="classes().length > 0">
-      Спробуйте змінити пошук або переключити фільтр.
-    </p>
     <button class="btn-primary" *ngIf="classes().length === 0" (click)="openCreateDialog()">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
         <line x1="12" y1="5" x2="12" y2="19"></line>
         <line x1="5" y1="12" x2="19" y2="12"></line>
       </svg>
-      Створити клас
+      {{ 'teacher.classes.create' | translate }}
     </button>
   </div>
 
   <!-- FAB -->
-  <button class="fab" (click)="openCreateDialog()" *ngIf="classes().length > 0" title="Створити клас">
+  <button class="fab" (click)="openCreateDialog()" *ngIf="classes().length > 0" [title]="'teacher.classes.create' | translate">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
       <line x1="12" y1="5" x2="12" y2="19"></line>
       <line x1="5" y1="12" x2="19" y2="12"></line>

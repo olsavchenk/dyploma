@@ -17,7 +17,7 @@
       </div>
       <div class="kpi-body">
         <span class="kpi-value">{{ stats()?.classes ?? 0 }}</span>
-        <span class="kpi-label">Класи</span>
+        <span class="kpi-label">{{ 'teacher.dashboard.classes' | translate }}</span>
       </div>
     </div>
 
@@ -33,7 +33,7 @@
       </div>
       <div class="kpi-body">
         <span class="kpi-value">{{ stats()?.students ?? 0 }}</span>
-        <span class="kpi-label">Учні</span>
+        <span class="kpi-label">{{ 'teacher.dashboard.students' | translate }}</span>
       </div>
     </div>
 
@@ -50,7 +50,7 @@
       </div>
       <div class="kpi-body">
         <span class="kpi-value">{{ stats()?.pendingReviews ?? 0 }}</span>
-        <span class="kpi-label">Очікують перевірки</span>
+        <span class="kpi-label">{{ 'teacher.dashboard.pendingReviews' | translate }}</span>
       </div>
     </div>
 
@@ -64,7 +64,7 @@
       </div>
       <div class="kpi-body">
         <span class="kpi-value">{{ stats()?.weekXp ?? 0 }}</span>
-        <span class="kpi-label">XP за тиждень</span>
+        <span class="kpi-label">{{ 'teacher.dashboard.weekXp' | translate }}</span>
       </div>
     </div>
   </div>
@@ -82,9 +82,10 @@
     </div>
   </ng-template>
 
-  <!-- M-27: Recent classes — clickable links to class detail -->
+  <!-- M-27: Recent classes — clickable links to class detail.
+       BUG H-10: show join code so duplicate-named classes are distinguishable. -->
   <div class="section">
-    <h2 class="section-title">Останні класи</h2>
+    <h2 class="section-title">{{ 'teacher.dashboard.recentClasses' | translate }}</h2>
 
     <div class="activity-list" *ngIf="recentClasses().length > 0; else noClasses">
       <a class="activity-item activity-item--link"
@@ -96,23 +97,28 @@
           </svg>
         </div>
         <div class="activity-body">
-          <span class="activity-text">{{ cls.name }} — {{ cls.studentCount }} учнів</span>
-          <span class="activity-time">{{ cls.subject || cls.gradeLevel + ' клас' }}</span>
+          <span class="activity-text">
+            {{ cls.name }} — {{ cls.studentCount }} {{ cls.studentCount | pluralUa: ['учень','учні','учнів'] }}
+          </span>
+          <span class="activity-time">
+            {{ cls.subject || (cls.gradeLevel + ' ' + ('teacher.dashboard.gradeSuffix' | translate)) }}
+            <span class="activity-code">· {{ 'teacher.dashboard.joinCodeLabel' | translate }} {{ cls.joinCode }}</span>
+          </span>
         </div>
       </a>
     </div>
 
     <ng-template #noClasses>
       <div class="empty-activity">
-        <p>Немає класів</p>
-        <button class="btn-primary" (click)="navigateToClasses()">Переглянути класи</button>
+        <p>{{ 'teacher.dashboard.noClasses' | translate }}</p>
+        <button class="btn-primary" (click)="navigateToClasses()">{{ 'teacher.dashboard.viewClasses' | translate }}</button>
       </div>
     </ng-template>
   </div>
 
   <!-- M-18: Остання активність -->
   <div class="section">
-    <h2 class="section-title">Остання активність</h2>
+    <h2 class="section-title">{{ 'teacher.dashboard.recentActivity' | translate }}</h2>
 
     <div class="activity-list" *ngIf="recentActivity().length > 0; else noActivity">
       <div class="activity-item" *ngFor="let item of recentActivity()">
@@ -136,7 +142,7 @@
 
     <ng-template #noActivity>
       <div class="empty-activity">
-        <p>Немає нещодавньої активності</p>
+        <p>{{ 'teacher.dashboard.noActivity' | translate }}</p>
       </div>
     </ng-template>
   </div>

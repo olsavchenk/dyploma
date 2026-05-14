@@ -10,6 +10,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged, finalize } from 'rxjs';
 import { LearningService, StudentClass, StudentClassSubject, Subject } from '@app/core';
 import { LoggingService } from '@app/core/services/logging.service';
+import { TranslationService } from '@app/core/services/translation.service';
+import { PluralUaPipe } from '@app/shared/pipes/plural-ua.pipe';
 
 @Component({
   selector: 'app-learn-browse',
@@ -21,6 +23,7 @@ import { LoggingService } from '@app/core/services/logging.service';
     MatIconModule,
     MatProgressSpinnerModule,
     TranslateModule,
+    PluralUaPipe,
   ],
   templateUrl: './learn-browse.component.html',
   styleUrl: './learn-browse.component.scss',
@@ -29,6 +32,7 @@ export class LearnBrowseComponent implements OnInit {
   private readonly learningService = inject(LearningService);
   private readonly router = inject(Router);
   private readonly logger = inject(LoggingService);
+  private readonly i18n = inject(TranslationService);
 
   // State signals
   protected readonly loading = signal<boolean>(true);
@@ -46,13 +50,13 @@ export class LearnBrowseComponent implements OnInit {
   protected readonly joinError = signal<string | null>(null);
   protected readonly joinSuccess = signal<string | null>(null);
 
-  // Grade filter
+  // Grade filter — labels are i18n keys, rendered via `| translate` in the template.
   protected readonly activeGradeFilter = signal<string>('all');
   protected readonly gradeFilters = [
-    { label: 'Усі', value: 'all' },
-    { label: '1–4', value: '1-4' },
-    { label: '5–9', value: '5-9' },
-    { label: '10–11', value: '10-11' },
+    { labelKey: 'learn.browse.filters.all', value: 'all' },
+    { labelKey: 'learn.browse.filters.primary', value: '1-4' },
+    { labelKey: 'learn.browse.filters.middle', value: '5-9' },
+    { labelKey: 'learn.browse.filters.high', value: '10-11' },
   ];
 
   // Controls
@@ -80,12 +84,52 @@ export class LearnBrowseComponent implements OnInit {
       .getSubjects()
       .pipe(finalize(() => this.allSubjectsLoading.set(false)))
       .subscribe({
-        next: (subjects) => this.allSubjects.set(subjects),
+        next: (subjects) => this.allSubjects.set(this.dedupSubjects(subjects ?? [])),
         error: (err) => {
           this.logger.error('LearnBrowseComponent', 'Failed to load subjects catalog', {}, err);
           this.allSubjects.set([]);
         },
       });
+  }
+
+  /**
+   * BUG H-06: backend currently seeds duplicate Math (`Math` and `Математика`) and
+   * an unwanted Природознавство. Dedup on the client by canonical lower-cased name
+   * (or `code` if present) and keep the localized record.
+   * TODO: backend seed migration needed to fix the actual source data — agent E
+   *       will handle the seed for Math + add History of Ukraine.
+   */
+  private dedupSubjects(list: Subject[]): Subject[] {
+    const seen = new Map<string, Subject>();
+    for (const s of list) {
+      const anyS = s as any;
+      const key = (
+        anyS.code ??
+        anyS.slug ??
+        this.canonicalSubjectKey(s.name)
+      ).toString().trim().toLowerCase();
+      if (!key) continue;
+      // Prefer the entry whose name contains Cyrillic letters (Ukrainian) over Latin-only "Math".
+      const existing = seen.get(key);
+      if (!existing) {
+        seen.set(key, s);
+        continue;
+      }
+      const cyrillic = /[Ѐ-ӿ]/;
+      if (cyrillic.test(s.name) && !cyrillic.test(existing.name)) {
+        seen.set(key, s);
+      }
+    }
+    return Array.from(seen.values());
+  }
+
+  private canonicalSubjectKey(name: string): string {
+    const lower = (name ?? '').trim().toLowerCase();
+    if (lower === 'math' || lower === 'mathematics' || lower === 'математика') return 'math';
+    if (lower === 'ukrainian' || lower === 'ukrainian language' || lower === 'українська' || lower === 'українська мова') return 'ukrainian';
+    if (lower === 'english' || lower === 'англійська' || lower === 'англійська мова') return 'english';
+    if (lower === 'history' || lower === 'history of ukraine' || lower === 'історія' || lower === 'історія україни') return 'history-ua';
+    return lower;
   }
 
   protected onSubjectCardClick(subject: Subject): void {
@@ -108,7 +152,7 @@ export class LearnBrowseComponent implements OnInit {
         },
         error: (err) => {
           this.logger.error('LearnBrowseComponent', 'Failed to load classes', {}, err);
-          this.error.set('Не вдалося завантажити класи. Спробуйте оновити сторінку.');
+          this.error.set(this.i18n.instant('errors.generic'));
         },
       });
   }
@@ -171,22 +215,37 @@ export class LearnBrowseComponent implements OnInit {
       .pipe(finalize(() => this.joining.set(false)))
       .subscribe({
         next: (res) => {
-          this.joinSuccess.set(`Ти успішно приєднався до класу "${res.className}"!`);
+          const successMsg = this.i18n.instant('learn.browse.joinSuccess', { className: res.className });
+          this.joinSuccess.set(successMsg);
           this.joinCodeControl.reset();
+          // BUG H-05: refresh memberships immediately so the joined-state UI renders.
+          this.learningService.clearCaches();
+          this.loadClasses();
           setTimeout(() => {
             this.joinDialogOpen.set(false);
             this.joinSuccess.set(null);
-            this.loadClasses();
           }, 1500);
         },
         error: (err) => {
           const msg: string = err?.error?.message ?? '';
-          if (msg.toLowerCase().includes('invalid join code') || msg.toLowerCase().includes('not active')) {
-            this.joinError.set('Невірний код або клас більше не активний.');
-          } else if (msg.toLowerCase().includes('already joined')) {
-            this.joinError.set('Ти вже є учасником цього класу.');
+          const lower = msg.toLowerCase();
+          if (lower.includes('already joined') || lower.includes('already a member') || lower.includes('вже')) {
+            // BUG H-05: treat "already joined" as a success — refetch memberships and
+            // show the joined-state UI instead of an error toast.
+            this.joinSuccess.set(this.i18n.instant('learn.browse.joinAlready'));
+            this.joinCodeControl.reset();
+            this.learningService.clearCaches();
+            this.loadClasses();
+            setTimeout(() => {
+              this.joinDialogOpen.set(false);
+              this.joinSuccess.set(null);
+            }, 1500);
+            return;
+          }
+          if (lower.includes('invalid join code') || lower.includes('not active')) {
+            this.joinError.set(this.i18n.instant('learn.browse.joinInvalid'));
           } else {
-            this.joinError.set('Не вдалося приєднатися. Перевір код та спробуй знову.');
+            this.joinError.set(this.i18n.instant('learn.browse.joinFailed'));
           }
           this.logger.error('LearnBrowseComponent', 'Failed to join class', { code }, err);
         },

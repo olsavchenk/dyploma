@@ -25,7 +25,13 @@
     "required": "Required field",
     "optional": "Optional",
     "xp": "XP",
-    "or": "or"
+    "or": "or",
+    "never": "Never",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{{count}} {{word}} ago",
+    "saving": "Saving...",
+    "create": "Create"
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",
@@ -34,6 +40,31 @@
     "forbidden": "You don't have access to this section.",
     "notFound": "Page not found.",
     "validation": "Please check the entered data."
+  },
+  "roles": {
+    "student": "Student",
+    "teacher": "Teacher",
+    "admin": "Admin"
+  },
+  "appTitle": {
+    "default": "Stride",
+    "dashboard": "Dashboard — Stride",
+    "learn": "Learn — Stride",
+    "leaderboard": "Leaderboard — Stride",
+    "profile": "Profile — Stride",
+    "achievements": "Achievements — Stride",
+    "teacher": "Teacher — Stride",
+    "teacherClasses": "Classes — Stride",
+    "teacherDashboard": "Teacher Dashboard — Stride",
+    "admin": "Admin — Stride",
+    "auth": "Sign in — Stride"
+  },
+  "league": {
+    "Bronze": "Bronze",
+    "Silver": "Silver",
+    "Gold": "Gold",
+    "Platinum": "Platinum",
+    "Diamond": "Diamond"
   },
   "layout": {
     "header": {
@@ -210,7 +241,9 @@
     },
     "xpBar": {
       "level": "Level",
-      "xpTo": "to next level"
+      "xp": "XP",
+      "xpTo": "to next level",
+      "almostLevel": "Almost a new level!"
     },
     "streak": {
       "title": "Streak",
@@ -237,6 +270,10 @@
     "firstTaskBonus": {
       "title": "First task of the day",
       "description": "Complete your first task and earn a +50 XP bonus!",
+      "doneTitle": "First task of the day completed! 🎉",
+      "doneSubtitle": "You earned a +50 XP bonus",
+      "availableTitle": "First task of the day +50 XP! 🎁",
+      "availableSubtitle": "Complete any task to earn the bonus",
       "cta": "Start learning"
     }
   },
@@ -248,6 +285,21 @@
       "start": "Start",
       "empty": "No subjects added yet",
       "allSubjects": "All subjects",
+      "loadingClasses": "Loading classes...",
+      "joinClassButton": "Join a class",
+      "joinNoneTitle": "You haven't joined any class yet",
+      "joinNoneSubtitle": "Ask your teacher for a 6-character code to join a class",
+      "joinHint": "Enter the 6-character code from your teacher",
+      "codeLabel": "Class code",
+      "codeError": "Only upper case letters and digits (6 chars)",
+      "joinCta": "Join",
+      "joinAlready": "You are already a member of this class.",
+      "joinInvalid": "Invalid code or class is no longer active.",
+      "joinFailed": "Could not join. Check the code and try again.",
+      "joinSuccess": "You have successfully joined \"{{className}}\"!",
+      "noSubjects": "No subjects added yet",
+      "noClassesTitle": "Not in any class yet",
+      "tryAgain": "Try again",
       "filters": {
         "all": "All grades",
         "primary": "Grades 1-4",
@@ -293,6 +345,14 @@
   },
   "leaderboard": {
     "title": "Leaderboard",
+    "weeklyXp": "XP this week",
+    "totalXp": "Total XP",
+    "filterAria": "Leaderboard filter",
+    "loadingAria": "Loading...",
+    "loadError": "Could not load the leaderboard. Try refreshing the page.",
+    "tryAgain": "Try again",
+    "emptyTitle": "No participants yet",
+    "emptySub": "Be the first!",
     "filters": {
       "weekly": "Weekly",
       "allTime": "All time",
@@ -314,12 +374,18 @@
     "title": "Profile",
     "editTitle": "Edit Profile",
     "memberSince": "Member since",
+    "memberSincePrefix": "Since",
+    "loading": "Loading profile...",
+    "loadError": "Could not load profile",
+    "edit": "Edit Profile",
+    "level": "Level",
     "stats": {
       "totalXp": "Total XP",
       "currentStreak": "Current Streak",
       "longestStreak": "Longest Streak",
       "tasksCompleted": "Tasks Completed",
-      "accuracy": "Accuracy"
+      "accuracy": "Accuracy",
+      "achievementsCount": "Achievements"
     },
     "achievements": {
       "title": "Achievements",
@@ -328,15 +394,22 @@
     },
     "activity": {
       "title": "Activity",
+      "lastActivityTitle": "Recent Activity",
       "empty": "No activity yet"
     },
     "settings": {
       "title": "Settings",
-      "language": "Language",
+      "language": "Interface language",
+      "languageDescription": "Choose the display language",
       "notifications": "Notifications",
+      "notificationsDescription": "Receive notifications about achievements and reminders",
       "installApp": "Install App",
+      "installAppDescription": "Add Stride to your home screen",
+      "install": "Install",
       "exportData": "Export Data",
       "logout": "Log out",
+      "logoutFull": "Log out of account",
+      "logoutDescription": "End the current session",
       "deleteAccount": "Delete Account"
     }
   },
@@ -347,7 +420,14 @@
       "classes": "Classes",
       "students": "Students",
       "pendingReviews": "Pending Reviews",
-      "weekXp": "Week XP"
+      "weekXp": "Week XP",
+      "recentClasses": "Recent Classes",
+      "recentActivity": "Recent Activity",
+      "noClasses": "No classes",
+      "viewClasses": "View classes",
+      "noActivity": "No recent activity",
+      "joinCodeLabel": "Code",
+      "gradeSuffix": "grade"
     },
     "classes": {
       "title": "My Classes",
@@ -356,7 +436,12 @@
       "students": "students",
       "avgMastery": "Avg. mastery",
       "manage": "Manage",
-      "shareCode": "Share Code"
+      "shareCode": "Share Code",
+      "searchPlaceholder": "Search by name...",
+      "filterActive": "Active",
+      "filterArchived": "Archived",
+      "subtitleStats": "{{classes}} {{classWord}} · {{students}} {{studentWord}}",
+      "duplicateName": "A class with this name already exists"
     },
     "classDetail": {
       "students": "Students",
@@ -364,13 +449,19 @@
       "analytics": "Analytics",
       "newAssignment": "New Assignment",
       "lastActive": "Last active",
-      "overdueDays": "Overdue {{count}} days ago"
+      "lastActiveLabel": "Last active",
+      "overdueDays": "Overdue {{count}} days ago",
+      "noSubject": "No subject",
+      "joinCode": "Class code:",
+      "regenerateCode": "Regenerate code",
+      "namePlaceholder": "Name"
     },
     "createClass": {
       "title": "Create Class",
       "name": "Class name",
       "grade": "Grade",
-      "description": "Description"
+      "description": "Description",
+      "noSubject": "— No subject —"
     },
     "shareCode": {
       "title": "Invitation Code",

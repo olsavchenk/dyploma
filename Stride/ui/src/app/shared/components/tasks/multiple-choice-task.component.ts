@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, signal, HostListener, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatRadioModule } from '@angular/material/radio';
 import { MatButtonModule } from '@angular/material/button';
 import { FormsModule } from '@angular/forms';
 import { MultipleChoiceTask } from '@app/core';
@@ -10,27 +9,37 @@ import { SafeHtmlPipe } from '@app/shared/pipes/safe-html.pipe';
 @Component({
   selector: 'app-multiple-choice-task',
   standalone: true,
-  imports: [CommonModule, MatCardModule, MatRadioModule, MatButtonModule, FormsModule, SafeHtmlPipe],
+  imports: [CommonModule, MatCardModule, MatButtonModule, FormsModule, SafeHtmlPipe],
   template: `
     <div class="multiple-choice-task">
       <div class="question" [innerHTML]="task.question | safeHtml"></div>
 
-      <mat-radio-group
+      <div
         class="options-list"
-        [(ngModel)]="selectedOptionValue"
-        (ngModelChange)="onSelectionChange($event)"
+        role="radiogroup"
+        [attr.aria-label]="'Варіанти відповіді'"
       >
         @for (option of task.options; track $index) {
-          <mat-radio-button
-            [value]="$index"
+          <label
             class="option-item"
+            [class.option-item--checked]="selectedOptionValue === $index"
             [attr.data-keyboard-index]="$index + 1"
           >
-            <span class="option-number">{{ $index + 1 }}</span>
+            <input
+              type="radio"
+              name="mcq-option"
+              class="option-radio"
+              [value]="$index"
+              [checked]="selectedOptionValue === $index"
+              [attr.aria-checked]="selectedOptionValue === $index"
+              (change)="selectOption($index)"
+              (keydown)="onOptionKeydown($event, $index)"
+            />
+            <span class="option-number" aria-hidden="true">{{ $index + 1 }}</span>
             <span class="option-text" [innerHTML]="option | safeHtml"></span>
-          </mat-radio-button>
+          </label>
         }
-      </mat-radio-group>
+      </div>
 
       @if (task.hints && task.hints.length > 0 && showHints()) {
         <div class="hints-section">
@@ -70,19 +79,34 @@ import { SafeHtmlPipe } from '@app/shared/pipes/safe-html.pipe';
         padding: 0.875rem 1rem;
         border: 2px solid var(--color-rule, #e5e5e3);
         border-radius: var(--radius-sm, 8px);
-        transition: border-color 0.15s, background 0.15s;
+        transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
         cursor: pointer;
         background: var(--color-paper, #fff);
+        user-select: none;
 
         &:hover {
           border-color: var(--sun-400, #facc15);
           background: #fefce8;
         }
 
-        &.mat-mdc-radio-checked {
+        &--checked {
           border-color: var(--sun-400, #facc15);
           background: #fefce8;
         }
+
+        &:focus-within {
+          box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.25);
+          outline: none;
+        }
+      }
+
+      .option-radio {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        pointer-events: none;
       }
 
       .option-number {
@@ -102,7 +126,7 @@ import { SafeHtmlPipe } from '@app/shared/pipes/safe-html.pipe';
         transition: background 0.15s, color 0.15s;
       }
 
-      .mat-mdc-radio-checked .option-number {
+      .option-item--checked .option-number {
         background: var(--sun-400, #facc15);
         color: #1a1a18;
       }
@@ -153,18 +177,41 @@ export class MultipleChoiceTaskComponent {
   handleKeyboardInput(event: KeyboardEvent): void {
     if (event.key >= '1' && event.key <= '4') {
       const index = parseInt(event.key, 10) - 1;
-      if (index < this.task.options.length) {
-        this.selectedOptionValue = index;
-        this.onSelectionChange(index);
+      if (this.task && index < this.task.options.length) {
+        this.selectOption(index);
       }
     } else if (event.key === 'h' || event.key === 'H' || event.key === 'п' || event.key === 'П') {
       this.showHints.set(!this.showHints());
     }
   }
 
-  protected onSelectionChange(selected: number | null): void {
-    if (selected !== null) {
-      this.answerSelected.emit(this.task.options[selected]);
+  protected selectOption(index: number): void {
+    if (!this.task || index < 0 || index >= this.task.options.length) return;
+    this.selectedOptionValue = index;
+    this.answerSelected.emit(this.task.options[index]);
+  }
+
+  protected onOptionKeydown(event: KeyboardEvent, index: number): void {
+    if (!this.task) return;
+    const count = this.task.options.length;
+    if (event.key === 'ArrowDown' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      this.selectOption((index + 1) % count);
+      this.focusRadioAt((index + 1) % count);
+    } else if (event.key === 'ArrowUp' || event.key === 'ArrowLeft') {
+      event.preventDefault();
+      this.selectOption((index - 1 + count) % count);
+      this.focusRadioAt((index - 1 + count) % count);
+    } else if (event.key === ' ' || event.key === 'Enter') {
+      event.preventDefault();
+      this.selectOption(index);
     }
+  }
+
+  private focusRadioAt(index: number): void {
+    if (typeof document === 'undefined') return;
+    const inputs = document.querySelectorAll<HTMLInputElement>('input[name="mcq-option"]');
+    const target = inputs.item(index);
+    if (target) target.focus();
   }
 }
